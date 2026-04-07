@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { FirebaseError } from "firebase/app";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -51,6 +52,44 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function firebaseEnvMissingMessage(): string {
+  return "Firebase is not configured: set all NEXT_PUBLIC_FIREBASE_* variables (see web/.env.example). On Vercel, add them for Production and redeploy so the live site includes them.";
+}
+
+/** When API key exists but initializeApp failed (wrong values) or auth is unavailable. */
+function firebaseInitFailedMessage(): string {
+  if (!isFirebaseConfigured()) return firebaseEnvMissingMessage();
+  return "Firebase could not start: copy every field from Firebase Console → Project settings → Your apps → Web app into Vercel Environment Variables (NEXT_PUBLIC_FIREBASE_*), save, redeploy, then hard-refresh.";
+}
+
+function formatFirebaseAuthError(e: unknown): string {
+  if (e instanceof FirebaseError) {
+    switch (e.code) {
+      case "auth/operation-not-allowed":
+        return "Email/password sign-in is off in Firebase. Open Firebase Console → Authentication → Sign-in method → enable Email/Password (this is not a database issue).";
+      case "auth/email-already-in-use":
+        return "This email is already registered. Sign in instead.";
+      case "auth/invalid-email":
+        return "Enter a valid email address.";
+      case "auth/weak-password":
+        return "Password is too weak. Use at least 6 characters.";
+      case "auth/user-disabled":
+        return "This account has been disabled.";
+      case "auth/user-not-found":
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        return "Wrong email or password.";
+      case "auth/network-request-failed":
+        return "Network error. Check your connection and try again.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Try again in a few minutes.";
+      default:
+        return e.message || "Sign-in failed.";
+    }
+  }
+  return e instanceof Error ? e.message : "Something went wrong.";
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -103,31 +142,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user?.uid]);
 
-  const firebaseUnavailableMessage =
-    "Firebase is not configured: set all NEXT_PUBLIC_FIREBASE_* variables (see web/.env.example). On Vercel, add them under Environment Variables and redeploy so the client bundle picks them up.";
-
   const signInEmail = useCallback(async (email: string, password: string) => {
     const auth = getFirebaseAuth();
     if (!auth) {
-      throw new Error(
-        isFirebaseConfigured()
-          ? "Sign-in is not available right now. Please try again later."
-          : firebaseUnavailableMessage
-      );
+      throw new Error(firebaseInitFailedMessage());
     }
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      throw new Error(formatFirebaseAuthError(e));
+    }
   }, []);
 
   const signUpEmail = useCallback(async (email: string, password: string) => {
     const auth = getFirebaseAuth();
     if (!auth) {
-      throw new Error(
-        isFirebaseConfigured()
-          ? "Registration is not available right now. Please try again later."
-          : firebaseUnavailableMessage
-      );
+      throw new Error(firebaseInitFailedMessage());
     }
-    await createUserWithEmailAndPassword(auth, email, password);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      throw new Error(formatFirebaseAuthError(e));
+    }
   }, []);
 
   const signOut = useCallback(async () => {
@@ -146,9 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const requestOtp = useCallback(async (phone: string) => {
     void phone;
     if (!isFirebaseConfigured()) {
-      throw new Error(
-        "SMS sign-in is not available right now. Please try again later."
-      );
+      throw new Error(firebaseEnvMissingMessage());
     }
     throw new Error(
       "SMS verification is not available right now. Please try again later."

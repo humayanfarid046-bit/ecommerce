@@ -6,7 +6,7 @@ let auth: Auth | null = null;
 let db: Firestore | null = null;
 
 export function isFirebaseConfigured(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+  return Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim());
 }
 
 /**
@@ -28,7 +28,14 @@ function getConfig() {
 export function getFirebaseApp(): FirebaseApp | null {
   if (!isFirebaseConfigured()) return null;
   if (!getApps().length) {
-    app = initializeApp(getConfig());
+    try {
+      app = initializeApp(getConfig());
+    } catch (e) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[firebase] initializeApp failed:", e);
+      }
+      return null;
+    }
   } else {
     app = getApps()[0]!;
   }
