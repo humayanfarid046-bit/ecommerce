@@ -103,11 +103,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user?.uid]);
 
+  const firebaseUnavailableMessage =
+    "Firebase is not configured: set all NEXT_PUBLIC_FIREBASE_* variables (see web/.env.example). On Vercel, add them under Environment Variables and redeploy so the client bundle picks them up.";
+
   const signInEmail = useCallback(async (email: string, password: string) => {
     const auth = getFirebaseAuth();
     if (!auth) {
       throw new Error(
-        "Sign-in is not available right now. Please try again later."
+        isFirebaseConfigured()
+          ? "Sign-in is not available right now. Please try again later."
+          : firebaseUnavailableMessage
       );
     }
     await signInWithEmailAndPassword(auth, email, password);
@@ -117,7 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const auth = getFirebaseAuth();
     if (!auth) {
       throw new Error(
-        "Registration is not available right now. Please try again later."
+        isFirebaseConfigured()
+          ? "Registration is not available right now. Please try again later."
+          : firebaseUnavailableMessage
       );
     }
     await createUserWithEmailAndPassword(auth, email, password);
