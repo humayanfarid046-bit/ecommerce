@@ -1,6 +1,17 @@
 import type { AdminOrderRow } from "@/lib/admin-mock-data";
 import type { UserOrderRecord } from "@/lib/user-order-firestore";
 
+/** For dashboard payment pie chart keys. */
+export function methodLabelToPaymentKey(
+  label: string
+): "upi" | "cod" | "card" | "netbanking" {
+  const m = methodLabelToPaymentMethod(label);
+  if (m === "COD") return "cod";
+  if (m === "NetBanking") return "netbanking";
+  if (m === "Card") return "card";
+  return "upi";
+}
+
 export function methodLabelToPaymentMethod(
   label: string
 ): AdminOrderRow["paymentMethod"] {

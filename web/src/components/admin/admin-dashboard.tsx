@@ -7,7 +7,6 @@ import { computeFraudAlerts } from "@/lib/fraud-signals";
 import {
   adminStats,
   adminStatsYesterday,
-  averageOrderValueToday,
   conversionFunnel,
   deltaVsYesterdayPercent,
   hourlySalesToday,
@@ -19,6 +18,7 @@ import {
   sparklineUsers,
   sparklineVisitors,
 } from "@/lib/admin-mock-data";
+import type { AdminStatsPayload } from "@/lib/admin-stats-types";
 import { MultiLayerSalesChart } from "@/components/admin/multi-layer-sales-chart";
 import { SparklineMini } from "@/components/admin/sparkline-mini";
 import { LowStockActionCenter } from "@/components/admin/low-stock-action-center";
@@ -54,16 +54,14 @@ function DeltaLine({
   );
 }
 
+type SrvStats = AdminStatsPayload;
+
 export function AdminDashboard() {
   const t = useTranslations("admin");
   const y = adminStatsYesterday;
-  const aov = averageOrderValueToday();
   const [live, setLive] = useState(() => readLiveCommerceStats());
   const [fraud, setFraud] = useState(() => computeFraudAlerts());
-  const [srv, setSrv] = useState<{
-    ordersToday: number;
-    revenueToday: number;
-  } | null>(null);
+  const [srv, setSrv] = useState<SrvStats | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,17 +72,27 @@ export function AdminDashboard() {
         const res = await fetch("/api/admin/stats", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const j = (await res.json().catch(() => ({}))) as {
-          ordersToday?: number;
-          revenueToday?: number;
+        const j = (await res.json().catch(() => ({}))) as Partial<AdminStatsPayload> & {
+          error?: string;
         };
         if (cancelled) return;
         if (
           res.ok &&
           typeof j.ordersToday === "number" &&
-          typeof j.revenueToday === "number"
+          typeof j.revenueToday === "number" &&
+          typeof j.totalOrders === "number"
         ) {
-          setSrv({ ordersToday: j.ordersToday, revenueToday: j.revenueToday });
+          setSrv({
+            ordersToday: j.ordersToday!,
+            revenueToday: j.revenueToday!,
+            ordersYesterday: j.ordersYesterday ?? 0,
+            revenueYesterday: j.revenueYesterday ?? 0,
+            totalOrders: j.totalOrders!,
+            newUsersToday: j.newUsersToday ?? 0,
+            paymentMix: Array.isArray(j.paymentMix) ? j.paymentMix : [],
+            regionOrders: Array.isArray(j.regionOrders) ? j.regionOrders : [],
+            hourlyToday: Array.isArray(j.hourlyToday) ? j.hourlyToday : [],
+          });
         }
       } catch {
         /* ignore */
@@ -137,44 +145,97 @@ export function AdminDashboard() {
     return hasLive ? live.revenueToday : adminStats.revenueToday;
   }, [srv, live.ordersToday, live.revenueToday]);
 
-  const statCards = [
-    {
-      label: t("statOrders"),
-      value: ordersToday.toLocaleString("en-IN"),
-      spark: sparklineOrders,
-      color: "#0066ff",
-      sparkId: "orders",
-      today: ordersToday,
-      yesterday: y.orders,
-    },
-    {
-      label: t("statRevenue"),
-      value: `₹${revenueToday.toLocaleString("en-IN")}`,
-      spark: sparklineRevenue,
-      color: "#059669",
-      sparkId: "rev",
-      today: revenueToday,
-      yesterday: y.revenue,
-    },
-    {
-      label: t("statUsers"),
-      value: adminStats.newUsers.toLocaleString("en-IN"),
-      spark: sparklineUsers,
-      color: "#7c3aed",
-      sparkId: "users",
-      today: adminStats.newUsers,
-      yesterday: y.newUsers,
-    },
-    {
-      label: t("statVisitors"),
-      value: adminStats.visitors.toLocaleString("en-IN"),
-      spark: sparklineVisitors,
-      color: "#d97706",
-      sparkId: "vis",
-      today: adminStats.visitors,
-      yesterday: y.visitors,
-    },
-  ];
+  const newUsersDisplay = useMemo(() => {
+    if (srv != null) return srv.newUsersToday;
+    return adminStats.newUsers;
+  }, [srv]);
+
+  const totalOrdersDisplay = useMemo(() => {
+    if (srv != null) return srv.totalOrders;
+    return adminStats.visitors;
+  }, [srv]);
+
+  const aov = useMemo(() => {
+    if (srv != null && srv.ordersToday > 0) {
+      return Math.round(srv.revenueToday / srv.ordersToday);
+    }
+    if (live.ordersToday > 0) {
+      return Math.round(live.revenueToday / live.ordersToday);
+    }
+    return 0;
+  }, [srv, live.ordersToday, live.revenueToday]);
+
+  const hourlyChartData = useMemo(() => {
+    if (srv?.hourlyToday?.some((h) => h.revenue > 0)) return srv.hourlyToday;
+    return hourlySalesToday;
+  }, [srv]);
+
+  const paymentSplitData = useMemo(() => {
+    if (srv?.paymentMix?.some((p) => p.amount > 0)) return srv.paymentMix;
+    return paymentMixToday;
+  }, [srv]);
+
+  const regionData = useMemo(() => {
+    if (srv?.regionOrders?.length) return srv.regionOrders;
+    return regionOrdersIndia;
+  }, [srv]);
+
+  const statCards = useMemo(() => {
+    const cards = [
+      {
+        label: t("statOrders"),
+        value: ordersToday.toLocaleString("en-IN"),
+        spark: sparklineOrders,
+        color: "#0066ff",
+        sparkId: "orders",
+        today: ordersToday,
+        yesterday: srv != null ? srv.ordersYesterday : y.orders,
+        showDelta: true,
+      },
+      {
+        label: t("statRevenue"),
+        value: `₹${revenueToday.toLocaleString("en-IN")}`,
+        spark: sparklineRevenue,
+        color: "#059669",
+        sparkId: "rev",
+        today: revenueToday,
+        yesterday: srv != null ? srv.revenueYesterday : y.revenue,
+        showDelta: true,
+      },
+      {
+        label: t("statUsers"),
+        value: newUsersDisplay.toLocaleString("en-IN"),
+        spark: sparklineUsers,
+        color: "#7c3aed",
+        sparkId: "users",
+        today: newUsersDisplay,
+        yesterday: srv != null ? 0 : y.newUsers,
+        showDelta: srv == null,
+      },
+      {
+        label: srv != null ? t("statAllOrders") : t("statVisitors"),
+        value: totalOrdersDisplay.toLocaleString("en-IN"),
+        spark: sparklineVisitors,
+        color: "#d97706",
+        sparkId: "vis",
+        today: totalOrdersDisplay,
+        yesterday: srv != null ? 0 : y.visitors,
+        showDelta: srv == null,
+      },
+    ];
+    return cards;
+  }, [
+    t,
+    ordersToday,
+    revenueToday,
+    newUsersDisplay,
+    totalOrdersDisplay,
+    srv,
+    y.orders,
+    y.revenue,
+    y.newUsers,
+    y.visitors,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -220,13 +281,19 @@ export function AdminDashboard() {
                 <p className="mt-1 text-2xl font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
                   {c.value}
                 </p>
-                <DeltaLine today={c.today} yesterday={c.yesterday} />
+                {c.showDelta ? (
+                  <DeltaLine today={c.today} yesterday={c.yesterday} />
+                ) : (
+                  <p className="mt-1 text-[11px] text-slate-400">{t("firestoreMetricNote")}</p>
+                )}
               </div>
               <div className="flex w-24 shrink-0 flex-col items-end gap-1">
                 <SparklineMini data={c.spark} color={c.color} id={c.sparkId} />
               </div>
             </div>
-            <p className="mt-2 text-[10px] font-medium text-slate-400">{t("realtimeHint")}</p>
+            <p className="mt-2 text-[10px] font-medium text-slate-400">
+              {srv ? t("realtimeHintFirestore") : t("realtimeHint")}
+            </p>
           </div>
         ))}
       </div>
@@ -252,7 +319,7 @@ export function AdminDashboard() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <HourlySalesChart data={hourlySalesToday} />
+          <HourlySalesChart data={hourlyChartData} />
         </div>
         <div className="lg:col-span-1">
           <LiveActivityFeed events={liveFeedPool} />
@@ -264,10 +331,10 @@ export function AdminDashboard() {
           visitors={conversionFunnel.visitors}
           productViews={conversionFunnel.productViews}
           addToCart={conversionFunnel.addToCart}
-          paidOrders={conversionFunnel.paidOrders}
+          paidOrders={srv?.ordersToday ?? conversionFunnel.paidOrders}
         />
-        <PaymentSplitChart data={paymentMixToday} />
-        <RegionIndiaPanel regions={regionOrdersIndia} />
+        <PaymentSplitChart data={paymentSplitData} />
+        <RegionIndiaPanel regions={regionData} />
       </div>
 
       <MultiLayerSalesChart />

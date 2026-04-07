@@ -16,23 +16,27 @@ export function ConversionFunnel({
   paidOrders,
 }: Props) {
   const t = useTranslations("admin");
-  const max = Math.max(visitors, 1);
+  const base = Math.max(visitors, productViews, addToCart, paidOrders, 1);
   const stages = [
-    { key: "funnelVisitors" as const, value: visitors, pct: 100 },
+    {
+      key: "funnelVisitors" as const,
+      value: visitors,
+      pct: (visitors / base) * 100,
+    },
     {
       key: "funnelViewers" as const,
       value: productViews,
-      pct: (productViews / max) * 100,
+      pct: (productViews / base) * 100,
     },
     {
       key: "funnelCart" as const,
       value: addToCart,
-      pct: (addToCart / max) * 100,
+      pct: (addToCart / base) * 100,
     },
     {
       key: "funnelPaid" as const,
       value: paidOrders,
-      pct: (paidOrders / max) * 100,
+      pct: (paidOrders / base) * 100,
     },
   ];
 
@@ -51,7 +55,7 @@ export function ConversionFunnel({
                 {s.value.toLocaleString("en-IN")}
                 {i > 0 ? (
                   <span className="ml-2 text-[10px] font-medium text-slate-400">
-                    ({((s.value / visitors) * 100).toFixed(1)}%)
+                    ({((s.value / base) * 100).toFixed(1)}%)
                   </span>
                 ) : null}
               </span>
