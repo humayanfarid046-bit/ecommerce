@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
-  mockUsers,
   mockBlockedIPsSeed,
   ordersForCustomer,
   type AdminUserRow,
   type UserSegment,
+  type AdminOrderRow,
 } from "@/lib/admin-mock-data";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 import { cn } from "@/lib/utils";
 import {
   Shield,
@@ -64,8 +65,15 @@ function UserStatusIcons({ u }: { u: AdminUserRow }) {
 
 export function AdminUsers() {
   const t = useTranslations("admin");
+  const getAuthHeader = useCallback(async () => {
+    const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }, []);
   const [tab, setTab] = useState<Tab>("users");
-  const [users, setUsers] = useState<AdminUserRow[]>(mockUsers);
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [remoteOrders, setRemoteOrders] = useState<AdminOrderRow[]>([]);
   const [blockedIPs, setBlockedIPs] = useState<string[]>([...mockBlockedIPsSeed]);
   const [newIp, setNewIp] = useState("");
 
@@ -81,6 +89,33 @@ export function AdminUsers() {
   const [blockModal, setBlockModal] = useState<{ id: string; reason: string } | null>(
     null
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const headers = await getAuthHeader();
+        const [resU, resO] = await Promise.all([
+          fetch("/api/admin/users", { headers }),
+          fetch("/api/admin/orders", { headers }),
+        ]);
+        const jU = (await resU.json().catch(() => ({}))) as {
+          users?: AdminUserRow[];
+        };
+        const jO = (await resO.json().catch(() => ({}))) as {
+          orders?: AdminOrderRow[];
+        };
+        if (cancelled) return;
+        if (resU.ok && Array.isArray(jU.users)) setUsers(jU.users);
+        if (resO.ok && Array.isArray(jO.orders)) setRemoteOrders(jO.orders);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getAuthHeader]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
@@ -533,8 +568,8 @@ export function AdminUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ordersForCustomer(detailUser.id).length ? (
-                      ordersForCustomer(detailUser.id).map((o) => (
+                    {ordersForCustomer(detailUser.id, remoteOrders).length ? (
+                      ordersForCustomer(detailUser.id, remoteOrders).map((o) => (
                         <tr key={o.id} className="border-t border-slate-100 dark:border-slate-800">
                           <td className="p-2 font-mono">{o.id}</td>
                           <td className="p-2">₹{o.amount.toLocaleString("en-IN")}</td>

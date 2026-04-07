@@ -32,9 +32,13 @@ export type UserOrderRecord = {
   trackingId?: string;
   timelineNote?: string;
   updatedAt?: number;
+  /** Snapshot at checkout for admin list (optional on older orders). */
+  customerName?: string;
+  customerPhone?: string;
+  deliveryPin?: string;
 };
 
-function parseOrderDoc(
+export function parseUserOrderDocument(
   id: string,
   x: Record<string, unknown>
 ): UserOrderRecord {
@@ -73,7 +77,20 @@ function parseOrderDoc(
     trackingId: typeof x.trackingId === "string" ? x.trackingId : undefined,
     timelineNote: typeof x.timelineNote === "string" ? x.timelineNote : undefined,
     updatedAt: typeof x.updatedAt === "number" ? x.updatedAt : undefined,
+    customerName:
+      typeof x.customerName === "string" ? x.customerName : undefined,
+    customerPhone:
+      typeof x.customerPhone === "string" ? x.customerPhone : undefined,
+    deliveryPin:
+      typeof x.deliveryPin === "string" ? x.deliveryPin : undefined,
   };
+}
+
+function parseOrderDoc(
+  id: string,
+  x: Record<string, unknown>
+): UserOrderRecord {
+  return parseUserOrderDocument(id, x);
 }
 
 export async function saveUserOrderToFirestore(

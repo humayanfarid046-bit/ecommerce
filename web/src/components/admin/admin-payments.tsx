@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   mockTransactions,
   mockPayouts,
+  type AdminTransaction,
 } from "@/lib/admin-mock-data";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 import { appendActivityLog } from "@/lib/admin-security-storage";
 import { confirmCodOrder } from "@/lib/cod-order-sync";
 import { CashCodReconciliation } from "@/components/admin/cash-cod-reconciliation";
@@ -14,7 +16,37 @@ import { CreditCard, Truck } from "lucide-react";
 
 export function AdminPayments() {
   const t = useTranslations("admin");
+  const getAuthHeader = useCallback(async () => {
+    const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }, []);
+  const [txRows, setTxRows] = useState<AdminTransaction[]>(mockTransactions);
   const [codOrderId, setCodOrderId] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/admin/orders", {
+          headers: await getAuthHeader(),
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          transactions?: AdminTransaction[];
+        };
+        if (cancelled) return;
+        if (res.ok && Array.isArray(j.transactions)) {
+          setTxRows(j.transactions);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getAuthHeader]);
 
   function markCodReceived() {
     const id = codOrderId.trim();
@@ -64,7 +96,7 @@ export function AdminPayments() {
               </tr>
             </thead>
             <tbody>
-              {mockTransactions.map((x) => (
+              {txRows.map((x) => (
                 <tr
                   key={x.id}
                   className="border-b border-slate-100 dark:border-slate-800"

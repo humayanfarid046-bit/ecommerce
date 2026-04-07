@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import {
   mockAdminOrders,
   mockReturns,
-  mockUsers,
   type AdminOrderRow,
   type AdminReturnReq,
+  type AdminUserRow,
 } from "@/lib/admin-mock-data";
 import {
   InvoicePrintButton,
@@ -96,6 +96,7 @@ export function AdminOrders() {
 
   const t = useTranslations("admin");
   const [orders, setOrders] = useState<AdminOrderRow[]>(mockAdminOrders);
+  const [userIndex, setUserIndex] = useState<AdminUserRow[]>([]);
   const [returns, setReturns] = useState<AdminReturnReq[]>(mockReturns);
 
   const [statusF, setStatusF] = useState<(typeof STATUS_FILTERS)[number]>("all");
@@ -119,6 +120,44 @@ export function AdminOrders() {
   const [deliveryOtpDraft, setDeliveryOtpDraft] = useState("");
   const [firebaseUidDraft, setFirebaseUidDraft] = useState("");
   const [trackingBusy, setTrackingBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const headers = await getAuthHeader();
+        const [resO, resU] = await Promise.all([
+          fetch("/api/admin/orders", { headers }),
+          fetch("/api/admin/users", { headers }),
+        ]);
+        const jO = (await resO.json().catch(() => ({}))) as {
+          orders?: AdminOrderRow[];
+        };
+        const jU = (await resU.json().catch(() => ({}))) as {
+          users?: AdminUserRow[];
+        };
+        if (cancelled) return;
+        if (resO.ok && Array.isArray(jO.orders)) {
+          setOrders(jO.orders);
+          for (const o of jO.orders) {
+            try {
+              setAdminOrderFirebaseUid(o.id, o.customerId);
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+        if (resU.ok && Array.isArray(jU.users)) {
+          setUserIndex(jU.users);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getAuthHeader]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -206,11 +245,38 @@ export function AdminOrders() {
     }
   };
 
-  const setStatus = useCallback((id: string, status: AdminOrderRow["status"]) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    setOrderTracking(id, { step: statusToStep(status) });
-    dispatchOrderTrackingEvent();
-  }, []);
+  const setStatus = useCallback(
+    (id: string, status: AdminOrderRow["status"]) => {
+      setOrders((prev) => {
+        const row = prev.find((o) => o.id === id);
+        if (row?.customerId) {
+          void (async () => {
+            try {
+              await fetch("/api/admin/order", {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(await getAuthHeader()),
+                },
+                body: JSON.stringify({
+                  userId: row.customerId,
+                  orderId: id,
+                  shipmentStep: statusToStep(status),
+                  status: mapAdminStatusToFirestore(status),
+                }),
+              });
+            } catch {
+              /* ignore */
+            }
+          })();
+        }
+        return prev.map((o) => (o.id === id ? { ...o, status } : o));
+      });
+      setOrderTracking(id, { step: statusToStep(status) });
+      dispatchOrderTrackingEvent();
+    },
+    [getAuthHeader]
+  );
 
   const setPrivateNote = (id: string, note: string) => {
     setOrders((prev) =>
@@ -464,7 +530,7 @@ export function AdminOrders() {
             {filtered.map((o) => {
               void codTick; // re-read COD meta from localStorage
               const pin = o.deliveryPin ?? "—";
-              const u = mockUsers.find((x) => x.id === o.customerId);
+              const u = userIndex.find((x) => x.id === o.customerId);
               const refusals = u?.codRefusedCount ?? 0;
               const codConf =
                 o.paymentMethod === "COD" && o.codConfirmationSeed
@@ -794,9 +860,36 @@ export function AdminOrders() {
               </button>
             </div>
             {(() => {
-              const u = mockUsers.find((x) => x.id === customerModal);
-              if (!u) return <p className="text-sm text-slate-500">{t("userNotFound")}</p>;
+              const u = userIndex.find((x) => x.id === customerModal);
               const oc = customerOrders(customerModal);
+              const hint = orders.find((o) => o.customerId === customerModal);
+              if (!u) {
+                if (!hint) {
+                  return (
+                    <p className="text-sm text-slate-500">{t("userNotFound")}</p>
+                  );
+                }
+                return (
+                  <div className="mt-4 space-y-3 text-sm">
+                    <p>
+                      <strong>{hint.customer}</strong>
+                    </p>
+                    <p className="text-xs text-slate-500">{hint.phone}</p>
+                    <p className="text-xs font-bold uppercase text-slate-500">
+                      {t("customerOrderHistory")}
+                    </p>
+                    <ul className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-2 text-xs dark:border-slate-600">
+                      {oc.map((x) => (
+                        <li key={x.id} className="flex justify-between gap-2">
+                          <span className="font-mono">{x.id}</span>
+                          <span>₹{x.amount}</span>
+                          <span className="text-slate-400">{x.status}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              }
               return (
                 <div className="mt-4 space-y-3 text-sm">
                   <p>

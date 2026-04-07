@@ -307,12 +307,18 @@ export function getLowStockProducts() {
 
 export const mockAdminOrders: AdminOrderRow[] = [];
 
-export function ordersForCustomer(customerId: string): AdminOrderRow[] {
-  return mockAdminOrders.filter((o) => o.customerId === customerId);
+export function ordersForCustomer(
+  customerId: string,
+  allOrders: AdminOrderRow[] = mockAdminOrders
+): AdminOrderRow[] {
+  return allOrders.filter((o) => o.customerId === customerId);
 }
 
-export function totalSpentForCustomer(customerId: string): number {
-  return ordersForCustomer(customerId).reduce((s, o) => s + o.amount, 0);
+export function totalSpentForCustomer(
+  customerId: string,
+  allOrders: AdminOrderRow[] = mockAdminOrders
+): number {
+  return ordersForCustomer(customerId, allOrders).reduce((s, o) => s + o.amount, 0);
 }
 
 export const mockUsers: AdminUserRow[] = [];

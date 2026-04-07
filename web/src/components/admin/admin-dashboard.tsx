@@ -29,6 +29,7 @@ import { PaymentSplitChart } from "@/components/admin/payment-split-chart";
 import { RegionIndiaPanel } from "@/components/admin/region-india-panel";
 import { LiveActivityFeed } from "@/components/admin/live-activity-feed";
 import { AlertTriangle, TrendingUp } from "lucide-react";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 
 function DeltaLine({
   today,
@@ -59,6 +60,40 @@ export function AdminDashboard() {
   const aov = averageOrderValueToday();
   const [live, setLive] = useState(() => readLiveCommerceStats());
   const [fraud, setFraud] = useState(() => computeFraudAlerts());
+  const [srv, setSrv] = useState<{
+    ordersToday: number;
+    revenueToday: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+        if (!token) return;
+        const res = await fetch("/api/admin/stats", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          ordersToday?: number;
+          revenueToday?: number;
+        };
+        if (cancelled) return;
+        if (
+          res.ok &&
+          typeof j.ordersToday === "number" &&
+          typeof j.revenueToday === "number"
+        ) {
+          setSrv({ ordersToday: j.ordersToday, revenueToday: j.revenueToday });
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function sync() {
@@ -91,14 +126,16 @@ export function AdminDashboard() {
   }, []);
 
   const ordersToday = useMemo(() => {
+    if (srv != null) return srv.ordersToday;
     const hasLive = live.ordersToday > 0 || live.revenueToday > 0;
     return hasLive ? live.ordersToday : adminStats.ordersToday;
-  }, [live.ordersToday, live.revenueToday]);
+  }, [srv, live.ordersToday, live.revenueToday]);
 
   const revenueToday = useMemo(() => {
+    if (srv != null) return srv.revenueToday;
     const hasLive = live.ordersToday > 0 || live.revenueToday > 0;
     return hasLive ? live.revenueToday : adminStats.revenueToday;
-  }, [live.ordersToday, live.revenueToday]);
+  }, [srv, live.ordersToday, live.revenueToday]);
 
   const statCards = [
     {

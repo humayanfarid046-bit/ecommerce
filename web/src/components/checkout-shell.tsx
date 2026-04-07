@@ -413,6 +413,16 @@ export function CheckoutShell() {
       try {
         const db = getFirebaseDb();
         if (db && orderUid && canUseFirestoreSync(orderUid)) {
+          const p = readProfile();
+          const customerName = useGuestForm
+            ? guestName.trim()
+            : (p.displayName?.trim() ||
+                user?.displayName?.trim() ||
+                "Customer");
+          const customerPhone = p.phone?.trim() || "";
+          const deliveryPinDigits = useGuestForm
+            ? guestPin.replace(/\D/g, "").slice(0, 6)
+            : (selectedAddr?.pin ?? "").replace(/\D/g, "").slice(0, 6);
           void saveUserOrderToFirestore(db, orderUid, {
             id,
             placedAt: new Date().toISOString(),
@@ -431,6 +441,10 @@ export function CheckoutShell() {
                     .join(" · ") +
                   (lines.length > 2 ? ` +${lines.length - 2}` : ""),
             updatedAt: Date.now(),
+            customerName,
+            customerPhone: customerPhone || undefined,
+            deliveryPin: deliveryPinDigits || undefined,
+            hubCity: deliveryCity.trim() || undefined,
           }).then(() => {
             try {
               setAdminOrderFirebaseUid(id, orderUid);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
@@ -17,7 +17,8 @@ import {
   Zap,
 } from "lucide-react";
 import { appendActivityLog } from "@/lib/admin-security-storage";
-import { ordersForCustomer } from "@/lib/admin-mock-data";
+import { ordersForCustomer, type AdminOrderRow } from "@/lib/admin-mock-data";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 import {
   applyReviewModeration,
   defaultSupportState,
@@ -51,10 +52,38 @@ function priorityClass(p: TicketPriority) {
 
 export function AdminSupport() {
   const t = useTranslations("admin");
+  const getAuthHeader = useCallback(async () => {
+    const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }, []);
   const [state, setState] = useState<SupportState>(defaultSupportState);
   const [mounted, setMounted] = useState(false);
   const [ticketReply, setTicketReply] = useState<Record<string, string>>({});
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  const [remoteOrders, setRemoteOrders] = useState<AdminOrderRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/admin/orders", {
+          headers: await getAuthHeader(),
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          orders?: AdminOrderRow[];
+        };
+        if (cancelled) return;
+        if (res.ok && Array.isArray(j.orders)) setRemoteOrders(j.orders);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getAuthHeader]);
 
   useEffect(() => {
     setState(getSupportState());
@@ -326,7 +355,7 @@ export function AdminSupport() {
         <div className="mt-4 space-y-3">
           {state.tickets.map((tk) => {
             const sla = isTicketSlaBreached(tk);
-            const orders = ordersForCustomer(tk.customerId);
+            const orders = ordersForCustomer(tk.customerId, remoteOrders);
             const open = selectedTicket === tk.id;
             return (
               <div
