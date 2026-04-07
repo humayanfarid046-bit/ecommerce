@@ -1,0 +1,25 @@
+{
+  "name": "ecommerce-monorepo",
+  "private": true,
+  "description": "Next.js storefront (web) + Express API (server) + optional Firebase Functions",
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev --prefix web\" \"npm run dev --prefix server\"",
+    "dev:web": "npm run dev --prefix web",
+    "dev:api": "npm run dev --prefix server",
+    "build": "npm run build --prefix web",
+    "build:all": "npm run build --prefix web",
+    "start:web": "npm run start --prefix web",
+    "start:api": "npm run start --prefix server",
+    "stack:health": "node scripts/stack-health.mjs",
+    "docker:up": "docker compose -f docker-compose.prod.yml up -d --build",
+    "docker:down": "docker compose -f docker-compose.prod.yml down",
+    "lint": "npm run lint --prefix web",
+    "install:all": "npm install --prefix web && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "firebase": "^12.11.0"
+  }
+}

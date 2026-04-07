@@ -1,0 +1,45 @@
+# Deploy Firestore security rules + composite indexes when those files change.
+# Setup (one-time): GitHub repo → Settings → Secrets and variables → Actions:
+#   FIREBASE_PROJECT_ID   = your Firebase project id (same as NEXT_PUBLIC_FIREBASE_PROJECT_ID)
+#   FIREBASE_SERVICE_ACCOUNT_JSON = full JSON of a Firebase service account with
+#     "Firebase Admin" / Editor on this project (download: Firebase Console → Project settings → Service accounts).
+#
+# Push to main/master that only touches app code will NOT run this job.
+
+name: Deploy Firestore
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "web/firestore.rules"
+      - "web/firestore.indexes.json"
+      - "web/firebase.json"
+      - ".github/workflows/firestore-deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Deploy Firestore rules and indexes
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          if [ -z "${FIREBASE_PROJECT_ID}" ] || [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "Skip: set FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT_JSON in repo Secrets."
+            exit 0
+          fi
+          echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "${RUNNER_TEMP}/firebase-ci.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="${RUNNER_TEMP}/firebase-ci.json"
+          npx --yes firebase-tools@latest deploy --only firestore --project "${FIREBASE_PROJECT_ID}" --non-interactive
