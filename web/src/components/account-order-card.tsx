@@ -16,6 +16,11 @@ import { ChevronDown, MapPin, CreditCard, Receipt } from "lucide-react";
 import { OrderNeedHelpChat } from "@/components/order-need-help-chat";
 import { useAuth } from "@/context/auth-context";
 import { creditWalletPaise, walletUserId } from "@/lib/wallet-storage";
+import { getTaxPercent } from "@/lib/admin-security-storage";
+import {
+  buildOrderInvoiceForCustomer,
+  openPrintableHtml,
+} from "@/lib/invoice-document";
 
 type Props = {
   order: DemoOrder;
@@ -97,6 +102,24 @@ export function AccountOrderCard({
     : 0;
   const mm = String(Math.floor(secsLeft / 60)).padStart(2, "0");
   const ss = String(secsLeft % 60).padStart(2, "0");
+
+  const downloadInvoice = () => {
+    const buyer =
+      user?.displayName?.trim() ||
+      user?.email?.trim() ||
+      "Customer";
+    const html = buildOrderInvoiceForCustomer({
+      orderId: order.id,
+      placedDate: order.date,
+      buyerName: buyer,
+      itemTitle: order.itemTitle,
+      totalRupees: order.total,
+      paymentLabel: to("demoPayment"),
+      shipCity: order.hubCity,
+      gstPercent: getTaxPercent(),
+    });
+    openPrintableHtml(html);
+  };
 
   const locationLine = (() => {
     if (cancelled) return to("orderLocationCancelled");
@@ -311,6 +334,7 @@ export function AccountOrderCard({
             </button>
             <button
               type="button"
+              onClick={downloadInvoice}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               {t("downloadInvoice")}
@@ -411,6 +435,7 @@ export function AccountOrderCard({
                 {!isDelivered && !cancelled ? (
                   <button
                     type="button"
+                    onClick={downloadInvoice}
                     className="mt-3 w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                   >
                     {t("downloadInvoice")}

@@ -45,6 +45,13 @@ import {
 import type { UserOrderRecord } from "@/lib/user-order-firestore";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { ensureMisleadingDemoAllowed } from "@/lib/deploy-safety";
+import { getTaxPercent } from "@/lib/admin-security-storage";
+import {
+  buildBulkInvoiceHtmlDocument,
+  getInvoiceHsn,
+  linesFromInclusiveTotal,
+  openPrintableHtml,
+} from "@/lib/invoice-document";
 
 const STATUS_FILTERS = ["all", "pending", "shipped", "delivered", "cancelled"] as const;
 
@@ -77,10 +84,6 @@ function rowTone(s: AdminOrderRow["status"]) {
     default:
       return "";
   }
-}
-
-function escapeInvoiceHtml(s: string) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 }
 
 export function AdminOrders() {
@@ -301,19 +304,28 @@ export function AdminOrders() {
     }
     const list = orders.filter((o) => selected.has(o.id));
     if (!list.length) return;
-    const blocks = list
-      .map(
-        (o) =>
-          `<section style="page-break-after:always;padding:24px;font-family:system-ui"><h2 style="color:#0066ff">Libas Collection</h2><p><strong>Order</strong> ${escapeInvoiceHtml(o.id)}</p><p><strong>Customer</strong> ${escapeInvoiceHtml(o.customer)}</p><p><strong>Total</strong> ₹${o.amount.toLocaleString("en-IN")}</p><p style="color:#64748b;font-size:12px">GST included (demo)</p></section>`
-      )
-      .join("");
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(
-      `<!DOCTYPE html><html><head><title>Bulk invoices</title></head><body>${blocks}</body></html>`
-    );
-    w.document.close();
-    w.print();
+    const gstPct = getTaxPercent();
+    const hsn = getInvoiceHsn();
+    const inputs = list.map((o) => ({
+      invoiceNo: o.id,
+      invoiceDate: o.placedAt,
+      placeOfSupply: "West Bengal",
+      buyerName: o.customer,
+      buyerPhone: o.phone,
+      lines: linesFromInclusiveTotal(
+        `Merchandise & fulfilment — order ${o.id}`,
+        1,
+        o.amount,
+        gstPct,
+        hsn
+      ),
+      grandTotal: o.amount,
+      gstPercent: gstPct,
+      paymentMethod: o.paymentMethod,
+      showCodQr: o.paymentMethod === "COD",
+      qrAmount: o.amount,
+    }));
+    openPrintableHtml(buildBulkInvoiceHtmlDocument(inputs));
   };
 
   const setReturnStatus = (
@@ -554,6 +566,8 @@ export function AdminOrders() {
                         amount={o.amount}
                         paymentMethod={o.paymentMethod}
                         showCodQr={o.paymentMethod === "COD"}
+                        placedAt={o.placedAt}
+                        phone={o.phone}
                       />
                       <ShippingLabelButton
                         orderId={o.id}
