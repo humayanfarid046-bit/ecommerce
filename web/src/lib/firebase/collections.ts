@@ -11,6 +11,9 @@
  * users/{uid}/profile/recentlyViewed — recent-firestore
  * users/{uid}/profile/wishlist      — wishlist-firestore
  * users/{uid}/wallet/snapshot       — wallet-firestore
+ * users/{uid}/returns/{returnId}    — return / refund requests
+ * users/{uid}/productReviews/{id}   — product reviews (written via POST /api/reviews)
+ * users/{uid}/supportThreads/{id}   — order-scoped support chat (user + admin replies)
  */
 
 export const PROFILE_SEGMENT = "account";

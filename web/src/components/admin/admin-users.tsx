@@ -63,7 +63,7 @@ function UserStatusIcons({ u }: { u: AdminUserRow }) {
   );
 }
 
-export function AdminUsers() {
+export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
   const t = useTranslations("admin");
   const getAuthHeader = useCallback(async () => {
     const token = await getFirebaseAuth()?.currentUser?.getIdToken();
@@ -81,7 +81,11 @@ export function AdminUsers() {
   const [statusF, setStatusF] = useState<"all" | "verified" | "suspicious" | "banned">(
     "all"
   );
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
+
+  useEffect(() => {
+    setQ(initialQuery);
+  }, [initialQuery]);
 
   const [quickId, setQuickId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -125,15 +129,29 @@ export function AdminUsers() {
       if (statusF === "banned" && !u.blocked) return false;
       const s = q.trim().toLowerCase();
       if (s) {
+        const orderHit = remoteOrders.some((o) => {
+          if (o.customerId !== u.id) return false;
+          const phoneNorm = o.phone.replace(/\s/g, "");
+          const qDigits = s.replace(/\D/g, "");
+          return (
+            o.id.toLowerCase().includes(s) ||
+            o.customer.toLowerCase().includes(s) ||
+            (phoneNorm.length > 0 &&
+              phoneNorm.includes(s.replace(/\s/g, ""))) ||
+            (qDigits.length >= 4 && phoneNorm.includes(qDigits))
+          );
+        });
         const hit =
           u.name.toLowerCase().includes(s) ||
           u.email.toLowerCase().includes(s) ||
-          u.phone.replace(/\s/g, "").includes(s.replace(/\s/g, ""));
+          u.phone.replace(/\s/g, "").includes(s.replace(/\s/g, "")) ||
+          u.id.toLowerCase().includes(s) ||
+          orderHit;
         if (!hit) return false;
       }
       return true;
     });
-  }, [users, segF, statusF, q]);
+  }, [users, segF, statusF, q, remoteOrders]);
 
   const quickUser = quickId ? users.find((x) => x.id === quickId) : null;
   const detailUser = detailId ? users.find((x) => x.id === detailId) : null;

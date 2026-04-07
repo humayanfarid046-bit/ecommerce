@@ -48,6 +48,8 @@ Optional: `ADMIN_PASSWORD`, `ADMIN_SESSION_TOKEN`, `NEXT_PUBLIC_ENABLE_DEMO_ADMI
 2. **Firebase Console** → Authentication → **Authorized domains** → add your Vercel host and custom domain.
 3. **Razorpay Dashboard** → Webhooks → URL: `https://<your-domain>/api/razorpay/webhook` (path must match your app; verify in repo under `web/src/app/api/razorpay/`).
 4. If you use the separate Express API, set **`CORS_ORIGIN`** there to your Vercel URL.
+5. **Firestore (rules + indexes):** From `web/`, run `npx firebase deploy --only firestore` (requires `web/.firebaserc` and `firebase login`), **or** push changes to `web/firestore.rules` / `web/firestore.indexes.json` on `main`/`master` with GitHub Secrets **`FIREBASE_PROJECT_ID`** and **`FIREBASE_SERVICE_ACCOUNT_JSON`** so [`.github/workflows/firestore-deploy.yml`](./.github/workflows/firestore-deploy.yml) can deploy automatically.
+6. **Server-side Firestore:** Set **`FIREBASE_SERVICE_ACCOUNT_JSON`** on Vercel (same JSON as the Firebase service account). Without it, admin APIs that use the Admin SDK will not read/write Firestore (often `503`).
 
 ### Vercel project config in repo
 

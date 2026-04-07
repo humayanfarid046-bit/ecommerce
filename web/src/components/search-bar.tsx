@@ -4,6 +4,11 @@ import { useRouter } from "@/i18n/navigation";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { Camera, Mic, Search } from "lucide-react";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
+import {
+  extractAverageRgb,
+  rankProductsByImageColor,
+} from "@/lib/visual-search";
+import { getProducts } from "@/lib/mock-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
@@ -21,6 +26,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
+  const [visualBusy, setVisualBusy] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const products = useCatalogProducts();
@@ -100,13 +106,25 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
     }
   }
 
-  function onVisualPick(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onVisualPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (f) {
-      router.push(`/search?q=visual-search&visual=1`);
-      setOpen(false);
-    }
     e.target.value = "";
+    if (!f || !f.type.startsWith("image/")) return;
+    setVisualBusy(true);
+    setOpen(false);
+    try {
+      const rgb = await extractAverageRgb(f);
+      const pool = products.length ? products : getProducts();
+      const ranked = rankProductsByImageColor(pool, rgb);
+      const ids = ranked.map((p) => p.id).slice(0, 48);
+      const rankedIds = encodeURIComponent(ids.join(","));
+      const qLabel = encodeURIComponent(t("visualSearchQuery"));
+      router.push(`/search?q=${qLabel}&visual=1&rankedIds=${rankedIds}`);
+    } catch {
+      window.alert(t("visualSearchFailed"));
+    } finally {
+      setVisualBusy(false);
+    }
   }
 
   const listId = "search-suggestions-list";
@@ -182,16 +200,17 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
+          disabled={visualBusy}
           className={cn(
-            "shrink-0 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100",
+            "shrink-0 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 disabled:opacity-40",
             variant === "flipkart"
               ? "hover:text-[#2874f0]"
               : "hover:text-[var(--electric)] dark:text-slate-400 dark:hover:bg-slate-800"
           )}
-          aria-label={t("visualSearch")}
-          title={t("visualSearch")}
+          aria-label={visualBusy ? t("visualSearchWorking") : t("visualSearch")}
+          title={visualBusy ? t("visualSearchWorking") : t("visualSearch")}
         >
-          <Camera className="h-3.5 w-3.5" />
+          <Camera className={cn("h-3.5 w-3.5", visualBusy && "animate-pulse")} />
         </button>
         <button
           type="button"

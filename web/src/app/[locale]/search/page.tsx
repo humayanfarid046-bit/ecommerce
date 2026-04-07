@@ -13,6 +13,8 @@ type Props = {
     stock?: string;
     visual?: string;
     sort?: string;
+    /** Comma-separated product ids (client visual search). */
+    rankedIds?: string;
   }>;
 };
 

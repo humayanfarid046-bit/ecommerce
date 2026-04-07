@@ -64,6 +64,7 @@ export type AdminTransaction = {
 
 export type AdminReturnReq = {
   id: string;
+  userId?: string;
   orderId: string;
   reason: string;
   status: "pending" | "approved" | "rejected";
@@ -71,6 +72,8 @@ export type AdminReturnReq = {
   imageProofUrl?: string;
   pickupDate?: string;
   refundMethod?: "wallet" | "bank" | null;
+  processedAt?: string;
+  adminNote?: string;
 };
 
 export type AdminTicket = {

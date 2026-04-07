@@ -53,6 +53,25 @@ service cloud.firestore {
       match /wallet/{docId} {
         allow read, write: if isOwner(userId) && docId == 'snapshot';
       }
+
+      /** Return / refund requests — customer creates; admin updates via Admin SDK. */
+      match /returns/{returnId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+
+      /** Product reviews — created via server API (Admin SDK); optional client reads. */
+      match /productReviews/{reviewId} {
+        allow read: if resource.data.status == 'published' || isOwner(userId);
+        allow write: if false;
+      }
+
+      /** Order-scoped support chat — owner only (admin uses Admin SDK). */
+      match /supportThreads/{threadId} {
+        allow read, create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
     }
   }
 }

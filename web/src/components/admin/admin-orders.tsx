@@ -130,11 +130,15 @@ export function AdminOrders() {
           fetch("/api/admin/orders", { headers }),
           fetch("/api/admin/users", { headers }),
         ]);
+        const resR = await fetch("/api/admin/returns", { headers });
         const jO = (await resO.json().catch(() => ({}))) as {
           orders?: AdminOrderRow[];
         };
         const jU = (await resU.json().catch(() => ({}))) as {
           users?: AdminUserRow[];
+        };
+        const jR = (await resR.json().catch(() => ({}))) as {
+          returns?: AdminReturnReq[];
         };
         if (cancelled) return;
         if (resO.ok && Array.isArray(jO.orders)) {
@@ -149,6 +153,9 @@ export function AdminOrders() {
         }
         if (resU.ok && Array.isArray(jU.users)) {
           setUserIndex(jU.users);
+        }
+        if (resR.ok && Array.isArray(jR.returns)) {
+          setReturns(jR.returns);
         }
       } catch {
         /* ignore */
@@ -217,6 +224,7 @@ export function AdminOrders() {
         const hit =
           o.id.toLowerCase().includes(q) ||
           o.customer.toLowerCase().includes(q) ||
+          o.customerId.toLowerCase().includes(q) ||
           o.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
         if (!hit) return false;
       }
@@ -394,16 +402,58 @@ export function AdminOrders() {
     openPrintableHtml(buildBulkInvoiceHtmlDocument(inputs));
   };
 
-  const setReturnStatus = (
+  const setReturnStatus = async (
     id: string,
     status: AdminReturnReq["status"],
     refund?: "wallet" | "bank"
   ) => {
+    const row = returns.find((r) => r.id === id);
+    const uid = row?.userId?.trim();
+    if (!row || !uid) {
+      window.alert(t("returnMissingUserId"));
+      return;
+    }
+    const before = returns;
+    const nextRefund = refund ?? row.refundMethod;
     setReturns((prev) =>
       prev.map((r) =>
-        r.id === id ? { ...r, status, refundMethod: refund ?? r.refundMethod } : r
+        r.id === id ? { ...r, status, refundMethod: nextRefund } : r
       )
     );
+    try {
+      const res = await fetch("/api/admin/returns", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getAuthHeader()),
+        },
+        body: JSON.stringify({
+          userId: uid,
+          returnId: row.id,
+          orderId: row.orderId,
+          status,
+          refundMethod: nextRefund ?? null,
+          pickupDate: row.pickupDate ?? "",
+          adminNote: row.adminNote ?? "",
+        }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setReturns(before);
+        window.alert(j.error ?? t("returnUpdateFailed"));
+        return;
+      }
+      setReturns((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? { ...r, processedAt: new Date().toISOString() }
+            : r
+        )
+      );
+    } catch {
+      setReturns(before);
+      window.alert(t("returnUpdateFailed"));
+    }
   };
 
   const customerOrders = (cid: string) => orders.filter((o) => o.customerId === cid);
@@ -933,7 +983,7 @@ export function AdminOrders() {
         <div className="mt-3 space-y-3">
           {returns.map((r) => (
             <div
-              key={r.id}
+              key={`${r.userId ?? "u"}-${r.id}`}
               className={cn(
                 "rounded-xl border p-4 dark:border-slate-700",
                 r.status === "pending"
@@ -946,6 +996,11 @@ export function AdminOrders() {
               <div className="flex flex-wrap gap-4">
                 <div className="min-w-0 flex-1">
                   <p className="font-mono text-xs font-bold">{r.orderId}</p>
+                  {r.userId ? (
+                    <p className="text-[10px] font-mono text-slate-500">
+                      UID: {r.userId}
+                    </p>
+                  ) : null}
                   <p className="text-sm text-slate-600">{r.reason}</p>
                   <p className="text-xs uppercase text-slate-400">{r.status}</p>
                   {r.imageProofUrl ? (
@@ -978,14 +1033,14 @@ export function AdminOrders() {
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          onClick={() => setReturnStatus(r.id, "approved", "wallet")}
+                          onClick={() => void setReturnStatus(r.id, "approved", "wallet")}
                           className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white"
                         >
                           {t("approveWallet")}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setReturnStatus(r.id, "approved", "bank")}
+                          onClick={() => void setReturnStatus(r.id, "approved", "bank")}
                           className="rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-bold text-emerald-800"
                         >
                           {t("approveBank")}
@@ -993,7 +1048,7 @@ export function AdminOrders() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setReturnStatus(r.id, "rejected")}
+                        onClick={() => void setReturnStatus(r.id, "rejected")}
                         className="rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700"
                       >
                         {t("reject")}

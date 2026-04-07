@@ -11,6 +11,7 @@ import {
 import { PRODUCT_GRID, STORE_SHELL } from "@/lib/store-layout";
 import { FilterListingShell } from "@/components/filter-listing-shell";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
+import type { Product } from "@/lib/product-model";
 
 type Sp = {
   q?: string;
@@ -21,6 +22,7 @@ type Sp = {
   stock?: string;
   visual?: string;
   sort?: string;
+  rankedIds?: string;
 };
 
 export function SearchListingClient({ sp }: { sp: Sp }) {
@@ -31,8 +33,20 @@ export function SearchListingClient({ sp }: { sp: Sp }) {
     const q = sp.q ?? "";
     const visualMode = sp.visual === "1";
     void visualMode;
-    let rows = searchProducts(q);
-    if (!q.trim()) rows = catalog;
+    const rankedRaw = sp.rankedIds?.trim();
+    let rows: Product[];
+    if (rankedRaw) {
+      const ids = decodeURIComponent(rankedRaw)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const map = new Map(catalog.map((p) => [p.id, p]));
+      rows = ids.map((id) => map.get(id)).filter((x): x is Product => x != null);
+      if (!rows.length) rows = searchProducts(q);
+    } else {
+      rows = searchProducts(q);
+      if (!q.trim()) rows = catalog;
+    }
     const minPrice = sp.min ? Number(sp.min) : undefined;
     const maxPrice = sp.max ? Number(sp.max) : undefined;
     const minRating = sp.rating ? Number(sp.rating) : undefined;
@@ -58,7 +72,7 @@ export function SearchListingClient({ sp }: { sp: Sp }) {
         <FilterListingShell maxPriceDefault={maxP || 100000} basePath="/search">
           {visualMode ? (
             <p className="mb-3 rounded-2xl border border-[#0066ff]/25 bg-[#0066ff]/10 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-[#0066ff]/35 dark:bg-[#0066ff]/15 dark:text-slate-100">
-              {t("visualBanner")}
+              {sp.rankedIds?.trim() ? t("visualBannerLive") : t("visualBanner")}
             </p>
           ) : null}
           <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">

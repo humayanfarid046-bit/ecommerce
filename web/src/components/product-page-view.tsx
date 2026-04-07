@@ -4,8 +4,8 @@ import { useEffect, useState, Suspense } from "react";
 import { getProductById, type Product } from "@/lib/mock-data";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductActions } from "@/components/product-actions";
-import { Star, CheckCircle2 } from "lucide-react";
-import Image from "next/image";
+import { Star } from "lucide-react";
+import { ProductReviewsSection } from "@/components/product-reviews-section";
 import { useTranslations } from "next-intl";
 import { RecordProductView } from "@/components/record-product-view";
 import { ProductTrustStrip } from "@/components/product-trust-strip";
@@ -70,7 +70,6 @@ function ProductJsonLd({ product, pageUrl }: { product: Product; pageUrl: string
 export function ProductPageView({ id, locale }: { id: string; locale: string }) {
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const t = useTranslations("product");
-  const tt = useTranslations("product.trust");
   const tc = useTranslations("cart");
 
   useEffect(() => {
@@ -278,59 +277,7 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
           <PeopleAlsoLiked productId={product.id} />
         </Suspense>
 
-        <section className="mt-14 md:mt-20">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {t("reviewsTitle")}
-          </h2>
-          <div className="mt-4 space-y-4">
-            {product.reviews.length === 0 && (
-              <p className="text-neutral-500 dark:text-neutral-400">
-                {t("noReviews")}
-              </p>
-            )}
-            {product.reviews.map((r) => (
-              <article
-                key={r.id}
-                className="glass rounded-2xl border border-neutral-200/80 p-4 dark:border-slate-700/80"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
-                    {r.user}
-                  </span>
-                  {r.verifiedPurchase ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      {tt("verifiedBuyer")}
-                    </span>
-                  ) : null}
-                  <span className="text-amber-600">★ {r.rating}</span>
-                  <span className="text-xs text-neutral-400">{r.date}</span>
-                </div>
-                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                  {r.text}
-                </p>
-                {r.images?.length ? (
-                  <div className="mt-3 flex gap-2">
-                    {r.images.map((im) => (
-                      <div
-                        key={im}
-                        className="relative h-20 w-20 overflow-hidden rounded-lg border border-neutral-200 dark:border-slate-600"
-                      >
-                        <Image
-                          src={im}
-                          alt=""
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        </section>
+        <ProductReviewsSection product={product} />
         <ProductStickyAddToCart productId={product.id} inStock={product.inStock} />
       </div>
     </ProductVisibilityGate>

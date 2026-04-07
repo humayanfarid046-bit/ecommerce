@@ -28,8 +28,9 @@ import { ConversionFunnel } from "@/components/admin/conversion-funnel";
 import { PaymentSplitChart } from "@/components/admin/payment-split-chart";
 import { RegionIndiaPanel } from "@/components/admin/region-india-panel";
 import { LiveActivityFeed } from "@/components/admin/live-activity-feed";
-import { AlertTriangle, TrendingUp } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, Search } from "lucide-react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { Link, useRouter } from "@/i18n/navigation";
 
 function DeltaLine({
   today,
@@ -58,8 +59,10 @@ type SrvStats = AdminStatsPayload;
 
 export function AdminDashboard() {
   const t = useTranslations("admin");
+  const router = useRouter();
   const y = adminStatsYesterday;
   const [live, setLive] = useState(() => readLiveCommerceStats());
+  const [customerFind, setCustomerFind] = useState("");
   const [fraud, setFraud] = useState(() => computeFraudAlerts());
   const [srv, setSrv] = useState<SrvStats | null>(null);
 
@@ -237,6 +240,15 @@ export function AdminDashboard() {
     y.visitors,
   ]);
 
+  function goFindCustomer() {
+    const s = customerFind.trim();
+    if (!s) {
+      router.push("/admin/users");
+      return;
+    }
+    router.push(`/admin/users?q=${encodeURIComponent(s)}`);
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -244,6 +256,55 @@ export function AdminDashboard() {
           {t("dashboardTitle")}
         </p>
         <p className="text-sm text-slate-500">{t("dashboardSubtitle")}</p>
+      </div>
+
+      <div className="rounded-2xl border border-[#0066ff]/25 bg-gradient-to-br from-[#0066ff]/5 via-white to-slate-50 p-4 shadow-sm dark:border-[#0066ff]/35 dark:from-[#0066ff]/10 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0066ff]/15 text-[#0066ff]">
+              <Users className="h-5 w-5" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                {t("dashboardFindCustomerTitle")}
+              </p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                {t("dashboardFindCustomerHint")}
+              </p>
+            </div>
+          </div>
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:max-w-md sm:flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                value={customerFind}
+                onChange={(e) => setCustomerFind(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") goFindCustomer();
+                }}
+                placeholder={t("dashboardFindCustomerPlaceholder")}
+                className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm dark:border-slate-600 dark:bg-slate-950"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={goFindCustomer}
+                className="rounded-xl bg-[#0066ff] px-4 py-2 text-sm font-bold text-white hover:bg-[#0052cc]"
+              >
+                {t("dashboardFindCustomerCta")}
+              </button>
+              <Link
+                href="/admin/users"
+                className="text-sm font-semibold text-[#0066ff] underline-offset-2 hover:underline"
+              >
+                {t("dashboardFindCustomerBrowseAll")}
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
       {fraud.activeAlerts > 0 ? (

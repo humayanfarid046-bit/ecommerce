@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import {
   appendMessage,
@@ -8,6 +8,12 @@ import {
   openOrGetThread,
   type SupportThread,
 } from "@/lib/support-chat-sync";
+import {
+  appendSupportMessageFirestore,
+  getOrCreateSupportThreadFirestore,
+  subscribeSupportThreadFirestore,
+} from "@/lib/support-thread-firestore";
+import { getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase/client";
 import { useTranslations } from "next-intl";
 import { MessageCircle, X } from "lucide-react";
 
@@ -20,14 +26,47 @@ export function OrderNeedHelpChat({ orderId, productHint }: Props) {
   const [thread, setThread] = useState<SupportThread | null>(null);
   const [msg, setMsg] = useState("");
 
-  useEffect(() => {
-    if (!open || !user?.email) return;
-    const th = openOrGetThread(orderId, user.email, productHint);
-    setThread(th);
-  }, [open, orderId, user?.email, productHint]);
+  const firestoreMode = useMemo(() => {
+    return isFirebaseConfigured() && Boolean(user?.uid) && getFirebaseDb() != null;
+  }, [user?.uid]);
 
   useEffect(() => {
-    if (!open || !thread?.id) return;
+    if (!open || !user?.email) return;
+    if (!firestoreMode || !user.uid) {
+      const th = openOrGetThread(orderId, user.email, productHint);
+      setThread(th);
+      return;
+    }
+    const db = getFirebaseDb();
+    if (!db) {
+      const th = openOrGetThread(orderId, user.email, productHint);
+      setThread(th);
+      return;
+    }
+    let cancelled = false;
+    let unsub: (() => void) | undefined;
+    void (async () => {
+      const th = await getOrCreateSupportThreadFirestore(
+        db,
+        user.uid,
+        orderId,
+        user.email!,
+        productHint
+      );
+      if (cancelled) return;
+      setThread(th);
+      unsub = subscribeSupportThreadFirestore(db, user.uid, orderId, (next) => {
+        if (next) setThread(next);
+      });
+    })();
+    return () => {
+      cancelled = true;
+      unsub?.();
+    };
+  }, [open, orderId, user?.email, user?.uid, productHint, firestoreMode]);
+
+  useEffect(() => {
+    if (!open || !thread?.id || firestoreMode) return;
     const tid = thread.id;
     function sync() {
       const list = getThreads();
@@ -36,12 +75,20 @@ export function OrderNeedHelpChat({ orderId, productHint }: Props) {
     }
     window.addEventListener("lc-support-threads", sync);
     return () => window.removeEventListener("lc-support-threads", sync);
-  }, [open, thread?.id]);
+  }, [open, thread?.id, firestoreMode]);
 
   function send() {
-    if (!thread || !msg.trim()) return;
-    appendMessage(thread.id, "user", msg.trim());
+    if (!thread || !msg.trim() || !user?.email) return;
+    const text = msg.trim();
     setMsg("");
+    if (firestoreMode && user.uid) {
+      const db = getFirebaseDb();
+      if (db) {
+        void appendSupportMessageFirestore(db, user.uid, thread.id, "user", text);
+        return;
+      }
+    }
+    appendMessage(thread.id, "user", text);
     setThread(getThreads().find((x) => x.id === thread.id) ?? thread);
   }
 
@@ -71,6 +118,11 @@ export function OrderNeedHelpChat({ orderId, productHint }: Props) {
                   {t("needHelpTitle")}
                 </p>
                 <p className="font-mono text-[11px] text-slate-500">{orderId}</p>
+                {firestoreMode ? (
+                  <p className="mt-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                    {t("needHelpSynced")}
+                  </p>
+                ) : null}
               </div>
               <button
                 type="button"

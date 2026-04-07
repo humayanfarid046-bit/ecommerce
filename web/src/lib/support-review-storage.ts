@@ -72,25 +72,10 @@ export type SupportState = {
   botScripts: BotScript[];
 };
 
-const BAD_WORDS = [
-  "fuck",
-  "shit",
-  "asshole",
-  "bastard",
-  "idiot",
-  "stupid",
-  "গালি",
-  "খারাপ",
-  "বোকা",
-];
+import { detectProfanity as detectProfanityLite } from "@/lib/profanity-lite";
 
 export function detectProfanity(text: string): boolean {
-  const lower = text.toLowerCase();
-  for (const w of BAD_WORDS) {
-    if (w.length < 2) continue;
-    if (lower.includes(w.toLowerCase())) return true;
-  }
-  return false;
+  return detectProfanityLite(text);
 }
 
 function uid(prefix: string) {

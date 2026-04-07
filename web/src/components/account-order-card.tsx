@@ -15,6 +15,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, MapPin, CreditCard, Receipt } from "lucide-react";
 import { OrderNeedHelpChat } from "@/components/order-need-help-chat";
 import { useAuth } from "@/context/auth-context";
+import { Link } from "@/i18n/navigation";
+import { getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase/client";
+import { createUserReturnRequest } from "@/lib/user-returns-firestore";
 import { creditWalletPaise, walletUserId } from "@/lib/wallet-storage";
 import { getTaxPercent } from "@/lib/admin-security-storage";
 import {
@@ -26,6 +29,8 @@ type Props = {
   order: DemoOrder;
   /** When true, use Firestore-backed step/notes (admin API), not localStorage demo overrides. */
   preferFirestoreTracking?: boolean;
+  /** Signed-in user id — enables return request to Firestore when live orders. */
+  firebaseUid?: string | null;
 };
 
 const GRACE_MINUTES = 10;
@@ -33,6 +38,7 @@ const GRACE_MINUTES = 10;
 export function AccountOrderCard({
   order,
   preferFirestoreTracking = false,
+  firebaseUid = null,
 }: Props) {
   const t = useTranslations("account");
   const to = useTranslations("orders");
@@ -46,6 +52,10 @@ export function AccountOrderCard({
   const [showCancelRefund, setShowCancelRefund] = useState(false);
   const [trackingOverride, setTrackingOverride] =
     useState<OrderTrackingPayload | null>(null);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnBusy, setReturnBusy] = useState(false);
+  const [returnMsg, setReturnMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (preferFirestoreTracking) {
@@ -65,6 +75,12 @@ export function AccountOrderCard({
       : (trackingOverride?.step ?? order.step);
   const canCancel = effectiveStep === 0 && !cancelled;
   const isDelivered = effectiveStep === 3 && !cancelled;
+
+  const canSubmitReturn =
+    preferFirestoreTracking &&
+    Boolean(firebaseUid) &&
+    isFirebaseConfigured() &&
+    isDelivered;
 
   const deliveryFee = order.total >= 500 ? 0 : 40;
   const subtotal = Math.max(0, order.total - deliveryFee);
@@ -102,6 +118,35 @@ export function AccountOrderCard({
     : 0;
   const mm = String(Math.floor(secsLeft / 60)).padStart(2, "0");
   const ss = String(secsLeft % 60).padStart(2, "0");
+
+  async function submitReturnRequest() {
+    if (!canSubmitReturn || !firebaseUid) return;
+    const reason = returnReason.trim();
+    if (reason.length < 8) {
+      setReturnMsg(t("returnReasonShort"));
+      return;
+    }
+    const db = getFirebaseDb();
+    if (!db) {
+      setReturnMsg(t("returnFirestoreUnavailable"));
+      return;
+    }
+    setReturnBusy(true);
+    setReturnMsg(null);
+    try {
+      await createUserReturnRequest(db, firebaseUid, {
+        orderId: order.id,
+        reason,
+      });
+      setReturnMsg(t("returnSubmitted"));
+      setReturnOpen(false);
+      setReturnReason("");
+    } catch {
+      setReturnMsg(t("returnSubmitFailed"));
+    } finally {
+      setReturnBusy(false);
+    }
+  }
 
   const downloadInvoice = () => {
     const buyer =
@@ -322,16 +367,20 @@ export function AccountOrderCard({
           <>
             <button
               type="button"
+              onClick={() => {
+                setReturnMsg(null);
+                setReturnOpen(true);
+              }}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               {t("returnReplace")}
             </button>
-            <button
-              type="button"
-              className="rounded-xl border border-[#0066ff]/35 bg-[#0066ff]/10 px-4 py-2 text-xs font-bold text-[#0066ff] transition hover:bg-[#0066ff]/15"
+            <Link
+              href={`/search?q=${encodeURIComponent(order.itemTitle)}`}
+              className="inline-flex items-center rounded-xl border border-[#0066ff]/35 bg-[#0066ff]/10 px-4 py-2 text-xs font-bold text-[#0066ff] transition hover:bg-[#0066ff]/15"
             >
               {to("rateReview")}
-            </button>
+            </Link>
             <button
               type="button"
               onClick={downloadInvoice}
@@ -446,6 +495,66 @@ export function AccountOrderCard({
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {returnOpen ? (
+        <div
+          className="fixed inset-0 z-[95] flex items-end justify-center bg-black/45 p-4 sm:items-center"
+          role="dialog"
+          aria-modal
+          aria-label={t("returnModalTitle")}
+        >
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+              {t("returnModalTitle")}
+            </p>
+            <p className="mt-1 font-mono text-xs text-slate-500">{order.id}</p>
+            {!canSubmitReturn ? (
+              <p className="mt-3 text-sm text-amber-800 dark:text-amber-200">
+                {t("returnModalUnavailable")}
+              </p>
+            ) : (
+              <label className="mt-3 block text-sm text-slate-700 dark:text-slate-300">
+                {t("returnReasonLabel")}
+                <textarea
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  placeholder={t("returnReasonPlaceholder")}
+                />
+              </label>
+            )}
+            {returnMsg ? (
+              <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+                {returnMsg}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setReturnOpen(false);
+                  setReturnMsg(null);
+                }}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold dark:border-slate-600"
+              >
+                {t("cancel")}
+              </button>
+              {canSubmitReturn ? (
+                <button
+                  type="button"
+                  disabled={returnBusy}
+                  onClick={() => void submitReturnRequest()}
+                  className="rounded-xl bg-[#0066ff] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+                >
+                  {t("returnSubmit")}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </article>
   );
 }

@@ -1,9 +1,13 @@
 {
+  "_comment": "Only composite indexes belong here. Single-field collection-group indexes are auto-managed; Firebase rejects redundant entries. Admin orderBy fallbacks exist in API routes.",
   "indexes": [
     {
-      "collectionGroup": "orders",
+      "collectionGroup": "productReviews",
       "queryScope": "COLLECTION_GROUP",
-      "fields": [{ "fieldPath": "placedAt", "order": "DESCENDING" }]
+      "fields": [
+        { "fieldPath": "productId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

@@ -86,6 +86,7 @@ export default function AccountOrdersPage() {
               <AccountOrderCard
                 order={o}
                 preferFirestoreTracking={remote !== null}
+                firebaseUid={user?.uid ?? null}
               />
             </li>
           ))}

@@ -63,6 +63,32 @@ export function AdminSupport() {
   const [ticketReply, setTicketReply] = useState<Record<string, string>>({});
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [remoteOrders, setRemoteOrders] = useState<AdminOrderRow[]>([]);
+  const [fsReviews, setFsReviews] = useState<
+    {
+      id: string;
+      userId: string;
+      productId: string;
+      productTitle: string;
+      userName: string;
+      rating: number;
+      text: string;
+      profanityFlag: boolean;
+      imageUrls: string[];
+      createdAt: number;
+    }[]
+  >([]);
+  const [fsThreads, setFsThreads] = useState<
+    {
+      threadId: string;
+      userId: string;
+      orderId: string;
+      userEmail: string;
+      productHint: string;
+      messages: { id: string; at: string; from: "user" | "admin"; body: string }[];
+      updatedAt: number;
+    }[]
+  >([]);
+  const [threadReply, setThreadReply] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +102,33 @@ export function AdminSupport() {
         };
         if (cancelled) return;
         if (res.ok && Array.isArray(j.orders)) setRemoteOrders(j.orders);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getAuthHeader]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const headers = await getAuthHeader();
+        const [rR, rT] = await Promise.all([
+          fetch("/api/admin/reviews", { headers }),
+          fetch("/api/admin/support-threads", { headers }),
+        ]);
+        const jR = (await rR.json().catch(() => ({}))) as {
+          reviews?: typeof fsReviews;
+        };
+        const jT = (await rT.json().catch(() => ({}))) as {
+          threads?: typeof fsThreads;
+        };
+        if (cancelled) return;
+        if (rR.ok && Array.isArray(jR.reviews)) setFsReviews(jR.reviews);
+        if (rT.ok && Array.isArray(jT.threads)) setFsThreads(jT.threads);
       } catch {
         /* ignore */
       }
@@ -147,6 +200,57 @@ export function AdminSupport() {
     setTicketReply((p) => ({ ...p, [ticketId]: line }));
   }
 
+  async function patchFsReview(
+    userId: string,
+    reviewId: string,
+    action: "publish" | "block"
+  ) {
+    try {
+      const res = await fetch("/api/admin/reviews", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getAuthHeader()),
+        },
+        body: JSON.stringify({ userId, reviewId, action }),
+      });
+      if (!res.ok) return;
+      setFsReviews((prev) => prev.filter((r) => !(r.userId === userId && r.id === reviewId)));
+      appendActivityLog({
+        actor: "admin",
+        action: "review.firestore_moderation",
+        detail: `${action} · ${reviewId}`,
+      });
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function sendFsThreadReply(userId: string, threadId: string) {
+    const body = threadReply[threadId]?.trim();
+    if (!body) return;
+    try {
+      const res = await fetch("/api/admin/support-threads", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getAuthHeader()),
+        },
+        body: JSON.stringify({ userId, threadId, body }),
+      });
+      if (!res.ok) return;
+      setThreadReply((p) => ({ ...p, [threadId]: "" }));
+      const headers = await getAuthHeader();
+      const rT = await fetch("/api/admin/support-threads", { headers });
+      const jT = (await rT.json().catch(() => ({}))) as {
+        threads?: typeof fsThreads;
+      };
+      if (rT.ok && Array.isArray(jT.threads)) setFsThreads(jT.threads);
+    } catch {
+      /* ignore */
+    }
+  }
+
   if (!mounted) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900">
@@ -163,6 +267,107 @@ export function AdminSupport() {
         </h2>
         <p className="text-sm text-slate-500">{t("supportSubtitle")}</p>
       </div>
+
+      {fsReviews.length > 0 ? (
+        <section className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+          <p className="font-extrabold text-emerald-900 dark:text-emerald-100">
+            {t("supportFirestoreReviews")}
+          </p>
+          <p className="mt-1 text-xs text-emerald-900/80 dark:text-emerald-200/90">
+            {t("supportFirestoreReviewsHint")}
+          </p>
+          <ul className="mt-4 space-y-3">
+            {fsReviews.map((r) => (
+              <li
+                key={`${r.userId}-${r.id}`}
+                className="rounded-xl border border-emerald-200/60 bg-white/90 p-3 dark:border-emerald-900/50 dark:bg-slate-900/80"
+              >
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  {r.productTitle}{" "}
+                  <span className="font-mono text-xs text-slate-500">
+                    {r.productId}
+                  </span>
+                </p>
+                <p className="text-xs text-slate-500">
+                  {r.userName} · {r.rating}★ · {r.id}
+                </p>
+                <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                  {r.text}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void patchFsReview(r.userId, r.id, "publish")}
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white"
+                  >
+                    {t("supportPublishReview")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void patchFsReview(r.userId, r.id, "block")}
+                    className="rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700"
+                  >
+                    {t("supportBlockReview")}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {fsThreads.length > 0 ? (
+        <section className="rounded-2xl border border-sky-200/80 bg-sky-50/40 p-5 dark:border-sky-900/40 dark:bg-sky-950/20">
+          <p className="font-extrabold text-sky-900 dark:text-sky-100">
+            {t("supportFirestoreThreads")}
+          </p>
+          <p className="mt-1 text-xs text-sky-900/80 dark:text-sky-200/90">
+            {t("supportFirestoreThreadsHint")}
+          </p>
+          <ul className="mt-4 space-y-4">
+            {fsThreads.map((th) => (
+              <li
+                key={`${th.userId}-${th.threadId}`}
+                className="rounded-xl border border-sky-200/60 bg-white/90 p-3 dark:border-sky-900/50 dark:bg-slate-900/80"
+              >
+                <p className="font-mono text-xs text-slate-600 dark:text-slate-400">
+                  {th.orderId} · {th.userEmail}
+                </p>
+                <div className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-slate-700 dark:text-slate-300">
+                  {th.messages.map((m) => (
+                    <p key={m.id}>
+                      <span className="font-bold text-[#0066ff]">
+                        {m.from}:
+                      </span>{" "}
+                      {m.body}
+                    </p>
+                  ))}
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={threadReply[th.threadId] ?? ""}
+                    onChange={(e) =>
+                      setThreadReply((p) => ({
+                        ...p,
+                        [th.threadId]: e.target.value,
+                      }))
+                    }
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-950"
+                    placeholder={t("supportThreadReplyPlaceholder")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void sendFsThreadReply(th.userId, th.threadId)}
+                    className="rounded-lg bg-[#0066ff] px-3 py-1 text-xs font-bold text-white"
+                  >
+                    {t("supportThreadSend")}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* Reviews */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
