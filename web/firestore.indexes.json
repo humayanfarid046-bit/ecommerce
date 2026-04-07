@@ -1,10 +1,15 @@
 {
-  "indexes": [
+  "indexes": [],
+  "fieldOverrides": [
     {
       "collectionGroup": "orders",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [{ "fieldPath": "id", "order": "ASCENDING" }]
+      "fieldPath": "id",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
     }
-  ],
-  "fieldOverrides": []
+  ]
 }
