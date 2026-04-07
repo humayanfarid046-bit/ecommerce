@@ -305,6 +305,9 @@ export default function LoginPage() {
                 <p className="mt-2 text-sm font-medium text-slate-600">
                   {t("subtitleRegister")}
                 </p>
+                <p className="mt-1 text-xs font-medium text-slate-500">
+                  {t("registerNoOtpHint")}
+                </p>
 
                 <form onSubmit={onSignUp} className="mt-8 space-y-4">
                   <div>

@@ -71,6 +71,7 @@ export function CheckoutShell() {
   const { user } = useAuth();
   const { addresses, update } = useAddresses();
   const t = useTranslations("checkout");
+  const showPhoneOtp = isPhoneOtpUiEnabled();
 
   const completedRef = useRef(false);
   const guestPinLookupRef = useRef<string>("");

@@ -752,6 +752,7 @@
     "welcomeBack": "Welcome back",
     "subtitleSignIn": "Sign in to continue shopping with OTP or password.",
     "subtitleRegister": "Join AJH Libas Collection — curated fashion, saved carts, faster checkout.",
+    "registerNoOtpHint": "No SMS code — sign up with email and password only.",
     "subtitlePhone": "We'll send you a one-time code to sign in quickly.",
     "tabSignIn": "Sign in",
     "tabRegister": "Create account",
