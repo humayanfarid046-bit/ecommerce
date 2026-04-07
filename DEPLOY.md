@@ -21,7 +21,7 @@ This app is meant to run **entirely on Vercel** from the `web/` folder: UI, App 
 
 1. Push the repo to **GitHub** (or GitLab / Bitbucket supported by Vercel).
 2. [Vercel](https://vercel.com) → **Add New Project** → import the repo.
-3. **Root Directory:** `web` (**required** for this monorepo — do not leave blank).
+3. **Root Directory:** `web` (**recommended**). If you leave the repo root as the Vercel root, the root [`vercel.json`](./vercel.json) runs `npm ci --prefix web` and `npm run build --prefix web` so `next` is installed under `web/node_modules`. Without that, you may see `next: command not found` (exit 127).
 4. **Framework Preset:** Next.js (auto-detected). **Build Command:** `npm run build` (default). **Install:** `npm ci` (set in `web/vercel.json`).
 5. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
 
