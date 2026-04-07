@@ -1,0 +1,169 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "@/i18n/navigation";
+import { useCompare } from "@/context/compare-context";
+import { getProductById, type Product } from "@/lib/mock-data";
+import { effectiveUnitPriceAfterCategoryDiscount } from "@/lib/category-discount-storage";
+import { useTranslations } from "next-intl";
+import { Scale, Star, Trash2 } from "lucide-react";
+
+export function ComparePageClient() {
+  const { ids, remove, clear } = useCompare();
+  const t = useTranslations("compare");
+  const [catDiscTick, setCatDiscTick] = useState(0);
+  useEffect(() => {
+    const fn = () => setCatDiscTick((n) => n + 1);
+    window.addEventListener("lc-category-discount", fn);
+    return () => window.removeEventListener("lc-category-discount", fn);
+  }, []);
+
+  const products = ids
+    .map((id) => getProductById(id))
+    .filter(Boolean) as NonNullable<ReturnType<typeof getProductById>>[];
+
+  const rows: { label: string; values: string[] }[] = useMemo(() => {
+    const ru = (p: Product) =>
+      effectiveUnitPriceAfterCategoryDiscount(p.price, p.categorySlug);
+    return [
+      {
+        label: t("rowPrice"),
+        values: products.map((p) => `₹${ru(p).toLocaleString("en-IN")}`),
+      },
+      {
+        label: t("rowMrp"),
+        values: products.map((p) => `₹${p.mrp.toLocaleString("en-IN")}`),
+      },
+      {
+        label: t("rowDiscount"),
+        values: products.map((p) => `${p.discountPct}%`),
+      },
+      {
+        label: t("rowRating"),
+        values: products.map((p) => `${p.rating} (${p.reviewCount})`),
+      },
+      {
+        label: t("rowBrand"),
+        values: products.map((p) => p.brand),
+      },
+      {
+        label: t("rowStock"),
+        values: products.map((p) => (p.inStock ? t("inStock") : t("outOfStock"))),
+      },
+    ];
+  }, [products, t, catDiscTick]);
+
+  if (products.length === 0) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+        <Scale className="mx-auto h-14 w-14 text-neutral-300" />
+        <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {t("emptyTitle")}
+        </h1>
+        <p className="mt-2 text-neutral-600 dark:text-neutral-400">{t("emptyBody")}</p>
+        <Link
+          href="/search"
+          className="mt-6 inline-block rounded-2xl bg-[#0066ff] px-6 py-3 text-sm font-bold text-white hover:bg-[#0052cc]"
+        >
+          {t("browse")}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {t("title")}
+        </h1>
+        <button
+          type="button"
+          onClick={clear}
+          className="text-sm font-semibold text-rose-600 hover:underline"
+        >
+          {t("clearAll")}
+        </button>
+      </div>
+
+      <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-700">
+        <table className="w-full min-w-[640px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/90 dark:border-slate-700 dark:bg-slate-800/50">
+              <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800">
+                {t("feature")}
+              </th>
+              {products.map((p) => (
+                <th key={p.id} className="min-w-[180px] px-4 py-3 align-top">
+                  <div className="relative mx-auto w-full max-w-[160px]">
+                    <button
+                      type="button"
+                      onClick={() => remove(p.id)}
+                      className="absolute -right-2 -top-2 z-10 rounded-full bg-white p-1.5 text-rose-600 shadow dark:bg-slate-900"
+                      aria-label={t("remove")}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100">
+                      <Image
+                        src={p.images[0]!}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="160px"
+                      />
+                    </div>
+                    <Link
+                      href={`/product/${p.id}`}
+                      className="mt-2 line-clamp-2 block text-left text-xs font-bold text-slate-900 hover:text-[#0066ff] dark:text-slate-100"
+                    >
+                      {p.title}
+                    </Link>
+                    <div className="mt-1 flex items-center gap-1 text-amber-500">
+                      <Star className="h-3 w-3 fill-current" />
+                      <span className="text-xs font-semibold">{p.rating}</span>
+                    </div>
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.label}
+                className="border-b border-slate-100 dark:border-slate-800"
+              >
+                <td className="sticky left-0 bg-white px-4 py-3 text-xs font-bold text-slate-600 dark:bg-slate-950 dark:text-slate-300">
+                  {row.label}
+                </td>
+                {row.values.map((v, i) => (
+                  <td
+                    key={products[i]!.id + row.label}
+                    className="px-4 py-3 text-center text-slate-800 dark:text-slate-200"
+                  >
+                    {v}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            <tr>
+              <td className="sticky left-0 bg-white px-4 py-4 dark:bg-slate-950" />
+              {products.map((p) => (
+                <td key={p.id} className="px-4 py-4 text-center">
+                  <Link
+                    href={`/product/${p.id}`}
+                    className="inline-block rounded-xl bg-[#0066ff] px-4 py-2 text-xs font-bold text-white hover:bg-[#0052cc]"
+                  >
+                    {t("viewProduct")}
+                  </Link>
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

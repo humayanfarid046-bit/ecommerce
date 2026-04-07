@@ -1,0 +1,125 @@
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  setDoc,
+  type Firestore,
+  type QuerySnapshot,
+} from "firebase/firestore";
+import type { OrderShipmentStep } from "@/lib/demo-orders";
+
+export type UserOrderRecord = {
+  id: string;
+  placedAt: string;
+  totalRupees: number;
+  methodLabel: string;
+  paymentTxnId?: string;
+  itemCount: number;
+  /** Business status — checkout writes `placed`. */
+  status:
+    | "placed"
+    | "processing"
+    | "shipped"
+    | "out_for_delivery"
+    | "delivered"
+    | "cancelled";
+  /** 0–3 tracker (aligned with DemoOrder.step). */
+  shipmentStep: OrderShipmentStep;
+  itemTitle?: string;
+  eta?: string;
+  hubCity?: string;
+  trackingId?: string;
+  timelineNote?: string;
+  updatedAt?: number;
+};
+
+function parseOrderDoc(
+  id: string,
+  x: Record<string, unknown>
+): UserOrderRecord {
+  const stepRaw = x.shipmentStep;
+  let shipmentStep: OrderShipmentStep = 0;
+  if (typeof stepRaw === "number" && stepRaw >= 0 && stepRaw <= 3) {
+    shipmentStep = stepRaw as OrderShipmentStep;
+  }
+  const statusRaw = x.status;
+  const status =
+    typeof statusRaw === "string" &&
+    [
+      "placed",
+      "processing",
+      "shipped",
+      "out_for_delivery",
+      "delivered",
+      "cancelled",
+    ].includes(statusRaw)
+      ? (statusRaw as UserOrderRecord["status"])
+      : "placed";
+
+  return {
+    id,
+    placedAt: typeof x.placedAt === "string" ? x.placedAt : "",
+    totalRupees: Math.max(0, Number(x.totalRupees) || 0),
+    methodLabel: typeof x.methodLabel === "string" ? x.methodLabel : "",
+    paymentTxnId:
+      typeof x.paymentTxnId === "string" ? x.paymentTxnId : undefined,
+    itemCount: Math.max(0, Math.floor(Number(x.itemCount) || 0)),
+    status,
+    shipmentStep,
+    itemTitle: typeof x.itemTitle === "string" ? x.itemTitle : undefined,
+    eta: typeof x.eta === "string" ? x.eta : undefined,
+    hubCity: typeof x.hubCity === "string" ? x.hubCity : undefined,
+    trackingId: typeof x.trackingId === "string" ? x.trackingId : undefined,
+    timelineNote: typeof x.timelineNote === "string" ? x.timelineNote : undefined,
+    updatedAt: typeof x.updatedAt === "number" ? x.updatedAt : undefined,
+  };
+}
+
+export async function saveUserOrderToFirestore(
+  db: Firestore,
+  uid: string,
+  order: UserOrderRecord
+): Promise<void> {
+  const ref = doc(db, "users", uid, "orders", order.id);
+  await setDoc(ref, order, { merge: true });
+}
+
+/** All orders for account page (newest first). */
+export async function listUserOrdersFromFirestore(
+  db: Firestore,
+  uid: string
+): Promise<UserOrderRecord[]> {
+  const ref = collection(db, "users", uid, "orders");
+  const snap = await getDocs(ref);
+  const rows: UserOrderRecord[] = [];
+  snap.forEach((d) => {
+    rows.push(parseOrderDoc(d.id, d.data() as Record<string, unknown>));
+  });
+  rows.sort((a, b) => b.placedAt.localeCompare(a.placedAt));
+  return rows;
+}
+
+function snapshotToRows(snap: QuerySnapshot): UserOrderRecord[] {
+  const rows: UserOrderRecord[] = [];
+  snap.forEach((d) => {
+    rows.push(parseOrderDoc(d.id, d.data() as Record<string, unknown>));
+  });
+  rows.sort((a, b) => b.placedAt.localeCompare(a.placedAt));
+  return rows;
+}
+
+/** Live updates when admin patches order in Firestore. */
+export function subscribeUserOrdersFromFirestore(
+  db: Firestore,
+  uid: string,
+  onRows: (rows: UserOrderRecord[]) => void,
+  onError?: (e: Error) => void
+): () => void {
+  const ref = collection(db, "users", uid, "orders");
+  return onSnapshot(
+    ref,
+    (snap) => onRows(snapshotToRows(snap)),
+    (err) => onError?.(err as Error)
+  );
+}

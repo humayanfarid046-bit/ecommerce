@@ -1,0 +1,368 @@
+/** Admin panel sample shapes; live catalogue comes from `readCatalogProducts`. */
+
+import { readCatalogProducts } from "@/lib/catalog-products-storage";
+
+export type AdminOrderRow = {
+  id: string;
+  customer: string;
+  /** Links to mockUsers / profile panel */
+  customerId: string;
+  phone: string;
+  amount: number;
+  status: "pending" | "shipped" | "delivered" | "cancelled";
+  placedAt: string;
+  /** YYYY-MM-DD for date-range filters */
+  placedDate: string;
+  paymentMethod: "UPI" | "COD" | "Card" | "NetBanking";
+  payment: "success" | "failed" | "cod_pending";
+  /** Internal admin note for fulfilment */
+  privateNote?: string;
+  /** Delivery PIN for distance-based fee preview (demo). */
+  deliveryPin?: string;
+  /** COD only — before phone confirmation; localStorage may override. */
+  codConfirmationSeed?: "awaiting" | "confirmed";
+};
+
+export type UserSegment = "premium" | "new" | "inactive";
+
+export type AdminUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  orders: number;
+  blocked: boolean;
+  lastActive: string;
+  /** Customer lifetime value (₹) — demo; align with orders sum in production */
+  totalSpent: number;
+  segment: UserSegment;
+  lastLogin: string;
+  wishlistItems: string[];
+  lastSearches: string[];
+  walletBalance: number;
+  referredByUserId?: string | null;
+  referralInvites: number;
+  verified: boolean;
+  suspicious: boolean;
+  shadowBanned: boolean;
+  fraudFlags: { highCancels: boolean; otpFails: boolean };
+  banReason?: string;
+  /** Prior COD orders refused at door (RTO) — risk signal. */
+  codRefusedCount: number;
+};
+
+export const mockBlockedIPsSeed: string[] = [];
+
+export type AdminTransaction = {
+  id: string;
+  orderId: string;
+  method: string;
+  amount: number;
+  status: "success" | "failed";
+  at: string;
+};
+
+export type AdminReturnReq = {
+  id: string;
+  orderId: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  /** Demo proof image */
+  imageProofUrl?: string;
+  pickupDate?: string;
+  refundMethod?: "wallet" | "bank" | null;
+};
+
+export type AdminTicket = {
+  id: string;
+  user: string;
+  subject: string;
+  status: "open" | "closed";
+  updated: string;
+};
+
+export type AdminReviewMod = {
+  id: string;
+  product: string;
+  user: string;
+  rating: number;
+  text: string;
+  published: boolean;
+};
+
+export const adminStats = {
+  ordersToday: 0,
+  revenueToday: 0,
+  newUsers: 0,
+  visitors: 0,
+};
+
+export const adminStatsYesterday = {
+  orders: 0,
+  revenue: 0,
+  newUsers: 0,
+  visitors: 0,
+};
+
+export const sparklineOrders: number[] = [];
+export const sparklineRevenue: number[] = [];
+export const sparklineUsers: number[] = [];
+export const sparklineVisitors: number[] = [];
+
+/** Hourly revenue for today (demo — IST business hours). */
+export const hourlySalesToday: { name: string; revenue: number }[] = [];
+
+export function deltaVsYesterdayPercent(today: number, yesterday: number): number {
+  if (yesterday === 0) return today > 0 ? 100 : 0;
+  return ((today - yesterday) / yesterday) * 100;
+}
+
+export const conversionFunnel = {
+  visitors: 0,
+  productViews: 0,
+  addToCart: 0,
+  paidOrders: 0,
+};
+
+/** AOV = revenue / orders (derived for display). */
+export function averageOrderValueToday(): number {
+  const { revenueToday, ordersToday } = adminStats;
+  if (ordersToday <= 0) return 0;
+  return Math.round(revenueToday / ordersToday);
+}
+
+export const paymentMixToday = [] as readonly {
+  key: "upi" | "cod" | "card" | "netbanking";
+  percent: number;
+  amount: number;
+}[];
+
+export const regionOrdersIndia: { regionKey: string; orders: number }[] = [];
+
+export type LiveFeedEvent = {
+  id: string;
+  kind: "cart" | "wishlist" | "checkout" | "view";
+  cityKey: string;
+  productTitle: string;
+};
+
+export const liveFeedPool: LiveFeedEvent[] = [];
+
+export const liveOnlineUsers = 0;
+
+export const salesWeek: { name: string; revenue: number }[] = [];
+
+export const salesMonth: { name: string; revenue: number }[] = [];
+
+/** Category slugs for admin sales graph filter (must exist in catalogue). */
+export const ADMIN_SALES_GRAPH_CATEGORIES = [
+  "all",
+  "mens-wear",
+  "womens-wear",
+  "kids-wear",
+  "ethnic-traditional",
+  "footwear-accessories",
+] as const;
+
+export type AdminSalesGraphCategoryId = (typeof ADMIN_SALES_GRAPH_CATEGORIES)[number];
+
+export type SalesGraphPoint = {
+  name: string;
+  revenue: number;
+  orders: number;
+  views: number;
+  revenuePrev: number;
+  ordersPrev: number;
+  viewsPrev: number;
+};
+
+function hashSeed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+/**
+ * Multi-layer series: revenue, orders, product views + previous period for overlay.
+ */
+export function getSalesGraphData(
+  categoryId: AdminSalesGraphCategoryId,
+  period: "week" | "month"
+): SalesGraphPoint[] {
+  const h = hashSeed(`${categoryId}:${period}`);
+  const labels =
+    period === "week"
+      ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+      : ["W1", "W2", "W3", "W4"];
+  const catMul = categoryId === "all" ? 1 : 0.55 + (h % 45) / 100;
+
+  return labels.map((name, i) => {
+    const base = (60000 + (h % 30) * 1200 + i * 9000) * catMul;
+    const revenue = Math.round(base + ((h + i * 7) % 8000) * 1.2);
+    const orders = Math.max(1, Math.round(14 + ((h + i * 3) % 22) + i * 3));
+    const views = Math.round(orders * 48 + 400 + ((h + i) % 180) * 12);
+    const prevFactor = 0.78 + ((h + i * 5) % 14) / 100;
+    return {
+      name,
+      revenue,
+      orders,
+      views,
+      revenuePrev: Math.round(revenue * prevFactor),
+      ordersPrev: Math.max(1, Math.round(orders * prevFactor)),
+      viewsPrev: Math.round(views * prevFactor),
+    };
+  });
+}
+
+/** Default low-stock alert threshold by price (smart threshold demo). */
+export function defaultStockThreshold(price: number): number {
+  if (price >= 15_000) return 2;
+  if (price >= 5_000) return 5;
+  if (price >= 1_500) return 10;
+  return 15;
+}
+
+function weeklySalesDemo(productId: string): number {
+  const h = hashSeed(productId);
+  return 4 + (h % 42);
+}
+
+export type LowStockActionRow = {
+  id: string;
+  slug: string;
+  title: string;
+  brand: string;
+  categorySlug: string;
+  price: number;
+  stock: number;
+  threshold: number;
+  weeklySalesUnits: number;
+  /** Internal ops / warehouse contact for low-stock alerts (demo). */
+  opsContactEmail: string;
+};
+
+export function getLowStockActionRows(): LowStockActionRow[] {
+  const products = readCatalogProducts();
+  const rows: LowStockActionRow[] = products.map((p) => {
+    const n = parseInt(p.id.replace(/\D/g, ""), 10);
+    const fallback = Number.isFinite(n) ? (n % 8) + 1 : 4;
+    const stock = p.stockLeft ?? fallback;
+    const threshold = defaultStockThreshold(p.price);
+    const opsContactEmail = "";
+    return {
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      brand: p.brand,
+      categorySlug: p.categorySlug,
+      price: p.price,
+      stock,
+      threshold,
+      weeklySalesUnits: weeklySalesDemo(p.id),
+      opsContactEmail,
+    };
+  });
+
+  const needAttention = rows.filter((r) => r.stock <= r.threshold);
+  const list = needAttention.length ? needAttention : [...rows].sort((a, b) => a.stock - b.stock).slice(0, 12);
+  return [...list].sort((a, b) => a.stock - b.stock);
+}
+
+export function predictDaysUntilStockout(
+  stock: number,
+  weeklySalesUnits: number
+): number | null {
+  if (stock <= 0) return 0;
+  if (weeklySalesUnits <= 0) return null;
+  const daily = weeklySalesUnits / 7;
+  return Math.max(1, Math.ceil(stock / daily));
+}
+
+export type StockSeverity = "out" | "critical" | "warning" | "ok";
+
+export function getStockSeverity(stock: number): StockSeverity {
+  if (stock <= 0) return "out";
+  if (stock <= 2) return "critical";
+  if (stock <= 10) return "warning";
+  return "ok";
+}
+
+export function getLowStockProducts() {
+  const products = readCatalogProducts();
+  const mapped = products.map((p) => {
+    const n = parseInt(p.id.replace(/\D/g, ""), 10);
+    const fallback = Number.isFinite(n) ? (n % 8) + 1 : 4;
+    return {
+      id: p.id,
+      title: p.title,
+      brand: p.brand,
+      stock: p.stockLeft ?? fallback,
+      price: p.price,
+    };
+  });
+  const low = mapped.filter((p) => p.stock < 15);
+  const list = low.length ? low : mapped;
+  return [...list].sort((a, b) => a.stock - b.stock).slice(0, 10);
+}
+
+export const mockAdminOrders: AdminOrderRow[] = [];
+
+export function ordersForCustomer(customerId: string): AdminOrderRow[] {
+  return mockAdminOrders.filter((o) => o.customerId === customerId);
+}
+
+export function totalSpentForCustomer(customerId: string): number {
+  return ordersForCustomer(customerId).reduce((s, o) => s + o.amount, 0);
+}
+
+export const mockUsers: AdminUserRow[] = [];
+
+export const mockTransactions: AdminTransaction[] = [];
+
+export const mockPayouts: {
+  id: string;
+  label: string;
+  amount: number;
+  status: string;
+  date: string;
+}[] = [];
+
+export type CodRemittanceRow = {
+  id: string;
+  courier: string;
+  amount: number;
+  status: "pending" | "received";
+  dueDate: string;
+};
+
+export type RiderCashRow = {
+  id: string;
+  name: string;
+  pendingCash: number;
+  todayCollected: number;
+  settled: boolean;
+};
+
+export const mockCodCashSummary = {
+  todayDeliveredCod: 0,
+  cashInHand: 0,
+};
+
+export const mockCodRemittance: CodRemittanceRow[] = [];
+
+export const mockRiderCash: RiderCashRow[] = [];
+
+export const mockReturns: AdminReturnReq[] = [];
+
+export const mockTickets: AdminTicket[] = [];
+
+export const mockReviewsMod: AdminReviewMod[] = [];
+
+export const mockActivityLogs: { who: string; action: string; at: string }[] = [];
+
+export const wishlistBehaviorDemo: {
+  product: string;
+  views: number;
+  wishlistAdds: number;
+  purchases: number;
+}[] = [];

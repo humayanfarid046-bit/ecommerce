@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  /* Storefront highlight — use sparingly (≈10%): CTAs & key links */
+  --electric: #2874f0;
+  --electric-hover: #1a65d8;
+  --store-canvas: #f9fafb;
+  --store-secondary: #f5f7fa;
+  --store-card-border: #e5e7eb;
+  --product-title: #1f2937;
+  --deal-orange: #ff6b00;
+  --muted: #64748b;
+  --glass-fill: rgba(255, 255, 255, 0.52);
+  --glass-border: rgba(255, 255, 255, 0.65);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --glass-fill: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(148, 163, 184, 0.12);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, ui-sans-serif), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.6;
+}
+
+/* Product cards — white surface, soft shadow (minimal border; premium feel) */
+.product-card-store {
+  background: #ffffff;
+  border: 1px solid var(--store-card-border);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 4px 12px rgb(0 0 0 / 0.06);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.product-card-store:hover {
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.06),
+    0 12px 24px -4px rgb(0 0 0 / 0.1);
+  border-color: #e5e7eb;
+}
+
+/* Neutral image well — same tone for all product thumbnails (grid consistency) */
+.product-card-image-well {
+  background-color: #fafafa;
+}
+
+@keyframes ripple-ring {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.42;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(3.2);
+    opacity: 0;
+  }
+}
+
+.animate-ripple-ring {
+  animation: ripple-ring 0.65s ease-out forwards;
+}
+
+/* Panels & filters */
+.glass {
+  background: var(--glass-fill);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 102, 255, 0.08);
+  box-shadow:
+    0 4px 24px rgba(0, 102, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Product cards — stronger glass + soft colored shadow */
+.glass-card-product {
+  background: rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 8px 32px rgba(0, 102, 255, 0.1),
+    0 2px 8px rgba(124, 58, 237, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+html.dark .glass-card-product {
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 102, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-premium {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 4px 24px rgba(0, 102, 255, 0.12),
+    0 24px 64px rgba(124, 58, 237, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.font-display {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@keyframes shimmer-badge {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(0, 102, 255, 0);
+  }
+}
+
+.animate-offer-ring {
+  animation: shimmer-badge 2.2s ease-in-out infinite;
+}
+
+/** Profile picture: halo ring expands and fades (Facebook-style guard preview) */
+@keyframes profile-avatar-halo {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.35);
+    opacity: 0;
+  }
+}
+
+.profile-avatar-halo {
+  animation: profile-avatar-halo 300ms ease-out forwards;
+}
+
+@keyframes profile-avatar-pop {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+.profile-avatar-pop {
+  animation: profile-avatar-pop 300ms ease-out forwards;
+}
+
+@keyframes profile-modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.profile-modal-overlay {
+  animation: profile-modal-fade 300ms ease-out forwards;
+}
+
+.profile-modal-panel {
+  animation: profile-modal-fade 300ms ease-out forwards;
+}
+
+@keyframes announce-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.announce-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: announce-marquee 28s linear infinite;
+}
+
+/* Storefront product grids — breathing room between cards */
+.product-grid-fluid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .product-grid-fluid {
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-grid-fluid {
+    gap: 1.25rem;
+  }
+}
+
