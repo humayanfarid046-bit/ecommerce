@@ -1,5 +1,5 @@
 /**
- * Quick smoke test: storefront + API respond (run after `npm run dev`).
+ * Quick smoke test: storefront + API respond (run after `npm run dev:stack`).
  * Usage: node scripts/stack-health.mjs
  * Env: STACK_WEB_URL, STACK_API_HEALTH_URL (optional overrides)
  */

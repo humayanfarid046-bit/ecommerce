@@ -41,7 +41,12 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
       const max = priceMax ? Number(priceMax) : NaN;
       if (Number.isFinite(min) && p.price < min) return false;
       if (Number.isFinite(max) && p.price > max) return false;
-      const stock = p.stockLeft ?? 10;
+      const stock =
+        typeof p.stockLeft === "number"
+          ? p.stockLeft
+          : p.inStock
+            ? 10
+            : 0;
       if (stockFilter === "low" && stock >= 15) return false;
       if (stockFilter === "out" && stock > 0) return false;
       return true;
@@ -130,10 +135,22 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
             </tr>
           </thead>
           <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
+                  {t("catalogEmpty")}
+                </td>
+              </tr>
+            ) : null}
             {rows.map((p) => {
               const meta = getProductMeta(p.id);
               const visible = meta.visible !== false;
-              const stock = p.stockLeft ?? 10;
+              const stock =
+                typeof p.stockLeft === "number"
+                  ? p.stockLeft
+                  : p.inStock
+                    ? 10
+                    : 0;
               return (
                 <tr key={p.id} className="border-b border-slate-100 dark:border-slate-800">
                   <td className="py-2">

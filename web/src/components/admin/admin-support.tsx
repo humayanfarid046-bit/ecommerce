@@ -9,13 +9,18 @@ import {
   CheckCircle2,
   CircleDot,
   Image as ImageIcon,
+  Layers,
+  Loader2,
   MessageSquare,
   Package,
+  Radio,
+  RefreshCw,
   Send,
   Star,
   Video,
   Zap,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { appendActivityLog } from "@/lib/admin-security-storage";
 import { ordersForCustomer, type AdminOrderRow } from "@/lib/admin-mock-data";
 import { getFirebaseAuth } from "@/lib/firebase/client";
@@ -89,6 +94,95 @@ export function AdminSupport() {
     }[]
   >([]);
   const [threadReply, setThreadReply] = useState<Record<string, string>>({});
+  const [supportTab, setSupportTab] = useState<"live" | "desk" | "chat">("desk");
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
+  const [liveFallback, setLiveFallback] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const mapLocalReviewsToLive = useCallback(
+    (src: SupportState) =>
+      src.reviews
+        .filter((r) => r.moderationStatus !== "blocked")
+        .map((r, i) => ({
+          id: r.id,
+          userId: `local-${r.id}`,
+          productId: r.productId,
+          productTitle: r.productTitle,
+          userName: r.user,
+          rating: r.rating,
+          text: r.text,
+          profanityFlag: r.profanityFlag,
+          imageUrls: r.mediaUrls,
+          createdAt: Date.now() - i * 1000,
+        })),
+    []
+  );
+
+  const mapLocalTicketsToLiveThreads = useCallback(
+    (src: SupportState) =>
+      src.tickets.map((tk, i) => ({
+        threadId: tk.id,
+        userId: tk.customerId || `local-${tk.id}`,
+        orderId: tk.orderId ?? "",
+        userEmail: tk.userEmail,
+        productHint: tk.subject,
+        messages: [
+          { id: `${tk.id}-u`, at: tk.createdAt, from: "user" as const, body: tk.body },
+          ...((tk.staffReplies ?? []).map((r, idx) => ({
+            id: `${tk.id}-a-${idx}`,
+            at: r.at,
+            from: "admin" as const,
+            body: r.body,
+          }))),
+        ],
+        updatedAt: Date.now() - i * 1000,
+      })),
+    []
+  );
+
+  const loadRemote = useCallback(async () => {
+    setRemoteLoading(true);
+    setRemoteError(null);
+    setLiveFallback(false);
+    try {
+      const headers = await getAuthHeader();
+      const [rR, rT] = await Promise.all([
+        fetch("/api/admin/reviews", { headers }),
+        fetch("/api/admin/support-threads", { headers }),
+      ]);
+      const jR = (await rR.json().catch(() => ({}))) as {
+        error?: string;
+        reviews?: typeof fsReviews;
+      };
+      const jT = (await rT.json().catch(() => ({}))) as {
+        error?: string;
+        threads?: typeof fsThreads;
+      };
+      if (rR.ok && Array.isArray(jR.reviews)) setFsReviews(jR.reviews);
+      else setFsReviews([]);
+      if (rT.ok && Array.isArray(jT.threads)) setFsThreads(jT.threads);
+      else setFsThreads([]);
+      const errs: string[] = [];
+      if (!rR.ok) errs.push(jR.error ?? t("supportRemoteErrorGeneric", { code: rR.status }));
+      if (!rT.ok) errs.push(jT.error ?? t("supportRemoteErrorGeneric", { code: rT.status }));
+      if (errs.length) {
+        const local = getSupportState();
+        setFsReviews(mapLocalReviewsToLive(local));
+        setFsThreads(mapLocalTicketsToLiveThreads(local));
+        setLiveFallback(true);
+        setRemoteError(errs.join(" · "));
+      }
+    } catch {
+      const local = getSupportState();
+      setFsReviews(mapLocalReviewsToLive(local));
+      setFsThreads(mapLocalTicketsToLiveThreads(local));
+      setLiveFallback(true);
+      setRemoteError(t("supportRemoteNetwork"));
+    } finally {
+      setRemoteLoading(false);
+    }
+  }, [getAuthHeader, mapLocalReviewsToLive, mapLocalTicketsToLiveThreads, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,31 +206,14 @@ export function AdminSupport() {
   }, [getAuthHeader]);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const headers = await getAuthHeader();
-        const [rR, rT] = await Promise.all([
-          fetch("/api/admin/reviews", { headers }),
-          fetch("/api/admin/support-threads", { headers }),
-        ]);
-        const jR = (await rR.json().catch(() => ({}))) as {
-          reviews?: typeof fsReviews;
-        };
-        const jT = (await rT.json().catch(() => ({}))) as {
-          threads?: typeof fsThreads;
-        };
-        if (cancelled) return;
-        if (rR.ok && Array.isArray(jR.reviews)) setFsReviews(jR.reviews);
-        if (rT.ok && Array.isArray(jT.threads)) setFsThreads(jT.threads);
-      } catch {
-        /* ignore */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [getAuthHeader]);
+    void loadRemote();
+  }, [loadRemote]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   useEffect(() => {
     setState(getSupportState());
@@ -205,6 +282,23 @@ export function AdminSupport() {
     reviewId: string,
     action: "publish" | "block"
   ) {
+    if (liveFallback) {
+      const next = {
+        ...state,
+        reviews: state.reviews.map((r) => {
+          if (r.id !== reviewId) return r;
+          return applyReviewModeration({
+            ...r,
+            published: action === "publish",
+            moderationStatus: action === "publish" ? "ok" : "blocked",
+          });
+        }),
+      };
+      persist(next);
+      setFsReviews(mapLocalReviewsToLive(next));
+      setToast(t("supportActionOk"));
+      return;
+    }
     try {
       const res = await fetch("/api/admin/reviews", {
         method: "PATCH",
@@ -214,7 +308,12 @@ export function AdminSupport() {
         },
         body: JSON.stringify({ userId, reviewId, action }),
       });
-      if (!res.ok) return;
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setToast(`${t("supportActionFailed")}: ${j.error ?? res.status}`);
+        return;
+      }
+      setToast(t("supportActionOk"));
       setFsReviews((prev) => prev.filter((r) => !(r.userId === userId && r.id === reviewId)));
       appendActivityLog({
         actor: "admin",
@@ -222,13 +321,34 @@ export function AdminSupport() {
         detail: `${action} · ${reviewId}`,
       });
     } catch {
-      /* ignore */
+      setToast(t("supportActionFailed"));
     }
   }
 
   async function sendFsThreadReply(userId: string, threadId: string) {
     const body = threadReply[threadId]?.trim();
     if (!body) return;
+    if (liveFallback) {
+      const now = new Date().toISOString();
+      const next = {
+        ...state,
+        tickets: state.tickets.map((tk) => {
+          if (tk.id !== threadId) return tk;
+          const replies = [...(tk.staffReplies ?? []), { body, at: now }];
+          return {
+            ...tk,
+            staffReplies: replies,
+            lastStaffReplyAt: now,
+            status: tk.status === "open" ? "in_progress" : tk.status,
+          };
+        }),
+      };
+      persist(next);
+      setFsThreads(mapLocalTicketsToLiveThreads(next));
+      setThreadReply((p) => ({ ...p, [threadId]: "" }));
+      setToast(t("supportActionOk"));
+      return;
+    }
     try {
       const res = await fetch("/api/admin/support-threads", {
         method: "PATCH",
@@ -238,7 +358,12 @@ export function AdminSupport() {
         },
         body: JSON.stringify({ userId, threadId, body }),
       });
-      if (!res.ok) return;
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setToast(`${t("supportActionFailed")}: ${j.error ?? res.status}`);
+        return;
+      }
+      setToast(t("supportActionOk"));
       setThreadReply((p) => ({ ...p, [threadId]: "" }));
       const headers = await getAuthHeader();
       const rT = await fetch("/api/admin/support-threads", { headers });
@@ -247,7 +372,7 @@ export function AdminSupport() {
       };
       if (rT.ok && Array.isArray(jT.threads)) setFsThreads(jT.threads);
     } catch {
-      /* ignore */
+      setToast(t("supportActionFailed"));
     }
   }
 
@@ -260,116 +385,221 @@ export function AdminSupport() {
   }
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-          {t("supportTitle")}
-        </h2>
-        <p className="text-sm text-slate-500">{t("supportSubtitle")}</p>
+    <div className="relative space-y-8">
+      {toast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 z-[100] max-w-md rounded-xl border border-emerald-500/30 bg-emerald-950 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-xl dark:bg-emerald-950/95"
+        >
+          {toast}
+        </div>
+      ) : null}
+
+      <div className="overflow-hidden rounded-3xl border border-sky-100/80 bg-gradient-to-r from-[#0066ff]/[0.12] via-violet-500/[0.08] to-sky-100/35 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#0066ff]">
+              {t("supportHeroEyebrow")}
+            </p>
+            <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white md:text-3xl">
+              {t("supportTitle")}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm font-medium text-slate-600 dark:text-slate-300">
+              {t("supportSubtitle")}
+            </p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              {t("supportHeroHint")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadRemote()}
+            disabled={remoteLoading}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/80 bg-white/90 px-4 py-2.5 text-sm font-bold text-slate-800 shadow-sm backdrop-blur disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100"
+          >
+            {remoteLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {t("supportRemoteRetry")}
+          </button>
+        </div>
       </div>
 
-      {fsReviews.length > 0 ? (
-        <section className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-          <p className="font-extrabold text-emerald-900 dark:text-emerald-100">
-            {t("supportFirestoreReviews")}
-          </p>
-          <p className="mt-1 text-xs text-emerald-900/80 dark:text-emerald-200/90">
-            {t("supportFirestoreReviewsHint")}
-          </p>
-          <ul className="mt-4 space-y-3">
-            {fsReviews.map((r) => (
-              <li
-                key={`${r.userId}-${r.id}`}
-                className="rounded-xl border border-emerald-200/60 bg-white/90 p-3 dark:border-emerald-900/50 dark:bg-slate-900/80"
-              >
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {r.productTitle}{" "}
-                  <span className="font-mono text-xs text-slate-500">
-                    {r.productId}
-                  </span>
-                </p>
-                <p className="text-xs text-slate-500">
-                  {r.userName} · {r.rating}★ · {r.id}
-                </p>
-                <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                  {r.text}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void patchFsReview(r.userId, r.id, "publish")}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white"
-                  >
-                    {t("supportPublishReview")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void patchFsReview(r.userId, r.id, "block")}
-                    className="rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700"
-                  >
-                    {t("supportBlockReview")}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <div
+        className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/80 bg-white/80 p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900/75"
+        role="tablist"
+        aria-label={t("supportTabListAria")}
+      >
+        {(
+          [
+            { id: "desk" as const, icon: Layers, label: t("supportTabDesk") },
+            { id: "live" as const, icon: Radio, label: t("supportTabLive") },
+            { id: "chat" as const, icon: Bot, label: t("supportTabChat") },
+          ] as const
+        ).map(({ id, icon: Icon, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={supportTab === id}
+            onClick={() => setSupportTab(id)}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition",
+              supportTab === id
+                ? "bg-gradient-to-r from-[#0066ff] to-[#7c3aed] text-white shadow-md shadow-indigo-300/35 dark:shadow-indigo-950/40"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {fsThreads.length > 0 ? (
-        <section className="rounded-2xl border border-sky-200/80 bg-sky-50/40 p-5 dark:border-sky-900/40 dark:bg-sky-950/20">
-          <p className="font-extrabold text-sky-900 dark:text-sky-100">
-            {t("supportFirestoreThreads")}
-          </p>
-          <p className="mt-1 text-xs text-sky-900/80 dark:text-sky-200/90">
-            {t("supportFirestoreThreadsHint")}
-          </p>
-          <ul className="mt-4 space-y-4">
-            {fsThreads.map((th) => (
-              <li
-                key={`${th.userId}-${th.threadId}`}
-                className="rounded-xl border border-sky-200/60 bg-white/90 p-3 dark:border-sky-900/50 dark:bg-slate-900/80"
-              >
-                <p className="font-mono text-xs text-slate-600 dark:text-slate-400">
-                  {th.orderId} · {th.userEmail}
-                </p>
-                <div className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-slate-700 dark:text-slate-300">
-                  {th.messages.map((m) => (
-                    <p key={m.id}>
-                      <span className="font-bold text-[#0066ff]">
-                        {m.from}:
-                      </span>{" "}
-                      {m.body}
+      {supportTab === "live" && (
+        <div className="space-y-6">
+          {remoteLoading ? (
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+              <Loader2 className="h-5 w-5 animate-spin text-[#0066ff]" />
+              {t("supportRemoteLoading")}
+            </div>
+          ) : null}
+          {liveFallback ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+              <p className="font-extrabold">{t("supportLiveFallbackTitle")}</p>
+              <p className="mt-1 text-xs">{t("supportLiveFallbackHint")}</p>
+            </div>
+          ) : null}
+          {remoteError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-sm text-rose-950 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-100">
+              <p className="font-extrabold">{t("supportRemoteErrorTitle")}</p>
+              <p className="mt-1 font-mono text-xs opacity-90">{remoteError}</p>
+              <p className="mt-3 text-xs text-rose-900/85 dark:text-rose-200/90">
+                {t("supportRemoteErrorFoot")}
+              </p>
+            </div>
+          ) : null}
+
+          <section className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+            <p className="font-extrabold text-emerald-900 dark:text-emerald-100">
+              {t("supportFirestoreReviews")}
+            </p>
+            <p className="mt-1 text-xs text-emerald-900/80 dark:text-emerald-200/90">
+              {t("supportFirestoreReviewsHint")}
+            </p>
+            {fsReviews.length === 0 && !remoteLoading ? (
+              <p className="mt-4 text-sm text-emerald-900/80 dark:text-emerald-200/85">
+                {t("supportLiveEmptyReviews")}
+              </p>
+            ) : null}
+            {fsReviews.length > 0 ? (
+              <ul className="mt-4 space-y-3">
+                {fsReviews.map((r) => (
+                  <li
+                    key={`${r.userId}-${r.id}`}
+                    className="rounded-xl border border-emerald-200/60 bg-white/90 p-3 dark:border-emerald-900/50 dark:bg-slate-900/80"
+                  >
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {r.productTitle}{" "}
+                      <span className="font-mono text-xs text-slate-500">
+                        {r.productId}
+                      </span>
                     </p>
-                  ))}
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <input
-                    value={threadReply[th.threadId] ?? ""}
-                    onChange={(e) =>
-                      setThreadReply((p) => ({
-                        ...p,
-                        [th.threadId]: e.target.value,
-                      }))
-                    }
-                    className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-950"
-                    placeholder={t("supportThreadReplyPlaceholder")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void sendFsThreadReply(th.userId, th.threadId)}
-                    className="rounded-lg bg-[#0066ff] px-3 py-1 text-xs font-bold text-white"
-                  >
-                    {t("supportThreadSend")}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+                    <p className="text-xs text-slate-500">
+                      {r.userName} · {r.rating}★ · {r.id}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                      {r.text}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void patchFsReview(r.userId, r.id, "publish")}
+                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white"
+                      >
+                        {t("supportPublishReview")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void patchFsReview(r.userId, r.id, "block")}
+                        className="rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700"
+                      >
+                        {t("supportBlockReview")}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
 
-      {/* Reviews */}
+          <section className="rounded-2xl border border-sky-200/80 bg-sky-50/40 p-5 dark:border-sky-900/40 dark:bg-sky-950/20">
+            <p className="font-extrabold text-sky-900 dark:text-sky-100">
+              {t("supportFirestoreThreads")}
+            </p>
+            <p className="mt-1 text-xs text-sky-900/80 dark:text-sky-200/90">
+              {t("supportFirestoreThreadsHint")}
+            </p>
+            {fsThreads.length === 0 && !remoteLoading ? (
+              <p className="mt-4 text-sm text-sky-900/80 dark:text-sky-200/85">
+                {t("supportLiveEmptyThreads")}
+              </p>
+            ) : null}
+            {fsThreads.length > 0 ? (
+              <ul className="mt-4 space-y-4">
+                {fsThreads.map((th) => (
+                  <li
+                    key={`${th.userId}-${th.threadId}`}
+                    className="rounded-xl border border-sky-200/60 bg-white/90 p-3 dark:border-sky-900/50 dark:bg-slate-900/80"
+                  >
+                    <p className="font-mono text-xs text-slate-600 dark:text-slate-400">
+                      {th.orderId} · {th.userEmail}
+                    </p>
+                    {th.productHint ? (
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        {th.productHint}
+                      </p>
+                    ) : null}
+                    <div className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-slate-700 dark:text-slate-300">
+                      {th.messages.map((m) => (
+                        <p key={m.id}>
+                          <span className="font-bold text-[#0066ff]">{m.from}:</span>{" "}
+                          {m.body}
+                        </p>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={threadReply[th.threadId] ?? ""}
+                        onChange={(e) =>
+                          setThreadReply((p) => ({
+                            ...p,
+                            [th.threadId]: e.target.value,
+                          }))
+                        }
+                        className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-950"
+                        placeholder={t("supportThreadReplyPlaceholder")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void sendFsThreadReply(th.userId, th.threadId)}
+                        className="rounded-lg bg-[#0066ff] px-3 py-1 text-xs font-bold text-white"
+                      >
+                        {t("supportThreadSend")}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+        </div>
+      )}
+
+      {supportTab === "desk" && (
+        <>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
         <div className="flex flex-wrap items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
           <Star className="h-5 w-5 text-amber-500" />
@@ -749,8 +979,10 @@ export function AdminSupport() {
           />
         </label>
       </section>
+        </>
+      )}
 
-      {/* Chat + WhatsApp + Bot */}
+      {supportTab === "chat" && (
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
         <div className="flex flex-wrap items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
           <Bot className="h-5 w-5 text-violet-600" />
@@ -835,6 +1067,7 @@ export function AdminSupport() {
           ))}
         </div>
       </section>
+      )}
     </div>
   );
 }

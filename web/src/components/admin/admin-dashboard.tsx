@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { readLiveCommerceStats } from "@/lib/live-commerce-stats";
-import { computeFraudAlerts } from "@/lib/fraud-signals";
+import {
+  computeFraudAlertItems,
+  formatFraudAlertItem,
+  fraudAlertItemKey,
+} from "@/lib/fraud-signals";
 import {
   adminStats,
   adminStatsYesterday,
@@ -63,7 +67,7 @@ export function AdminDashboard() {
   const y = adminStatsYesterday;
   const [live, setLive] = useState(() => readLiveCommerceStats());
   const [customerFind, setCustomerFind] = useState("");
-  const [fraud, setFraud] = useState(() => computeFraudAlerts());
+  const [fraudItems, setFraudItems] = useState(() => computeFraudAlertItems());
   const [srv, setSrv] = useState<SrvStats | null>(null);
 
   useEffect(() => {
@@ -123,7 +127,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     function syncFraud() {
-      setFraud(computeFraudAlerts());
+      setFraudItems(computeFraudAlertItems());
     }
     syncFraud();
     window.addEventListener("lc-user-payment-history", syncFraud);
@@ -307,7 +311,7 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {fraud.activeAlerts > 0 ? (
+      {fraudItems.length > 0 ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-rose-300 bg-rose-50 p-4 dark:border-rose-900/60 dark:bg-rose-950/30 sm:flex-row sm:items-start sm:gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white">
             <AlertTriangle className="h-6 w-6" aria-hidden />
@@ -317,11 +321,13 @@ export function AdminDashboard() {
               {t("dashboardFraudAlert")}
             </p>
             <p className="mt-1 text-sm text-rose-800/90 dark:text-rose-200/90">
-              {t("dashboardFraudAlertBody", { n: fraud.activeAlerts })}
+              {t("dashboardFraudAlertBody", { n: fraudItems.length })}
             </p>
             <ul className="mt-2 list-inside list-disc text-sm text-rose-900/85 dark:text-rose-200/85">
-              {fraud.messages.map((m) => (
-                <li key={m}>{m}</li>
+              {fraudItems.map((item) => (
+                <li key={fraudAlertItemKey(item)}>
+                  {formatFraudAlertItem(item, t)}
+                </li>
               ))}
             </ul>
           </div>

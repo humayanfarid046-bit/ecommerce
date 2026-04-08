@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Wand2 } from "lucide-react";
 
@@ -57,6 +57,20 @@ export function VariantMatrix({
   const t = useTranslations("admin");
   const [sizesRaw, setSizesRaw] = useState("M, L, XL");
   const [colorsRaw, setColorsRaw] = useState("Red, Navy");
+
+  const variantSig = useMemo(
+    () => variants.map((v) => `${v.id}:${v.size}:${v.color}`).join("|"),
+    [variants]
+  );
+
+  /** Keep matrix text fields in sync when parent loads or replaces variants (e.g. edit product). */
+  useEffect(() => {
+    if (variants.length === 0) return;
+    const sizes = [...new Set(variants.map((v) => v.size))];
+    const colors = [...new Set(variants.map((v) => v.color))];
+    setSizesRaw(sizes.join(", "));
+    setColorsRaw(colors.join(", "));
+  }, [variantSig]);
 
   const uniqueColors = useMemo(() => {
     const set = new Set(variants.map((v) => v.color));

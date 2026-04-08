@@ -1,10 +1,11 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultShippingRules,
   getShippingRules,
+  saveShippingRules,
   computeDeliveryQuote,
   type ShippingRulesState,
   type PinShippingRule,
@@ -14,16 +15,67 @@ import {
   saveTaxShippingConfig,
   getActivityLogs,
   appendActivityLog,
-  saveShippingRulesWithActivity,
   type ActivityLogEntry,
 } from "@/lib/admin-security-storage";
-import { Lock, ScrollText, Truck, Plus, Trash2 } from "lucide-react";
+import {
+  Lock,
+  Receipt,
+  ScrollText,
+  Settings2,
+  Shield,
+  Sparkles,
+  Truck,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { cn } from "@/lib/utils";
+
+type SettingsTab = "shipping" | "finance" | "security" | "audit";
+
+function SettingsSectionCard({
+  children,
+  className,
+  accent = "sky",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  accent?: "sky" | "emerald" | "violet" | "amber" | "slate";
+}) {
+  const accents: Record<typeof accent, string> = {
+    sky: "border-sky-100/90 bg-gradient-to-br from-white via-sky-50/40 to-indigo-50/50 shadow-sm shadow-sky-100/30 dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950",
+    emerald:
+      "border-emerald-100/90 bg-gradient-to-br from-white via-emerald-50/35 to-teal-50/45 shadow-sm shadow-emerald-100/25 dark:border-emerald-900/40 dark:from-slate-900 dark:via-emerald-950/15 dark:to-slate-950",
+    violet:
+      "border-violet-100/90 bg-gradient-to-br from-white via-violet-50/40 to-fuchsia-50/35 shadow-sm shadow-violet-100/25 dark:border-violet-900/30 dark:from-slate-900 dark:via-violet-950/20 dark:to-slate-950",
+    amber:
+      "border-amber-100/90 bg-gradient-to-br from-white via-amber-50/35 to-orange-50/40 shadow-sm shadow-amber-100/20 dark:border-amber-900/30 dark:from-slate-900 dark:via-amber-950/15 dark:to-slate-950",
+    slate:
+      "border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-slate-100/40 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950",
+  };
+  return (
+    <div className={cn("rounded-2xl border p-5 md:p-6", accents[accent], className)}>
+      {children}
+    </div>
+  );
+}
+
+function scopeBadgeClass(scope: string | undefined): string {
+  const s = (scope ?? "").toLowerCase();
+  if (s === "owner")
+    return "bg-violet-100 text-violet-900 dark:bg-violet-950/60 dark:text-violet-200";
+  if (s === "operations")
+    return "bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200";
+  if (s === "catalog")
+    return "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200";
+  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+}
 
 export function AdminSettings() {
   const t = useTranslations("admin");
-  const { user } = useAuth();
+  const { user, refreshAccessScope } = useAuth();
+  const [tab, setTab] = useState<SettingsTab>("shipping");
   const [tax, setTax] = useState("18");
   const [shipMetro, setShipMetro] = useState("40");
   const [shipRest, setShipRest] = useState("60");
@@ -37,6 +89,9 @@ export function AdminSettings() {
   const [previewSub, setPreviewSub] = useState("450");
   const [previewPin, setPreviewPin] = useState("700016");
   const [previewCod, setPreviewCod] = useState(true);
+  const [toast, setToast] = useState<string | null>(null);
+  const shipLogTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     setRules(getShippingRules());
     const cfg = getTaxShippingConfig();
@@ -64,15 +119,27 @@ export function AdminSettings() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
   function persist(next: ShippingRulesState) {
     setRules(next);
-    saveShippingRulesWithActivity(next);
+    saveShippingRules(next);
+    if (shipLogTimer.current) clearTimeout(shipLogTimer.current);
+    shipLogTimer.current = setTimeout(() => {
+      appendActivityLog({
+        actor: "admin",
+        action: "settings.shipping_rules_updated",
+        detail: `free≥${next.freeShippingMin} · ${next.pinRules.length} PIN rules`,
+      });
+      shipLogTimer.current = null;
+    }, 550);
   }
 
-  function updatePinRule(
-    index: number,
-    patch: Partial<PinShippingRule>
-  ) {
+  function updatePinRule(index: number, patch: Partial<PinShippingRule>) {
     const next = { ...rules, pinRules: [...rules.pinRules] };
     next.pinRules[index] = { ...next.pinRules[index], ...patch };
     persist(next);
@@ -81,10 +148,7 @@ export function AdminSettings() {
   function addPinRule() {
     persist({
       ...rules,
-      pinRules: [
-        ...rules.pinRules,
-        { pinPrefix: "", label: "", fee: 40 },
-      ],
+      pinRules: [...rules.pinRules, { pinPrefix: "", label: "", fee: 40 }],
     });
   }
 
@@ -95,366 +159,455 @@ export function AdminSettings() {
     });
   }
 
-  const quote = computeDeliveryQuote(
-    Number(previewSub) || 0,
-    previewPin,
-    previewCod
-  );
+  const quote = computeDeliveryQuote(Number(previewSub) || 0, previewPin, previewCod);
+
+  const tabItems: {
+    id: SettingsTab;
+    icon: typeof Truck;
+    label: string;
+  }[] = [
+    { id: "shipping", icon: Truck, label: t("settingsTabShipping") },
+    { id: "finance", icon: Receipt, label: t("settingsTabFinance") },
+    { id: "security", icon: Shield, label: t("settingsTabSecurity") },
+    { id: "audit", icon: ScrollText, label: t("settingsTabAudit") },
+  ];
+
+  const scopeLabel =
+    user?.accessScopeReady && user.accessScope
+      ? user.accessScope
+      : user?.accessScopeReady === false
+        ? "…"
+        : t("scopeNone");
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-          {t("settingsTitle")}
-        </h2>
-        <p className="text-sm text-slate-500">{t("settingsSubtitle")}</p>
+    <div className="relative space-y-8">
+      {toast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 z-[100] max-w-md rounded-xl border border-emerald-500/30 bg-emerald-950 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-xl dark:bg-emerald-950/95"
+        >
+          {toast}
+        </div>
+      ) : null}
+      <div className="overflow-hidden rounded-3xl border border-sky-100/80 bg-gradient-to-r from-[#0066ff]/[0.12] via-violet-500/[0.08] to-emerald-100/30 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0066ff] to-[#7c3aed] text-white shadow-lg shadow-indigo-300/30 dark:shadow-indigo-950/40">
+              <Settings2 className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#0066ff]">
+                {t("settingsHeroEyebrow")}
+              </p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white md:text-3xl">
+                {t("settingsTitle")}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm font-medium text-slate-600 dark:text-slate-300">
+                {t("settingsSubtitle")}
+              </p>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("settingsHeroHint")}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-xs font-semibold shadow-inner backdrop-blur dark:border-slate-700 dark:bg-slate-900/70">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            <span className="text-slate-600 dark:text-slate-300">{t("accessCurrent")}</span>
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                scopeBadgeClass(user?.accessScope)
+              )}
+            >
+              {scopeLabel}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-[#0066ff]/25 bg-gradient-to-br from-[#0066ff]/[0.06] to-white p-5 dark:border-[#0066ff]/30 dark:from-[#0066ff]/10 dark:to-slate-900">
-        <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
-          <Truck className="h-5 w-5 text-[#0066ff]" />
-          {t("shippingRulesTitle")}
-        </div>
-        <p className="mt-1 text-sm text-slate-500">{t("shippingRulesHint")}</p>
+      <div
+        className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/80 bg-white/80 p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900/75"
+        role="tablist"
+        aria-label={t("settingsTabListAria")}
+      >
+        {tabItems.map(({ id, icon: Icon, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition",
+              tab === id
+                ? "bg-gradient-to-r from-[#0066ff] to-[#7c3aed] text-white shadow-md shadow-indigo-300/35 dark:shadow-indigo-950/40"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {label}
+          </button>
+        ))}
+      </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <label className="block text-xs font-bold text-slate-500">
-            {t("freeShippingThreshold")}
-            <input
-              type="number"
-              min={0}
-              value={rules.freeShippingMin}
-              onChange={(e) =>
-                persist({ ...rules, freeShippingMin: Number(e.target.value) || 0 })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-          <label className="block text-xs font-bold text-slate-500">
-            {t("feeBelowThreshold")}
-            <input
-              type="number"
-              min={0}
-              value={rules.feeBelowMin}
-              onChange={(e) =>
-                persist({ ...rules, feeBelowMin: Number(e.target.value) || 0 })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-          <label className="block text-xs font-bold text-slate-500">
-            {t("defaultPinFee")}
-            <input
-              type="number"
-              min={0}
-              value={rules.defaultPinFee}
-              onChange={(e) =>
-                persist({ ...rules, defaultPinFee: Number(e.target.value) || 0 })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-          <label className="block text-xs font-bold text-slate-500">
-            {t("codHandlingFee")}
-            <input
-              type="number"
-              min={0}
-              value={rules.codHandlingFee}
-              onChange={(e) =>
-                persist({ ...rules, codHandlingFee: Number(e.target.value) || 0 })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-        </div>
+      {tab === "shipping" && (
+        <SettingsSectionCard accent="sky">
+          <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
+            <Truck className="h-5 w-5 text-[#0066ff]" />
+            {t("shippingRulesTitle")}
+          </div>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("shippingRulesHint")}</p>
 
-        <p className="mt-4 text-xs font-bold uppercase text-slate-500">
-          {t("pinRulesTitle")}
-        </p>
-        <div className="mt-2 space-y-2">
-          {rules.pinRules.map((row, i) => (
-            <div
-              key={i}
-              className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white/80 p-3 dark:border-slate-600 dark:bg-slate-950/50"
-            >
-              <label className="text-[10px] font-bold text-slate-500">
-                {t("pinPrefix")}
-                <input
-                  value={row.pinPrefix}
-                  onChange={(e) => updatePinRule(i, { pinPrefix: e.target.value })}
-                  placeholder="700"
-                  className="mt-0.5 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
-                />
-              </label>
-              <label className="min-w-[120px] flex-1 text-[10px] font-bold text-slate-500">
-                {t("pinRuleLabel")}
-                <input
-                  value={row.label}
-                  onChange={(e) => updatePinRule(i, { label: e.target.value })}
-                  className="mt-0.5 block w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
-                />
-              </label>
-              <label className="text-[10px] font-bold text-slate-500">
-                {t("pinRuleFee")}
-                <input
-                  type="number"
-                  min={0}
-                  value={row.fee}
-                  onChange={(e) =>
-                    updatePinRule(i, { fee: Number(e.target.value) || 0 })
-                  }
-                  className="mt-0.5 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={() => removePinRule(i)}
-                className="rounded-lg p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                aria-label="Remove"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={addPinRule}
-          className="mt-2 inline-flex items-center gap-1 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 dark:border-slate-600"
-        >
-          <Plus className="h-4 w-4" />
-          {t("addPinRule")}
-        </button>
-
-        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
-          <p className="text-xs font-bold uppercase text-slate-500">{t("shippingPreview")}</p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <label className="text-[10px] font-bold text-slate-500">
-              {t("previewSubtotal")}
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("freeShippingThreshold")}
               <input
-                value={previewSub}
-                onChange={(e) => setPreviewSub(e.target.value)}
-                className="mt-1 block w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                type="number"
+                min={0}
+                value={rules.freeShippingMin}
+                onChange={(e) =>
+                  persist({ ...rules, freeShippingMin: Number(e.target.value) || 0 })
+                }
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
               />
             </label>
-            <label className="text-[10px] font-bold text-slate-500">
-              {t("previewPin")}
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("feeBelowThreshold")}
               <input
-                value={previewPin}
-                onChange={(e) => setPreviewPin(e.target.value)}
-                className="mt-1 block w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                type="number"
+                min={0}
+                value={rules.feeBelowMin}
+                onChange={(e) =>
+                  persist({ ...rules, feeBelowMin: Number(e.target.value) || 0 })
+                }
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
               />
             </label>
-            <label className="flex items-center gap-2 pt-5 text-xs font-bold">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("defaultPinFee")}
               <input
-                type="checkbox"
-                checked={previewCod}
-                onChange={(e) => setPreviewCod(e.target.checked)}
+                type="number"
+                min={0}
+                value={rules.defaultPinFee}
+                onChange={(e) =>
+                  persist({ ...rules, defaultPinFee: Number(e.target.value) || 0 })
+                }
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
               />
-              COD
+            </label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("codHandlingFee")}
+              <input
+                type="number"
+                min={0}
+                value={rules.codHandlingFee}
+                onChange={(e) =>
+                  persist({ ...rules, codHandlingFee: Number(e.target.value) || 0 })
+                }
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
+              />
             </label>
           </div>
-          <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">
-            {t("previewDelivery")}: â‚¹{quote.deliveryFee.toLocaleString("en-IN")} Â·{" "}
-            {t("previewCodFee")}: â‚¹{quote.codHandling.toLocaleString("en-IN")} Â·{" "}
-            {quote.freeShippingApplied ? t("previewFreeShip") : t("previewPaidShip")}
-            {quote.matchedRuleLabel
-              ? ` Â· ${quote.matchedRuleLabel}`
-              : ""}
-          </p>
-        </div>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-          <h3 className="font-extrabold text-slate-900 dark:text-slate-100">
-            {t("taxShipping")}
-          </h3>
-          <label className="mt-3 block text-xs font-bold text-slate-500">
-            {t("gstPercent")}
-            <input
-              value={tax}
-              onChange={(e) => setTax(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-          <label className="mt-3 block text-xs font-bold text-slate-500">
-            {t("shipMetro")}
-            <input
-              value={shipMetro}
-              onChange={(e) => setShipMetro(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-          <label className="mt-3 block text-xs font-bold text-slate-500">
-            {t("shipRest")}
-            <input
-              value={shipRest}
-              onChange={(e) => setShipRest(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-            />
-          </label>
-          <p className="mt-2 text-xs text-slate-400">{t("taxShippingNote")}</p>
+          <p className="mt-6 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {t("pinRulesTitle")}
+          </p>
+          <div className="mt-3 space-y-2">
+            {rules.pinRules.map((row, i) => (
+              <div
+                key={i}
+                className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200/90 bg-white/70 p-3 dark:border-slate-700 dark:bg-slate-950/40"
+              >
+                <label className="text-[10px] font-bold text-slate-500">
+                  {t("pinPrefix")}
+                  <input
+                    value={row.pinPrefix}
+                    onChange={(e) => updatePinRule(i, { pinPrefix: e.target.value })}
+                    placeholder="700"
+                    className="mt-0.5 block w-24 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
+                </label>
+                <label className="min-w-[120px] flex-1 text-[10px] font-bold text-slate-500">
+                  {t("pinRuleLabel")}
+                  <input
+                    value={row.label}
+                    onChange={(e) => updatePinRule(i, { label: e.target.value })}
+                    className="mt-0.5 block w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
+                </label>
+                <label className="text-[10px] font-bold text-slate-500">
+                  {t("pinRuleFee")}
+                  <input
+                    type="number"
+                    min={0}
+                    value={row.fee}
+                    onChange={(e) =>
+                      updatePinRule(i, { fee: Number(e.target.value) || 0 })
+                    }
+                    className="mt-0.5 block w-24 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => removePinRule(i)}
+                  className="rounded-lg p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                  aria-label={t("pinRuleRemoveAria")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
           <button
             type="button"
-            className="mt-4 rounded-xl bg-[#0066ff] px-4 py-2 text-sm font-bold text-white"
+            onClick={addPinRule}
+            className="mt-3 inline-flex items-center gap-1 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-[#0066ff]/50 hover:text-[#0066ff] dark:border-slate-600"
+          >
+            <Plus className="h-4 w-4" />
+            {t("addPinRule")}
+          </button>
+
+          <div className="mt-6 rounded-xl border border-slate-200/90 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {t("shippingPreview")}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <label className="text-[10px] font-bold text-slate-500">
+                {t("previewSubtotal")}
+                <input
+                  value={previewSub}
+                  onChange={(e) => setPreviewSub(e.target.value)}
+                  className="mt-1 block w-28 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                />
+              </label>
+              <label className="text-[10px] font-bold text-slate-500">
+                {t("previewPin")}
+                <input
+                  value={previewPin}
+                  onChange={(e) => setPreviewPin(e.target.value)}
+                  className="mt-1 block w-28 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+                />
+              </label>
+              <label className="flex items-center gap-2 pt-5 text-xs font-bold text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={previewCod}
+                  onChange={(e) => setPreviewCod(e.target.checked)}
+                />
+                {t("previewCodLabel")}
+              </label>
+            </div>
+            <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">
+              {t("previewDelivery")}: ₹{quote.deliveryFee.toLocaleString("en-IN")} ·{" "}
+              {t("previewCodFee")}: ₹{quote.codHandling.toLocaleString("en-IN")} ·{" "}
+              {quote.freeShippingApplied ? t("previewFreeShip") : t("previewPaidShip")}
+              {quote.matchedRuleLabel ? ` · ${quote.matchedRuleLabel}` : ""}
+            </p>
+          </div>
+        </SettingsSectionCard>
+      )}
+
+      {tab === "finance" && (
+        <SettingsSectionCard accent="emerald">
+          <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
+            <Receipt className="h-5 w-5 text-emerald-600" />
+            {t("taxShipping")}
+          </div>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("taxShippingNote")}</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("gstPercent")}
+              <input
+                value={tax}
+                onChange={(e) => setTax(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
+              />
+            </label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("shipMetro")}
+              <input
+                value={shipMetro}
+                onChange={(e) => setShipMetro(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
+              />
+            </label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("shipRest")}
+              <input
+                value={shipRest}
+                onChange={(e) => setShipRest(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-inner dark:border-slate-700 dark:bg-slate-950"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            className="mt-6 rounded-xl bg-gradient-to-r from-[#0066ff] to-[#7c3aed] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-300/30 dark:shadow-indigo-950/40"
             onClick={() => {
               saveTaxShippingConfig({
                 taxPercent: Math.min(99, Math.max(0, Number(tax) || 0)),
                 metroFlat: Math.max(0, Number(shipMetro) || 0),
                 restFlat: Math.max(0, Number(shipRest) || 0),
               });
+              setToast(t("settingsSavedToast"));
             }}
           >
             {t("saveRules")}
           </button>
-        </div>
+        </SettingsSectionCard>
+      )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-          <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
-            <Lock className="h-5 w-5 text-[#0066ff]" />
-            {t("accessTitle")}
-          </div>
-          <p className="mt-1 text-sm text-slate-500">{t("accessHint")}</p>
-          <label className="mt-3 block text-xs font-bold text-slate-500">
-            {t("accessCurrent")}
-            <div className="mt-1 rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950">
-              {user?.accessScopeReady ? (user?.accessScope ?? "none") : "…"}
+      {tab === "security" && (
+        <div className="space-y-6">
+          <SettingsSectionCard accent="violet">
+            <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
+              <Lock className="h-5 w-5 text-violet-600" />
+              {t("accessTitle")}
             </div>
-          </label>
-          {bootstrapEnabled && user?.accessScopeReady && user.accessScope !== "owner" ? (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-slate-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-50">
-              <p className="font-bold">One-time owner bootstrap</p>
-              <p className="mt-1 text-[11px] text-slate-600 dark:text-amber-100">
-                Enter the bootstrap secret to mark this logged-in account as
-                <code className="mx-1 rounded bg-slate-900 px-1 text-[10px] text-emerald-300">owner</code>
-                in Firestore (<code className="rounded bg-slate-900 px-1 text-[10px] text-emerald-300">users/{user.uid}/profile/account</code>).
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <input
-                  type="password"
-                  value={bootstrapSecret}
-                  onChange={(e) => setBootstrapSecret(e.target.value)}
-                  placeholder="Bootstrap secret"
-                  className="min-w-[200px] flex-1 rounded-lg border border-slate-300 px-3 py-2 text-xs dark:border-slate-600 dark:bg-slate-900"
-                />
-                <button
-                  type="button"
-                  disabled={bootstrapBusy || !bootstrapSecret.trim()}
-                  onClick={async () => {
-                    setBootstrapMsg(null);
-                    setBootstrapBusy(true);
-                    try {
-                      const token = await getFirebaseAuth()?.currentUser?.getIdToken();
-                      if (!token) {
-                        setBootstrapMsg("Sign in again and retry.");
-                        return;
-                      }
-                      const res = await fetch("/api/admin/bootstrap-owner", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ secret: bootstrapSecret }),
-                      });
-                      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-                      if (!res.ok || !j.ok) {
-                        setBootstrapMsg(j.error ?? "Could not set owner scope.");
-                        return;
-                      }
-                      setBootstrapMsg("Success. Reload or sign out/in to refresh scope.");
-                    } catch (e) {
-                      setBootstrapMsg(e instanceof Error ? e.message : "Bootstrap failed.");
-                    } finally {
-                      setBootstrapBusy(false);
-                    }
-                  }}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("accessHint")}</p>
+            <label className="mt-4 block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {t("accessCurrent")}
+              <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-950">
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[11px] font-bold uppercase",
+                    scopeBadgeClass(user?.accessScope)
+                  )}
                 >
-                  {bootstrapBusy ? "Working..." : "Make this account owner"}
-                </button>
-              </div>
-              {bootstrapMsg ? (
-                <p className="mt-2 text-[11px] font-medium text-amber-900 dark:text-amber-100">{bootstrapMsg}</p>
-              ) : null}
-            </div>
-          ) : null}
-          <ul className="mt-4 space-y-2 text-sm">
-            <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
-              <span>{t("accessOperations")}</span>
-              <span className="font-mono text-xs text-emerald-600">
-                {t("permOrdersHint")}
-              </span>
-            </li>
-            <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
-              <span>{t("accessCatalog")}</span>
-              <span className="font-mono text-xs text-emerald-600">
-                {t("permCatalogHint")}
-              </span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
-            <ScrollText className="h-5 w-5 text-slate-600" />
-            {t("activityLogs")}
-          </div>
-          <button
-            type="button"
-            className="text-xs font-bold text-[#0066ff] hover:underline"
-            onClick={() => {
-              appendActivityLog({
-                actor: "admin",
-                action: "audit.note",
-                detail: t("activityManualNote"),
-              });
-              setLogs(getActivityLogs());
-            }}
-          >
-            {t("activityAddTest")}
-          </button>
-        </div>
-        <p className="mt-1 text-xs text-slate-500">{t("activityLogsHint")}</p>
-        <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto text-sm">
-          {logs.length === 0 ? (
-            <li className="text-slate-400">{t("activityEmpty")}</li>
-          ) : (
-            logs.map((log) => (
-              <li
-                key={log.id}
-                className="flex flex-col gap-0.5 border-b border-slate-100 py-2 dark:border-slate-800"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="font-mono text-xs text-[#0066ff]">
-                    {log.actor}
-                  </span>
-                  <time
-                    className="text-xs text-slate-400"
-                    dateTime={log.at}
-                  >
-                    {new Date(log.at).toLocaleString()}
-                  </time>
-                </div>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  {log.action}
+                  {scopeLabel}
                 </span>
-                {log.detail ? (
-                  <span className="text-xs text-slate-500">{log.detail}</span>
+              </div>
+            </label>
+            {bootstrapEnabled && user?.accessScopeReady && user.accessScope !== "owner" ? (
+              <div className="mt-5 rounded-xl border border-amber-200/90 bg-amber-50/90 p-4 text-xs text-slate-800 dark:border-amber-800/60 dark:bg-amber-950/35 dark:text-amber-50">
+                <p className="font-extrabold text-amber-950 dark:text-amber-100">{t("bootstrapTitle")}</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-amber-900/95 dark:text-amber-100/90">
+                  {t("bootstrapBody", {
+                    owner: t("scopeOwner"),
+                    path: user?.uid ? `users/${user.uid}/profile/account` : "users/…/profile/account",
+                  })}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <input
+                    type="password"
+                    value={bootstrapSecret}
+                    onChange={(e) => setBootstrapSecret(e.target.value)}
+                    placeholder={t("bootstrapPlaceholder")}
+                    className="min-w-[200px] flex-1 rounded-lg border border-amber-200/80 bg-white px-3 py-2 text-xs dark:border-amber-900/50 dark:bg-slate-900"
+                  />
+                  <button
+                    type="button"
+                    disabled={bootstrapBusy || !bootstrapSecret.trim()}
+                    onClick={async () => {
+                      setBootstrapMsg(null);
+                      setBootstrapBusy(true);
+                      try {
+                        const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+                        if (!token) {
+                          setBootstrapMsg(t("bootstrapSignIn"));
+                          return;
+                        }
+                        const res = await fetch("/api/admin/bootstrap-owner", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ secret: bootstrapSecret }),
+                        });
+                        const j = (await res.json().catch(() => ({}))) as {
+                          ok?: boolean;
+                          error?: string;
+                        };
+                        if (!res.ok || !j.ok) {
+                          setBootstrapMsg(j.error ?? t("bootstrapFail"));
+                          return;
+                        }
+                        await refreshAccessScope();
+                        setBootstrapMsg(t("bootstrapSuccess"));
+                        setToast(t("settingsScopeRefreshed"));
+                      } catch (e) {
+                        setBootstrapMsg(e instanceof Error ? e.message : t("bootstrapFail"));
+                      } finally {
+                        setBootstrapBusy(false);
+                      }
+                    }}
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {bootstrapBusy ? t("bootstrapWorking") : t("bootstrapBtn")}
+                  </button>
+                </div>
+                {bootstrapMsg ? (
+                  <p className="mt-2 text-[11px] font-medium text-amber-950 dark:text-amber-100">
+                    {bootstrapMsg}
+                  </p>
                 ) : null}
+              </div>
+            ) : null}
+            <ul className="mt-5 space-y-2 text-sm">
+              <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white/80 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{t("accessOperations")}</span>
+                <span className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                  {t("permOrdersHint")}
+                </span>
               </li>
-            ))
-          )}
-        </ul>
-      </div>
+              <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white/80 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{t("accessCatalog")}</span>
+                <span className="font-mono text-xs text-emerald-700 dark:text-emerald-400">
+                  {t("permCatalogHint")}
+                </span>
+              </li>
+            </ul>
+          </SettingsSectionCard>
+        </div>
+      )}
+
+      {tab === "audit" && (
+        <SettingsSectionCard accent="slate">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
+              <ScrollText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+              {t("activityLogs")}
+            </div>
+            <button
+              type="button"
+              className="text-xs font-bold text-[#0066ff] hover:underline"
+              onClick={() => {
+                appendActivityLog({
+                  actor: "admin",
+                  action: "audit.note",
+                  detail: t("activityManualNote"),
+                });
+                setLogs(getActivityLogs());
+              }}
+            >
+              {t("activityAddTest")}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("activityLogsHint")}</p>
+          <ul className="mt-4 max-h-[28rem] space-y-1 overflow-y-auto rounded-xl border border-slate-100 bg-white/60 p-2 text-sm dark:border-slate-800 dark:bg-slate-950/30">
+            {logs.length === 0 ? (
+              <li className="px-2 py-6 text-center text-slate-400">{t("activityEmpty")}</li>
+            ) : (
+              logs.map((log) => (
+                <li
+                  key={log.id}
+                  className="flex flex-col gap-0.5 rounded-lg border border-transparent px-3 py-2 hover:border-slate-100 hover:bg-slate-50/80 dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="font-mono text-xs font-bold text-[#0066ff]">{log.actor}</span>
+                    <time className="text-xs text-slate-400" dateTime={log.at}>
+                      {new Date(log.at).toLocaleString()}
+                    </time>
+                  </div>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{log.action}</span>
+                  {log.detail ? (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{log.detail}</span>
+                  ) : null}
+                </li>
+              ))
+            )}
+          </ul>
+        </SettingsSectionCard>
+      )}
     </div>
   );
 }
-
-
-
-
-

@@ -1,38 +1,15 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
-import { verifyModuleAccess } from "@/lib/server-access";
-import type { AdminUserRow, UserSegment } from "@/lib/admin-mock-data";
-
-function defaultSegment(): UserSegment {
-  return "new";
-}
-
-function emptyRow(uid: string, email: string): AdminUserRow {
-  return {
-    id: uid,
-    name: "—",
-    email: email || "—",
-    phone: "",
-    orders: 0,
-    blocked: false,
-    lastActive: "—",
-    totalSpent: 0,
-    segment: defaultSegment(),
-    lastLogin: "—",
-    wishlistItems: [],
-    lastSearches: [],
-    walletBalance: 0,
-    referralInvites: 0,
-    verified: true,
-    suspicious: false,
-    shadowBanned: false,
-    fraudFlags: { highCancels: false, otpFails: false },
-    codRefusedCount: 0,
-  };
-}
+import { verifyModuleAccessAny } from "@/lib/server-access";
+import type { AdminUserRow } from "@/lib/admin-mock-data";
+import {
+  computeUserSegment,
+  emptyAdminUserRow,
+} from "@/lib/admin-user-server-row";
+import { WALLET_DOC_ID } from "@/lib/firebase/collections";
 
 export async function GET(req: Request) {
-  const gate = await verifyModuleAccess(req, "users");
+  const gate = await verifyModuleAccessAny(req, ["users", "orders"]);
   if (!gate.ok) {
     return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
@@ -63,7 +40,7 @@ export async function GET(req: Request) {
   const users: AdminUserRow[] = [];
 
   for (const u of list.users) {
-    const base = emptyRow(u.uid, u.email ?? "");
+    const base = emptyAdminUserRow(u.uid, u.email ?? "");
     const prof = await db.doc(`users/${u.uid}/profile/account`).get();
     const d = prof.data() as Record<string, unknown> | undefined;
     const displayName =
@@ -73,6 +50,19 @@ export async function GET(req: Request) {
     const phone =
       typeof d?.phone === "string" ? d.phone.replace(/\D/g, "") : "";
     const agg = spendByUser.get(u.uid);
+    const lastSignInMs = u.metadata.lastSignInTime
+      ? new Date(u.metadata.lastSignInTime).getTime()
+      : null;
+
+    let walletBalance = 0;
+    try {
+      const wSnap = await db.doc(`users/${u.uid}/wallet/${WALLET_DOC_ID}`).get();
+      const bp = Math.max(0, Number(wSnap.data()?.balancePaise) || 0);
+      walletBalance = Math.round(bp / 100);
+    } catch {
+      /* ignore */
+    }
+
     users.push({
       ...base,
       name: displayName,
@@ -80,6 +70,7 @@ export async function GET(req: Request) {
       phone: phone || base.phone,
       orders: agg?.count ?? 0,
       totalSpent: agg?.spent ?? 0,
+      walletBalance,
       lastLogin: u.metadata.lastSignInTime
         ? new Date(u.metadata.lastSignInTime).toLocaleString("en-IN", {
             day: "2-digit",
@@ -91,7 +82,10 @@ export async function GET(req: Request) {
       lastActive: u.metadata.lastSignInTime
         ? new Date(u.metadata.lastSignInTime).toLocaleDateString("en-IN")
         : "—",
-      segment: (agg?.count ?? 0) > 3 ? "premium" : defaultSegment(),
+      segment: computeUserSegment({
+        orderCount: agg?.count ?? 0,
+        lastSignInMs,
+      }),
     });
   }
 

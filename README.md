@@ -53,20 +53,25 @@ Copy `server/.env.example` to `server/.env` and set **Firebase Admin** (same pro
 
 Without Admin, `/health` still works; `/api/me` and other protected routes return **503**.
 
-## Run both (frontend + backend)
+## Run locally
 
-From the repo root:
+**Storefront only** (most common — from repo root):
 
 ```bash
 npm run dev
 ```
 
-This starts:
+Next.js listens on **http://127.0.0.1:3000** (also works as `http://localhost:3000`). Prefer opening **`/en`** or **`/bn`** (e.g. `http://127.0.0.1:3000/en`). Do not paste Bangla punctuation into the address bar.
 
-- Next.js on **http://localhost:3000**
-- Express API on **http://localhost:4000**
+**Frontend + Express API** together:
 
-Run separately:
+```bash
+npm run dev:stack
+```
+
+This starts Next.js on port **3000** and the API on **http://localhost:4000**.
+
+Run services separately:
 
 ```bash
 npm run dev:web

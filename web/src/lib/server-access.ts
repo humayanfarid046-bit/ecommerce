@@ -15,6 +15,14 @@ export async function verifyModuleAccess(
   req: Request,
   mod: AccessModule
 ): Promise<AccessResult> {
+  return verifyModuleAccessAny(req, [mod]);
+}
+
+/** Allow access if the user has any of the listed modules (same token verification). */
+export async function verifyModuleAccessAny(
+  req: Request,
+  mods: AccessModule[]
+): Promise<AccessResult> {
   const authz = req.headers.get("authorization") ?? "";
   const m = authz.match(/^Bearer\s+(.+)$/i);
   if (!m) return { ok: false, status: 401, error: "Unauthorized" };
@@ -33,7 +41,7 @@ export async function verifyModuleAccess(
     );
     const scope =
       resolvedScope === "none" && isForcedOwnerUid(uid) ? "owner" : resolvedScope;
-    if (!canAccess(scope, mod)) {
+    if (!mods.some((mod) => canAccess(scope, mod))) {
       return { ok: false, status: 403, error: "Access denied" };
     }
     return { ok: true, uid, scope };

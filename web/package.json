@@ -6,7 +6,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1 -p 3000",
+    "dev:clean": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\" && next dev -H 127.0.0.1 -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

@@ -1,10 +1,16 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useAuth } from "@/context/auth-context";
 import { useTranslations } from "next-intl";
 import {
-  mockAdminOrders,
-  mockReturns,
   type AdminOrderRow,
   type AdminReturnReq,
   type AdminUserRow,
@@ -30,6 +36,7 @@ import {
   ChevronDown,
   ChevronUp,
   KeyRound,
+  RefreshCw,
 } from "lucide-react";
 import {
   confirmCodOrder,
@@ -87,6 +94,7 @@ function rowTone(s: AdminOrderRow["status"]) {
 }
 
 export function AdminOrders() {
+  const { user, status: authStatus } = useAuth();
   const getAuthHeader = useCallback(async () => {
     const token = await getFirebaseAuth()?.currentUser?.getIdToken();
     const headers: Record<string, string> = {};
@@ -95,9 +103,17 @@ export function AdminOrders() {
   }, []);
 
   const t = useTranslations("admin");
-  const [orders, setOrders] = useState<AdminOrderRow[]>(mockAdminOrders);
+  const [orders, setOrders] = useState<AdminOrderRow[]>([]);
+  const ordersRef = useRef(orders);
+  ordersRef.current = orders;
+
   const [userIndex, setUserIndex] = useState<AdminUserRow[]>([]);
-  const [returns, setReturns] = useState<AdminReturnReq[]>(mockReturns);
+  const [returns, setReturns] = useState<AdminReturnReq[]>([]);
+
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [usersLoadError, setUsersLoadError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const [statusF, setStatusF] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [payF, setPayF] = useState<(typeof PAY_FILTERS)[number]>("all");
@@ -122,49 +138,66 @@ export function AdminOrders() {
   const [trackingBusy, setTrackingBusy] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const headers = await getAuthHeader();
-        const [resO, resU] = await Promise.all([
-          fetch("/api/admin/orders", { headers }),
-          fetch("/api/admin/users", { headers }),
-        ]);
-        const resR = await fetch("/api/admin/returns", { headers });
-        const jO = (await resO.json().catch(() => ({}))) as {
-          orders?: AdminOrderRow[];
-        };
-        const jU = (await resU.json().catch(() => ({}))) as {
-          users?: AdminUserRow[];
-        };
-        const jR = (await resR.json().catch(() => ({}))) as {
-          returns?: AdminReturnReq[];
-        };
-        if (cancelled) return;
-        if (resO.ok && Array.isArray(jO.orders)) {
-          setOrders(jO.orders);
-          for (const o of jO.orders) {
-            try {
-              setAdminOrderFirebaseUid(o.id, o.customerId);
-            } catch {
-              /* ignore */
-            }
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4200);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  const loadOrdersData = useCallback(async () => {
+    if (authStatus !== "ready") return;
+    setOrdersLoading(true);
+    setOrdersError(null);
+    try {
+      const headers = await getAuthHeader();
+      const [resO, resU] = await Promise.all([
+        fetch("/api/admin/orders", { headers }),
+        fetch("/api/admin/users", { headers }),
+      ]);
+      const resR = await fetch("/api/admin/returns", { headers });
+      const jO = (await resO.json().catch(() => ({}))) as {
+        orders?: AdminOrderRow[];
+      };
+      const jU = (await resU.json().catch(() => ({}))) as {
+        users?: AdminUserRow[];
+      };
+      const jR = (await resR.json().catch(() => ({}))) as {
+        returns?: AdminReturnReq[];
+      };
+      if (resO.ok && Array.isArray(jO.orders)) {
+        setOrders(jO.orders);
+        for (const o of jO.orders) {
+          try {
+            setAdminOrderFirebaseUid(o.id, o.customerId);
+          } catch {
+            /* ignore */
           }
         }
-        if (resU.ok && Array.isArray(jU.users)) {
-          setUserIndex(jU.users);
-        }
-        if (resR.ok && Array.isArray(jR.returns)) {
-          setReturns(jR.returns);
-        }
-      } catch {
-        /* ignore */
+        setOrdersError(null);
+      } else {
+        setOrders([]);
+        setOrdersError(t("ordersLoadFailed"));
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [getAuthHeader]);
+      if (resU.ok && Array.isArray(jU.users)) {
+        setUserIndex(jU.users);
+        setUsersLoadError(null);
+      } else {
+        setUserIndex([]);
+        setUsersLoadError(t("usersDirectoryUnavailable"));
+      }
+      if (resR.ok && Array.isArray(jR.returns)) {
+        setReturns(jR.returns);
+      }
+    } catch {
+      setOrders([]);
+      setOrdersError(t("ordersLoadFailed"));
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, [authStatus, getAuthHeader, t]);
+
+  useEffect(() => {
+    void loadOrdersData();
+  }, [loadOrdersData, user?.uid]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -232,6 +265,8 @@ export function AdminOrders() {
     });
   }, [orders, statusF, payF, minAmt, maxAmt, dateFrom, dateTo, search]);
 
+  const tableBusy = authStatus !== "ready" || ordersLoading;
+
   const visibleIds = filtered.map((o) => o.id);
   const allSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
@@ -254,36 +289,42 @@ export function AdminOrders() {
   };
 
   const setStatus = useCallback(
-    (id: string, status: AdminOrderRow["status"]) => {
-      setOrders((prev) => {
-        const row = prev.find((o) => o.id === id);
-        if (row?.customerId) {
-          void (async () => {
-            try {
-              await fetch("/api/admin/order", {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                  ...(await getAuthHeader()),
-                },
-                body: JSON.stringify({
-                  userId: row.customerId,
-                  orderId: id,
-                  shipmentStep: statusToStep(status),
-                  status: mapAdminStatusToFirestore(status),
-                }),
-              });
-            } catch {
-              /* ignore */
-            }
-          })();
+    async (id: string, nextStatus: AdminOrderRow["status"]) => {
+      const row = ordersRef.current.find((o) => o.id === id);
+      if (!row?.customerId) {
+        setToast(t("orderStatusNoUser"));
+        return;
+      }
+      try {
+        const res = await fetch("/api/admin/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({
+            userId: row.customerId,
+            orderId: id,
+            shipmentStep: statusToStep(nextStatus),
+            status: mapAdminStatusToFirestore(nextStatus),
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? t("orderStatusSaveFailed"));
+          return;
         }
-        return prev.map((o) => (o.id === id ? { ...o, status } : o));
-      });
-      setOrderTracking(id, { step: statusToStep(status) });
-      dispatchOrderTrackingEvent();
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, status: nextStatus } : o))
+        );
+        setOrderTracking(id, { step: statusToStep(nextStatus) });
+        dispatchOrderTrackingEvent();
+        setToast(t("orderStatusSaved"));
+      } catch {
+        setToast(t("orderStatusSaveFailed"));
+      }
     },
-    [getAuthHeader]
+    [getAuthHeader, t]
   );
 
   const setPrivateNote = (id: string, note: string) => {
@@ -303,7 +344,7 @@ export function AdminOrders() {
     setAdminOrderFirebaseUid(o.id, firebaseUidDraft);
     const uid = getAdminOrderFirebaseUid(o.id);
     if (!uid) {
-      window.alert(t("trackingSavedLocalOnly"));
+      setToast(t("trackingSavedLocalOnly"));
       return;
     }
     setTrackingBusy(true);
@@ -325,12 +366,12 @@ export function AdminOrders() {
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        window.alert(j.error ?? t("trackingSaveFailed"));
+        setToast(j.error ?? t("trackingSaveFailed"));
         return;
       }
-      window.alert(t("trackingSavedFirestore"));
+      setToast(t("trackingSavedFirestore"));
     } catch {
-      window.alert(t("trackingSaveFailed"));
+      setToast(t("trackingSaveFailed"));
     } finally {
       setTrackingBusy(false);
     }
@@ -338,23 +379,23 @@ export function AdminOrders() {
 
   const fetchCourierDemo = () => {
     if (!ensureMisleadingDemoAllowed()) {
-      window.alert("This action is disabled in production for safety.");
+      setToast("This action is disabled in production for safety.");
       return;
     }
-    window.alert(t("courierFetchDemo"));
+    setToast(t("courierFetchDemo"));
   };
 
   const notifyDemo = () => {
     if (!ensureMisleadingDemoAllowed()) {
-      window.alert("This action is disabled in production for safety.");
+      setToast("This action is disabled in production for safety.");
       return;
     }
-    window.alert(t("notifyWhatsAppDemo"));
+    setToast(t("notifyWhatsAppDemo"));
   };
 
   const bulkShipped = () => {
     if (!ensureMisleadingDemoAllowed()) {
-      window.alert("This bulk demo action is disabled in production.");
+      setToast("This bulk demo action is disabled in production.");
       return;
     }
     const n = selected.size;
@@ -368,12 +409,12 @@ export function AdminOrders() {
     });
     dispatchOrderTrackingEvent();
     setSelected(new Set());
-    window.alert(t("bulkShippedDemo", { n }));
+    setToast(t("bulkShippedDemo", { n }));
   };
 
   const bulkInvoices = () => {
     if (!ensureMisleadingDemoAllowed()) {
-      window.alert("This bulk demo action is disabled in production.");
+      setToast("This bulk demo action is disabled in production.");
       return;
     }
     const list = orders.filter((o) => selected.has(o.id));
@@ -400,6 +441,7 @@ export function AdminOrders() {
       qrAmount: o.amount,
     }));
     openPrintableHtml(buildBulkInvoiceHtmlDocument(inputs));
+    setToast(t("bulkInvoiceDemo", { n: list.length }));
   };
 
   const setReturnStatus = async (
@@ -410,7 +452,7 @@ export function AdminOrders() {
     const row = returns.find((r) => r.id === id);
     const uid = row?.userId?.trim();
     if (!row || !uid) {
-      window.alert(t("returnMissingUserId"));
+      setToast(t("returnMissingUserId"));
       return;
     }
     const before = returns;
@@ -440,7 +482,7 @@ export function AdminOrders() {
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         setReturns(before);
-        window.alert(j.error ?? t("returnUpdateFailed"));
+        setToast(j.error ?? t("returnUpdateFailed"));
         return;
       }
       setReturns((prev) =>
@@ -452,20 +494,54 @@ export function AdminOrders() {
       );
     } catch {
       setReturns(before);
-      window.alert(t("returnUpdateFailed"));
+      setToast(t("returnUpdateFailed"));
     }
   };
 
   const customerOrders = (cid: string) => orders.filter((o) => o.customerId === cid);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-          {t("ordersTitle")}
-        </h2>
-        <p className="text-sm text-slate-500">{t("ordersSubtitle")}</p>
+    <div className="relative space-y-8">
+      {toast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-[60] max-w-md -translate-x-1/2 rounded-xl border border-slate-200 bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+        >
+          {toast}
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
+            {t("ordersTitle")}
+          </h2>
+          <p className="text-sm text-slate-500">{t("ordersSubtitle")}</p>
+        </div>
+        <button
+          type="button"
+          disabled={tableBusy}
+          onClick={() => void loadOrdersData()}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        >
+          <RefreshCw
+            className={cn("h-4 w-4", tableBusy && "animate-spin")}
+          />
+          {t("ordersRefresh")}
+        </button>
       </div>
+
+      {ordersError ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-100">
+          {ordersError}
+        </div>
+      ) : null}
+
+      {usersLoadError ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100">
+          {usersLoadError}
+        </div>
+      ) : null}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
         <p className="text-xs font-bold uppercase text-slate-500">{t("orderFiltersAdvanced")}</p>
@@ -577,7 +653,37 @@ export function AdminOrders() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((o) => {
+            {tableBusy ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <tr
+                  key={`sk-${i}`}
+                  className="border-b border-slate-100 dark:border-slate-800"
+                >
+                  <td colSpan={11} className="p-3">
+                    <div className="h-3 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                  </td>
+                </tr>
+              ))
+            ) : ordersError ? (
+              <tr>
+                <td colSpan={11} className="p-8 text-center text-sm text-slate-500">
+                  {t("ordersLoadFailed")}
+                </td>
+              </tr>
+            ) : orders.length === 0 ? (
+              <tr>
+                <td colSpan={11} className="p-8 text-center text-sm text-slate-500">
+                  {t("ordersEmpty")}
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={11} className="p-8 text-center text-sm text-slate-500">
+                  {t("ordersNoMatch")}
+                </td>
+              </tr>
+            ) : (
+              filtered.map((o) => {
               void codTick; // re-read COD meta from localStorage
               const pin = o.deliveryPin ?? "—";
               const u = userIndex.find((x) => x.id === o.customerId);
@@ -663,7 +769,10 @@ export function AdminOrders() {
                     <select
                       value={o.status}
                       onChange={(e) =>
-                        setStatus(o.id, e.target.value as AdminOrderRow["status"])
+                        void setStatus(
+                          o.id,
+                          e.target.value as AdminOrderRow["status"]
+                        )
                       }
                       className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold dark:border-slate-600 dark:bg-slate-950"
                     >
@@ -888,7 +997,8 @@ export function AdminOrders() {
                 ) : null}
               </Fragment>
             );
-            })}
+              })
+            )}
           </tbody>
         </table>
       </div>
@@ -921,6 +1031,11 @@ export function AdminOrders() {
                 }
                 return (
                   <div className="mt-4 space-y-3 text-sm">
+                    {usersLoadError ? (
+                      <p className="text-xs text-amber-800 dark:text-amber-200">
+                        {usersLoadError}
+                      </p>
+                    ) : null}
                     <p>
                       <strong>{hint.customer}</strong>
                     </p>
@@ -981,6 +1096,11 @@ export function AdminOrders() {
         </h3>
         <p className="text-sm text-slate-500">{t("returnsSubtitle")}</p>
         <div className="mt-3 space-y-3">
+          {returns.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-600">
+              {t("returnsEmpty")}
+            </p>
+          ) : null}
           {returns.map((r) => (
             <div
               key={`${r.userId ?? "u"}-${r.id}`}

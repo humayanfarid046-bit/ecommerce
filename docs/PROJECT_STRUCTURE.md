@@ -24,6 +24,11 @@ Monorepo root (`E COMMERC`):
 
 `FIREBASE_SERVICE_ACCOUNT_JSON` থাকলে Admin rules বাইপাস করে অর্ডার PATCH, `collectionGroup("orders")` lookup ইত্যাদি।
 
+### প্রোডাক্ট ক্যাটালগ (অ্যাডমিন উইজার্ড / বাল্ক ইমপোর্ট)
+
+- **Firestore-এ সেভ হয় না** — ব্রাউজার **`localStorage`** (`lc_store_catalog_v1`, ইমেজ লাইব্রেরি আলাদা কী)। প্রোডাক্ট/ছবি সার্ভারে তুলতে হলে পরে CDN বা ব্যাকএন্ড যোগ করতে হবে।
+- এই ধরনের ফিচার পুশ করলে **`firestore.rules` / `firestore.indexes.json` ডিপ্লয় বাধ্যতামূলক নয়** — শুধু তখনই আপডেট করবে যখন নতুন **কম্পোজিট কুয়েরি** (where + orderBy) বা নতুন **ক্লায়েন্ট-রাইট পাথ** যোগ করো।
+
 ## কখন কী করবে
 
 | কাজ | কোথায় |

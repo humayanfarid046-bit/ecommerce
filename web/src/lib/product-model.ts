@@ -42,6 +42,8 @@ export type Product = {
   demoVideoUrl?: string;
   sizeOptions?: string[];
   colorOptions?: { id: string; label: string; hex: string }[];
+  /** Hex (e.g. #fafafa) behind product photos on PDP gallery */
+  galleryBackground?: string;
 };
 
 export const categories: Category[] = [

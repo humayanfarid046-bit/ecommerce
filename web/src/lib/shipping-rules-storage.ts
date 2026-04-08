@@ -100,12 +100,13 @@ export function computeDeliveryQuote(
   const free = subtotal >= rules.freeShippingMin;
   let deliveryFee = 0;
   let matchedLabel: string | null = null;
-  if (!free) {
+    if (!free) {
     const hit = matchPinRule(pin, rules.pinRules);
     if (hit) {
       deliveryFee = hit.fee;
       matchedLabel = hit.label;
     } else {
+      /** No PIN rule match: prefer “below threshold” fee, else fallback PIN fee. */
       deliveryFee = rules.feeBelowMin > 0 ? rules.feeBelowMin : rules.defaultPinFee;
     }
   }

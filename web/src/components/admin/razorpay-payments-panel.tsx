@@ -51,6 +51,13 @@ function statusBadgeClass(s: RzpLedgerEntry["status"]) {
   }
 }
 
+const GW_DEFAULT: RazorpayGatewaySettings = {
+  upi: true,
+  card: true,
+  netbanking: true,
+  wallet: true,
+};
+
 export function RazorpayPaymentsPanel() {
   const t = useTranslations("admin");
   const [rows, setRows] = useState<RzpLedgerEntry[]>([]);
@@ -59,10 +66,16 @@ export function RazorpayPaymentsPanel() {
     keyIdPreview: string;
     webhookConfigured: boolean;
   } | null>(null);
-  const [gw, setGw] = useState<RazorpayGatewaySettings>(getGatewaySettings);
-  const [autoInv, setAutoInv] = useState(getAutoInvoiceEnabled);
+  const [gw, setGw] = useState<RazorpayGatewaySettings>(GW_DEFAULT);
+  const [autoInv, setAutoInv] = useState(true);
   const [refundBusy, setRefundBusy] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [rzpToast, setRzpToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    setGw(getGatewaySettings());
+    setAutoInv(getAutoInvoiceEnabled());
+  }, []);
 
   const refresh = useCallback(() => {
     setRows(getRzpLedger());
@@ -85,6 +98,12 @@ export function RazorpayPaymentsPanel() {
     const id = window.setInterval(() => setTick((x) => x + 1), 8000);
     return () => window.clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!rzpToast) return;
+    const id = window.setTimeout(() => setRzpToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [rzpToast]);
 
   const feeTotals = useMemo(() => {
     const captured = rows.filter((r) => r.status === "captured");
@@ -115,14 +134,18 @@ export function RazorpayPaymentsPanel() {
       };
       if (res.ok && data.refundId) {
         markRefundedInLedger(pid, data.refundId, data.amount ?? row.amountPaise);
+        setRzpToast(t("rzpRefundOk"));
       } else {
         markRefundedInLedger(
           pid,
           `rfnd_demo_${Date.now().toString(36)}`,
           row.amountPaise
         );
+        setRzpToast(t("rzpRefundDemoFallback"));
       }
       refresh();
+    } catch {
+      setRzpToast(t("rzpRefundFailed"));
     } finally {
       setRefundBusy(null);
     }
@@ -135,7 +158,15 @@ export function RazorpayPaymentsPanel() {
   }
 
   return (
-    <div className="space-y-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-900">
+    <div className="relative space-y-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-900">
+      {rzpToast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 z-[100] max-w-md rounded-xl border border-emerald-500/30 bg-emerald-950 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-xl dark:bg-emerald-950/95"
+        >
+          {rzpToast}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
@@ -255,6 +286,16 @@ export function RazorpayPaymentsPanel() {
               </tr>
             </thead>
             <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="p-8 text-center text-sm text-slate-500"
+                  >
+                    {t("rzpLedgerEmpty")}
+                  </td>
+                </tr>
+              ) : null}
               {rows.map((r) => (
                 <tr
                   key={r.id}

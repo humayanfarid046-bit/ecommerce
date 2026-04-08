@@ -8,7 +8,7 @@ import { useWishlist } from "@/context/wishlist-context";
 import { setSnapshot } from "@/lib/wishlist-price-snapshot";
 import { getProductById } from "@/lib/mock-data";
 import type { Product } from "@/lib/product-model";
-import { getShippingRules } from "@/lib/shipping-rules-storage";
+import { computeDeliveryQuote } from "@/lib/shipping-rules-storage";
 import {
   effectiveLineTotalRupees,
   effectiveUnitPriceAfterCategoryDiscount,
@@ -58,10 +58,9 @@ export default function CartPage() {
   }, [lines, catDiscTick]);
 
   const delivery = useMemo(() => {
-    const rules = getShippingRules();
     if (itemTotal === 0) return 0;
-    if (itemTotal >= rules.freeShippingMin) return 0;
-    return rules.feeBelowMin > 0 ? rules.feeBelowMin : rules.defaultPinFee;
+    const q = computeDeliveryQuote(itemTotal, "", false);
+    return q.deliveryFee;
   }, [itemTotal, shipTick]);
 
   function moveToWishlist(productId: string) {

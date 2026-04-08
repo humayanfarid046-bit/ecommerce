@@ -11,11 +11,22 @@ type Props = {
   images: string[];
   title: string;
   videoUrl?: string | null;
+  /** Hex — behind main product image (from admin) */
+  galleryBackground?: string | null;
 };
 
 type Tab = "photos" | "spin" | "video";
 
-export function ProductGallery({ images, title, videoUrl }: Props) {
+function imgUnoptimized(src: string) {
+  return src.startsWith("data:") || src.startsWith("blob:");
+}
+
+export function ProductGallery({
+  images,
+  title,
+  videoUrl,
+  galleryBackground,
+}: Props) {
   const t = useTranslations("product.gallery");
   const [idx, setIdx] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -81,20 +92,31 @@ export function ProductGallery({ images, title, videoUrl }: Props) {
       <div className="flex gap-2 lg:flex-col">
         {images.map((im, i) => (
           <button
-            key={im}
+            key={`${i}-${im.slice(0, 48)}`}
             type="button"
             onClick={() => {
               setIdx(i);
               setTab("photos");
             }}
             className={cn(
-              "relative aspect-square h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#fafafa] transition",
+              "relative aspect-square h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition",
+              !galleryBackground && "bg-[#fafafa] dark:bg-slate-800/50",
               i === idx && tab === "photos"
                 ? "border-[#2874f0] ring-2 ring-[#2874f0]/20"
                 : "border-transparent opacity-80 hover:opacity-100"
             )}
+            style={
+              galleryBackground ? { backgroundColor: galleryBackground } : undefined
+            }
           >
-            <Image src={im} alt="" fill className="object-contain p-0.5" sizes="64px" />
+            <Image
+              src={im}
+              alt=""
+              fill
+              className="object-contain p-0.5"
+              sizes="64px"
+              unoptimized={imgUnoptimized(im)}
+            />
           </button>
         ))}
       </div>
@@ -146,7 +168,18 @@ export function ProductGallery({ images, title, videoUrl }: Props) {
           </div>
         )}
 
-        <div className="group/main relative aspect-square w-full max-w-[min(100%,640px)] overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#fafafa] shadow-[0_4px_14px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(40,116,240,0.12)] dark:border-slate-700 dark:bg-slate-900/40 xl:max-w-none">
+        <div
+          className={cn(
+            "group/main relative aspect-square w-full max-w-[min(100%,640px)] overflow-hidden rounded-2xl border border-[#E5E7EB] shadow-[0_4px_14px_rgba(0,0,0,0.06)] transition-shadow duration-300 hover:shadow-[0_12px_32px_rgba(40,116,240,0.12)] dark:border-slate-700 xl:max-w-none",
+            !galleryBackground &&
+              "bg-[#fafafa] dark:bg-slate-900/40"
+          )}
+          style={
+            galleryBackground
+              ? { backgroundColor: galleryBackground }
+              : undefined
+          }
+        >
           {tab === "video" && videoUrl ? (
             <video
               className="h-full w-full object-contain"
@@ -188,6 +221,7 @@ export function ProductGallery({ images, title, videoUrl }: Props) {
                       alt={title}
                       fill
                       priority
+                      unoptimized={imgUnoptimized(src!)}
                       className={cn(
                         tab === "photos"
                           ? "object-contain transition-transform duration-200 ease-out"

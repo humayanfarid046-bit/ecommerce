@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Megaphone,
   MessageCircle,
+  PanelsTopLeft,
   Plus,
   Smartphone,
   Sparkles,
@@ -20,7 +21,6 @@ import {
 import {
   defaultCmsState,
   getCms,
-  homeSectionLabels,
   parseSectionKey,
   resolveBannerHref,
   saveCms,
@@ -29,28 +29,91 @@ import {
   type CmsBannerSlide,
   type CmsCustomSection,
   type CmsState,
+  type HomeSectionKey,
 } from "@/lib/cms-storage";
 import { ensureMisleadingDemoAllowed } from "@/lib/deploy-safety";
 
-function sectionLabel(raw: string): string {
-  const p = parseSectionKey(raw);
-  if (!p) return raw;
-  if (p.type === "custom") return `Collection`;
-  return homeSectionLabels[p.key];
+function hrefForLinkType(
+  nextType: BannerHrefType,
+  prevHref: string,
+  productIds: string[],
+  categorySlugs: string[]
+): string {
+  if (nextType === "product") {
+    if (productIds.includes(prevHref)) return prevHref;
+    return productIds[0] ?? prevHref;
+  }
+  if (nextType === "category") {
+    if (categorySlugs.includes(prevHref)) return prevHref;
+    return categorySlugs[0] ?? "mens-wear";
+  }
+  const t = prevHref.trim();
+  if (!t) return "/sale";
+  return t.startsWith("/") ? t : `/${t}`;
 }
 
 export function AdminContent() {
   const t = useTranslations("admin");
+  const tHome = useTranslations("home");
   const products = useCatalogProducts();
   const [cms, setCms] = useState<CmsState>(defaultCmsState);
   const [mounted, setMounted] = useState(false);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [previewBannerId, setPreviewBannerId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     setCms(getCms());
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  /** Catalog loads after first paint — fix product link targets that were invalid while the list was empty. */
+  useEffect(() => {
+    if (!mounted || products.length === 0) return;
+    const productIds = products.map((p) => p.id);
+    const categorySlugs = categories.map((c) => c.slug);
+    setCms((prev) => {
+      let changed = false;
+      const banners = prev.banners.map((b) => {
+        if (b.hrefType === "product" && !productIds.includes(b.href)) {
+          changed = true;
+          return { ...b, href: productIds[0]! };
+        }
+        if (b.hrefType === "category" && !categorySlugs.includes(b.href)) {
+          changed = true;
+          return { ...b, href: categorySlugs[0] ?? b.href };
+        }
+        return b;
+      });
+      if (!changed) return prev;
+      const next = { ...prev, banners };
+      saveCms(next);
+      return next;
+    });
+  }, [mounted, products]);
+
+  const builtinSectionTitle = (key: HomeSectionKey) => {
+    const titles: Record<HomeSectionKey, string> = {
+      categories: tHome("shopByCategory"),
+      featured: tHome("featuredProducts"),
+      continue: tHome("continueShopping"),
+      instagram: tHome("instagramTitle"),
+    };
+    return titles[key];
+  };
+
+  function sectionOrderLabel(raw: string): string {
+    const p = parseSectionKey(raw);
+    if (!p) return raw;
+    if (p.type === "custom") return t("cmsCustomSection");
+    return builtinSectionTitle(p.key);
+  }
 
   const previewSlide = useMemo(() => {
     const b = cms.banners.find((x) => x.id === previewBannerId) ?? cms.banners[0];
@@ -67,6 +130,7 @@ export function AdminContent() {
 
   function saveAll() {
     saveCms(cms);
+    setToast(t("cmsToastSaved"));
   }
 
   function updateBanner(id: string, patch: Partial<CmsBannerSlide>) {
@@ -197,21 +261,45 @@ export function AdminContent() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-            {t("contentTitle")}
-          </h2>
-          <p className="text-sm text-slate-500">{t("contentSubtitle")}</p>
-        </div>
-        <button
-          type="button"
-          onClick={saveAll}
-          className="rounded-xl bg-[#0066ff] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0052cc]"
+    <div className="relative space-y-8">
+      {toast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 z-[100] max-w-md rounded-xl border border-emerald-500/30 bg-emerald-950 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-xl dark:bg-emerald-950/95"
         >
-          {t("cmsSaveAll")}
-        </button>
+          {toast}
+        </div>
+      ) : null}
+
+      <div className="overflow-hidden rounded-3xl border border-indigo-100/80 bg-gradient-to-r from-[#0066ff]/[0.12] via-violet-500/[0.08] to-sky-100/30 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0066ff] to-violet-600 text-white shadow-lg shadow-indigo-300/30 dark:shadow-indigo-950/40">
+              <PanelsTopLeft className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#0066ff]">
+                {t("cmsHeroEyebrow")}
+              </p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white md:text-3xl">
+                {t("contentTitle")}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm font-medium text-slate-600 dark:text-slate-300">
+                {t("contentSubtitle")}
+              </p>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                {t("cmsHeroHint")}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={saveAll}
+            className="shrink-0 rounded-xl bg-[#0066ff] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0052cc]"
+          >
+            {t("cmsSaveAll")}
+          </button>
+        </div>
       </div>
 
       {/* Banners */}
@@ -248,6 +336,21 @@ export function AdminContent() {
                 </tr>
               </thead>
               <tbody>
+                {cms.banners.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="py-12 text-center align-middle text-sm text-slate-500"
+                    >
+                      <p className="font-semibold text-slate-700 dark:text-slate-300">
+                        {t("cmsBannerEmptyTitle")}
+                      </p>
+                      <p className="mt-1 max-w-md mx-auto text-xs">
+                        {t("cmsBannerEmptyHint")}
+                      </p>
+                    </td>
+                  </tr>
+                ) : null}
                 {cms.banners.map((b) => (
                   <tr key={b.id} className="align-top border-b border-slate-100 dark:border-slate-800">
                     <td className="py-2 pr-2">
@@ -283,11 +386,16 @@ export function AdminContent() {
                     <td className="py-2 pr-2">
                       <select
                         value={b.hrefType}
-                        onChange={(e) =>
-                          updateBanner(b.id, {
-                            hrefType: e.target.value as BannerHrefType,
-                          })
-                        }
+                        onChange={(e) => {
+                          const hrefType = e.target.value as BannerHrefType;
+                          const href = hrefForLinkType(
+                            hrefType,
+                            b.href,
+                            products.map((p) => p.id),
+                            categories.map((c) => c.slug)
+                          );
+                          updateBanner(b.id, { hrefType, href });
+                        }}
                         className="w-full rounded-lg border border-slate-200 px-2 py-1 dark:border-slate-600 dark:bg-slate-950"
                       >
                         <option value="product">{t("cmsHrefProduct")}</option>
@@ -298,17 +406,26 @@ export function AdminContent() {
                     <td className="py-2 pr-2">
                       {b.hrefType === "product" ? (
                         <select
-                          value={b.href}
+                          value={
+                            products.some((p) => p.id === b.href)
+                              ? b.href
+                              : products[0]?.id ?? ""
+                          }
                           onChange={(e) =>
                             updateBanner(b.id, { href: e.target.value })
                           }
                           className="w-full rounded-lg border border-slate-200 px-2 py-1 dark:border-slate-600 dark:bg-slate-950"
+                          disabled={products.length === 0}
                         >
-                          {products.slice(0, 40).map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.title.slice(0, 40)}
-                            </option>
-                          ))}
+                          {products.length === 0 ? (
+                            <option value="">{t("cmsCatalogLoading")}</option>
+                          ) : (
+                            products.slice(0, 40).map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.title.slice(0, 40)}
+                              </option>
+                            ))
+                          )}
                         </select>
                       ) : b.hrefType === "category" ? (
                         <select
@@ -427,7 +544,7 @@ export function AdminContent() {
             const label =
               custom != null
                 ? `${t("cmsCustomSection")}: ${custom.title}`
-                : sectionLabel(key);
+                : sectionOrderLabel(key);
             return (
               <li
                 key={key}

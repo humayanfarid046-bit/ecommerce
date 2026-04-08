@@ -24,6 +24,37 @@ import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { GoogleSnippetPreview } from "@/components/google-snippet-preview";
 import { computeSeoScore } from "@/lib/seo-analytics-storage";
 
+/** Rebuild variant rows from saved catalogue data so edit/duplicate does not reset stock to defaults. */
+function variantsFromProduct(p: import("@/lib/product-model").Product): VariantRow[] {
+  const stock =
+    typeof p.stockLeft === "number" ? p.stockLeft : p.inStock ? 10 : 0;
+  const sizes = p.sizeOptions?.length ? p.sizeOptions : ["One size"];
+  const colorLabels = p.colorOptions?.length
+    ? p.colorOptions.map((c) => c.label)
+    : ["Default"];
+  const pairs: { size: string; color: string }[] = [];
+  for (const s of sizes) {
+    for (const c of colorLabels) {
+      pairs.push({ size: s, color: c });
+    }
+  }
+  const n = Math.max(1, pairs.length);
+  const base = Math.floor(stock / n);
+  const extra = stock - base * n;
+  return pairs.map((pair, i) => {
+    const rowStock = base + (i < extra ? 1 : 0);
+    return {
+      id: `v-${p.id}-${i}`,
+      size: pair.size,
+      color: pair.color,
+      sku: `${(p.slug || "sku").toUpperCase().replace(/\s+/g, "-").slice(0, 28)}-${i}`,
+      price: p.price,
+      stock: rowStock,
+      weightG: 280,
+    };
+  });
+}
+
 type Img = GalleryItem;
 
 type Props = {
@@ -55,6 +86,9 @@ export function ProductWizard({
   const [colorImages, setColorImages] = useState<Record<string, string>>({});
   const [flashH, setFlashH] = useState("2");
   const [flashPct, setFlashPct] = useState("12");
+  const [toast, setToast] = useState<string | null>(null);
+  /** Hex for PDP gallery frame behind photos (optional) */
+  const [galleryBg, setGalleryBg] = useState("");
 
   const priceDemo = getProductById(targetId)?.price ?? 1999;
 
@@ -62,11 +96,21 @@ export function ProductWizard({
     setSlug(slugifyName(name));
   }, [name]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const tid = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(tid);
+  }, [toast]);
+
   const loadProduct = useCallback(
     (id: string, dup: boolean) => {
       const p = getProductById(id);
       if (!p) return;
-      if (!dup) setTargetId(p.id);
+      if (dup) {
+        setTargetId(newCatalogProductId());
+      } else {
+        setTargetId(p.id);
+      }
       setName(dup ? `${p.title} (copy)` : p.title);
       setSlug(dup ? `${p.slug}-copy` : p.slug);
       setCategorySlug(p.categorySlug);
@@ -78,17 +122,28 @@ export function ProductWizard({
       const alts = m.imageAlts ?? {};
       setImages(
         p.images.map((src, i) => {
-          const id = `ex-${i}`;
+          const imId = `ex-${i}`;
           return {
-            id,
+            id: imId,
             src,
             name: `image-${i}.jpg`,
-            alt: alts[id] ?? "",
+            alt: alts[imId] ?? "",
           };
         })
       );
-      setVariants([]);
+      setVariants(variantsFromProduct(p));
       setColorImages({});
+      setFlashH("2");
+      setFlashPct("12");
+      if (m.flashSale?.endsAt && m.flashSale.discountPct) {
+        const end = new Date(m.flashSale.endsAt).getTime();
+        if (end > Date.now()) {
+          const hours = Math.max(1, Math.ceil((end - Date.now()) / 3600000));
+          setFlashH(String(Math.min(168, hours)));
+          setFlashPct(String(m.flashSale.discountPct));
+        }
+      }
+      setGalleryBg(p.galleryBackground?.trim() ?? "");
     },
     []
   );
@@ -144,6 +199,9 @@ export function ProductWizard({
     const uniqColors = [...new Set(variants.map((v) => v.color))];
     const descPlain = stripHtml(descHtml) || name.trim() || "Product";
     const imgs = images.map((i) => i.src).filter(Boolean);
+    const bgHex = galleryBg.trim();
+    const validBg =
+      bgHex && /^#[0-9A-Fa-f]{3,8}$/.test(bgHex) ? bgHex : undefined;
 
     const product: Product = {
       id: targetId,
@@ -171,6 +229,7 @@ export function ProductWizard({
               hex: ["#111827", "#2563eb", "#dc2626", "#059669", "#7c3aed"][i % 5],
             }))
           : undefined,
+      ...(validBg ? { galleryBackground: validBg } : {}),
     };
 
     upsertCatalogProduct(product);
@@ -182,13 +241,21 @@ export function ProductWizard({
       imageAlts: Object.keys(imageAlts).length ? imageAlts : undefined,
     });
     window.dispatchEvent(new CustomEvent("lc-catalog"));
-    window.alert(t("wizardSavedDemo"));
+    setToast(t("wizardSavedDemo"));
   };
 
   const steps = 6;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <div className="relative space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+      {toast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-50 max-w-md -translate-x-1/2 rounded-xl border border-slate-200 bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg dark:border-slate-600 dark:bg-slate-800"
+        >
+          {toast}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[#0066ff]">
           <Sparkles className="h-5 w-5" />
@@ -218,7 +285,7 @@ export function ProductWizard({
         {t("wizardTargetProduct")}
         <div className="mt-1 flex flex-wrap gap-2">
           <select
-            value={catalog.some((p) => p.id === targetId) ? targetId : ""}
+            value={targetId}
             onChange={(e) => {
               const v = e.target.value;
               if (!v) return;
@@ -233,6 +300,13 @@ export function ProductWizard({
                 {p.id} — {p.title}
               </option>
             ))}
+            {targetId && !catalog.some((p) => p.id === targetId) ? (
+              <option value={targetId}>
+                {getProductById(targetId)?.title?.trim() ||
+                  name.trim() ||
+                  `${targetId.slice(0, 12)}…`}
+              </option>
+            ) : null}
           </select>
           <button
             type="button"
@@ -249,6 +323,7 @@ export function ProductWizard({
               setImages([]);
               setVariants([]);
               setColorImages({});
+              setGalleryBg("");
             }}
             className="rounded-xl border border-dashed border-[#0066ff] px-3 py-2 text-xs font-bold text-[#0066ff]"
           >
@@ -387,14 +462,67 @@ export function ProductWizard({
       ) : null}
 
       {step === 4 ? (
-        <div>
+        <div className="space-y-4">
           <p className="mb-2 text-xs font-bold text-slate-500">{t("uploadImages")}</p>
           <ImageDropCrop items={images} onChange={setImages} />
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-600 dark:bg-slate-800/40">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              {t("galleryBgLabel")}
+            </p>
+            <p className="mt-1 text-[11px] text-slate-500">{t("galleryBgHint")}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <input
+                type="color"
+                aria-label={t("galleryBgLabel")}
+                value={galleryBg || "#fafafa"}
+                onChange={(e) => setGalleryBg(e.target.value)}
+                className="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white dark:border-slate-600"
+              />
+              <input
+                type="text"
+                value={galleryBg}
+                onChange={(e) => setGalleryBg(e.target.value)}
+                placeholder="#fafafa"
+                className="w-32 rounded-lg border border-slate-200 px-2 py-1.5 font-mono text-sm dark:border-slate-600 dark:bg-slate-950"
+              />
+              <button
+                type="button"
+                onClick={() => setGalleryBg("")}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:border-slate-600"
+              >
+                {t("galleryBgClear")}
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(
+                [
+                  "#fafafa",
+                  "#ffffff",
+                  "#f5f5f4",
+                  "#f8fafc",
+                  "#ecfdf5",
+                  "#fef3c7",
+                  "#e0e7ff",
+                  "#1e293b",
+                ] as const
+              ).map((hex) => (
+                <button
+                  key={hex}
+                  type="button"
+                  title={hex}
+                  onClick={() => setGalleryBg(hex)}
+                  className="h-9 w-9 rounded-lg border-2 border-slate-200 shadow-sm ring-offset-2 transition hover:ring-2 hover:ring-[#0066ff]/40 dark:border-slate-600"
+                  style={{ backgroundColor: hex }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       ) : null}
 
       {step === 5 ? (
         <VariantMatrix
+          key={targetId}
           baseSlug={slug || "sku"}
           defaultPrice={priceDemo}
           variants={variants}

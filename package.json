@@ -3,7 +3,8 @@
   "private": true,
   "description": "Next.js storefront (web) + Express API (server) + optional Firebase Functions",
   "scripts": {
-    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev --prefix web\" \"npm run dev --prefix server\"",
+    "dev": "npm run dev --prefix web",
+    "dev:stack": "concurrently -n web,api -c cyan,magenta \"npm run dev --prefix web\" \"npm run dev --prefix server\"",
     "dev:web": "npm run dev --prefix web",
     "dev:api": "npm run dev --prefix server",
     "build": "npm ci --prefix web && npm run build --prefix web",

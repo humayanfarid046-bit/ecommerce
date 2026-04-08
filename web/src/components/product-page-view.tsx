@@ -157,6 +157,7 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
               images={product.images.length ? product.images : ["/vercel.svg"]}
               title={product.title}
               videoUrl={product.demoVideoUrl}
+              galleryBackground={product.galleryBackground}
             />
           </div>
           <div className="min-h-0 min-w-0 lg:max-h-[min(880px,calc(100dvh-8rem))] lg:overflow-y-auto lg:overscroll-contain lg:pl-1">

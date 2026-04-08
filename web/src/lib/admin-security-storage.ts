@@ -229,19 +229,15 @@ export function logAdminSessionOpen(): void {
   }
 }
 
-let lastShipLog = 0;
 export function saveShippingRulesWithActivity(
   next: ShippingRulesState,
-  opts?: { forceLog?: boolean }
+  opts?: { skipActivityLog?: boolean }
 ): void {
   saveShippingRules(next);
-  const now = Date.now();
-  if (opts?.forceLog || now - lastShipLog > 45_000) {
-    lastShipLog = now;
-    appendActivityLog({
-      actor: "admin",
-      action: "settings.shipping_rules_updated",
-      detail: `${next.pinRules.length} PIN rules`,
-    });
-  }
+  if (opts?.skipActivityLog) return;
+  appendActivityLog({
+    actor: "admin",
+    action: "settings.shipping_rules_updated",
+    detail: `free≥${next.freeShippingMin} · ${next.pinRules.length} PIN rules`,
+  });
 }

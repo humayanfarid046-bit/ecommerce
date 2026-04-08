@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   mockCodCashSummary,
@@ -11,16 +11,41 @@ import {
 import { Banknote, Bike, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const RIDERS_KEY = "lc_cod_riders_v1";
+
+function readRiders(): RiderCashRow[] {
+  if (typeof window === "undefined") return mockRiderCash;
+  try {
+    const raw = localStorage.getItem(RIDERS_KEY);
+    if (!raw) return mockRiderCash;
+    const p = JSON.parse(raw) as RiderCashRow[];
+    return Array.isArray(p) && p.length ? p : mockRiderCash;
+  } catch {
+    return mockRiderCash;
+  }
+}
+
+function writeRiders(rows: RiderCashRow[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(RIDERS_KEY, JSON.stringify(rows));
+}
+
 export function CashCodReconciliation() {
   const t = useTranslations("admin");
   const [riders, setRiders] = useState<RiderCashRow[]>(mockRiderCash);
 
+  useEffect(() => {
+    setRiders(readRiders());
+  }, []);
+
   function markRiderPaid(id: string) {
-    setRiders((prev) =>
-      prev.map((r) =>
+    setRiders((prev) => {
+      const next = prev.map((r) =>
         r.id === id ? { ...r, pendingCash: 0, settled: true } : r
-      )
-    );
+      );
+      writeRiders(next);
+      return next;
+    });
     window.alert(t("riderSettledDemo"));
   }
 

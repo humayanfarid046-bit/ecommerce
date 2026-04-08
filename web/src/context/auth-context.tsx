@@ -55,6 +55,8 @@ function mapFirebaseUser(u: FirebaseUser): AuthUser {
 type AuthContextValue = {
   user: AuthUser | null;
   status: AuthStatus;
+  /** Re-read access scope from `/api/user/access-scope` or Firestore (after owner bootstrap, etc.). */
+  refreshAccessScope: () => Promise<void>;
   signInEmail: (email: string, password: string) => Promise<void>;
   signUpEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -262,17 +264,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const refreshAccessScope = useCallback(async () => {
+    const auth = getFirebaseAuth();
+    const cu = auth?.currentUser;
+    if (!cu) return;
+    try {
+      const token = await cu.getIdToken(true);
+      const res = await fetch("/api/user/access-scope", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { accessScope?: unknown };
+        const scope = normalizeAccessScope(json.accessScope);
+        setUser((prev) =>
+          prev ? { ...prev, accessScope: scope, accessScopeReady: true } : prev
+        );
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    const db = getFirebaseDb();
+    if (!db) {
+      setUser((prev) =>
+        prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
+      );
+      return;
+    }
+    try {
+      const snap = await getDoc(doc(db, "users", cu.uid, "profile", "account"));
+      const scope = resolveAccessScopeFromRecord(
+        snap.data() as Record<string, unknown> | undefined
+      );
+      const effectiveScope =
+        scope === "none" && isForcedOwnerUid(cu.uid) ? "owner" : scope;
+      setUser((prev) =>
+        prev ? { ...prev, accessScope: effectiveScope, accessScopeReady: true } : prev
+      );
+    } catch {
+      const fallbackScope: AccessScope = isForcedOwnerUid(cu.uid) ? "owner" : "none";
+      setUser((prev) =>
+        prev ? { ...prev, accessScope: fallbackScope, accessScopeReady: true } : prev
+      );
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       status,
+      refreshAccessScope,
       signInEmail,
       signUpEmail,
       signOut,
       logoutAllDevices,
       requestOtp,
     }),
-    [user, status, signInEmail, signUpEmail, signOut, logoutAllDevices, requestOtp]
+    [
+      user,
+      status,
+      refreshAccessScope,
+      signInEmail,
+      signUpEmail,
+      signOut,
+      logoutAllDevices,
+      requestOtp,
+    ]
   );
 
   return (

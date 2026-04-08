@@ -117,6 +117,9 @@ function normalizeProduct(raw: unknown): Product | null {
     }
     if (colors.length) p.colorOptions = colors;
   }
+  if (typeof raw.galleryBackground === "string" && /^#[0-9A-Fa-f]{3,8}$/.test(raw.galleryBackground.trim())) {
+    p.galleryBackground = raw.galleryBackground.trim();
+  }
   return p;
 }
 

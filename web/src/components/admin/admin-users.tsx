@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
@@ -25,7 +32,23 @@ import {
   LogIn,
   Users,
   Globe,
+  RefreshCw,
+  ShieldCheck,
+  Copy,
 } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import {
+  mergeUserOverrides,
+  patchUserOverride,
+} from "@/lib/admin-user-local-overrides";
+import {
+  computeFraudAlertItems,
+  formatFraudAlertItem,
+  fraudAlertItemKey,
+  type FraudAlertItem,
+} from "@/lib/fraud-signals";
+
+const BLOCKED_IP_STORAGE_KEY = "lc_admin_blocked_ips_v1";
 
 type Tab = "users" | "security";
 
@@ -65,6 +88,7 @@ function UserStatusIcons({ u }: { u: AdminUserRow }) {
 
 export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
   const t = useTranslations("admin");
+  const { user } = useAuth();
   const getAuthHeader = useCallback(async () => {
     const token = await getFirebaseAuth()?.currentUser?.getIdToken();
     const headers: Record<string, string> = {};
@@ -74,8 +98,13 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
   const [tab, setTab] = useState<Tab>("users");
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [remoteOrders, setRemoteOrders] = useState<AdminOrderRow[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [blockedIPs, setBlockedIPs] = useState<string[]>([...mockBlockedIPsSeed]);
   const [newIp, setNewIp] = useState("");
+  const [fraudItems, setFraudItems] = useState<FraudAlertItem[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
 
   const [segF, setSegF] = useState<"all" | UserSegment>("all");
   const [statusF, setStatusF] = useState<"all" | "verified" | "suspicious" | "banned">(
@@ -89,37 +118,158 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
 
   const [quickId, setQuickId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailProfile, setDetailProfile] = useState<AdminUserRow | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailFetchError, setDetailFetchError] = useState<string | null>(null);
   const [walletInput, setWalletInput] = useState("");
   const [blockModal, setBlockModal] = useState<{ id: string; reason: string } | null>(
     null
   );
+  const usersRef = useRef(users);
+  usersRef.current = users;
+  const detailIdRef = useRef<string | null>(null);
+  detailIdRef.current = detailId;
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
+  const fetchDetailProfile = useCallback(
+    async (uid: string) => {
+      setDetailLoading(true);
+      setDetailFetchError(null);
       try {
         const headers = await getAuthHeader();
-        const [resU, resO] = await Promise.all([
-          fetch("/api/admin/users", { headers }),
-          fetch("/api/admin/orders", { headers }),
-        ]);
-        const jU = (await resU.json().catch(() => ({}))) as {
-          users?: AdminUserRow[];
+        const res = await fetch(`/api/admin/users/${encodeURIComponent(uid)}`, {
+          headers,
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          user?: AdminUserRow;
+          error?: string;
         };
-        const jO = (await resO.json().catch(() => ({}))) as {
-          orders?: AdminOrderRow[];
-        };
-        if (cancelled) return;
-        if (resU.ok && Array.isArray(jU.users)) setUsers(jU.users);
-        if (resO.ok && Array.isArray(jO.orders)) setRemoteOrders(jO.orders);
+        if (!res.ok || !j.user) {
+          setDetailFetchError(j.error ?? t("usersError"));
+          const fb = usersRef.current.find((u) => u.id === uid);
+          setDetailProfile(fb ? mergeUserOverrides([fb])[0]! : null);
+          return;
+        }
+        const merged = mergeUserOverrides([j.user])[0]!;
+        setDetailProfile(merged);
+        setUsers((prev) => prev.map((u) => (u.id === uid ? merged : u)));
       } catch {
-        /* ignore */
+        setDetailFetchError(t("usersError"));
+        const fb = usersRef.current.find((u) => u.id === uid);
+        setDetailProfile(fb ? mergeUserOverrides([fb])[0]! : null);
+      } finally {
+        setDetailLoading(false);
       }
-    })();
+    },
+    [getAuthHeader, t]
+  );
+  const fetchDetailProfileRef = useRef(fetchDetailProfile);
+  fetchDetailProfileRef.current = fetchDetailProfile;
+
+  const loadUsersAndOrders = useCallback(async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+    setOrdersError(null);
+    try {
+      const headers = await getAuthHeader();
+      const [resU, resO] = await Promise.all([
+        fetch("/api/admin/users", { headers }),
+        fetch("/api/admin/orders", { headers }),
+      ]);
+      const jU = (await resU.json().catch(() => ({}))) as {
+        users?: AdminUserRow[];
+        error?: string;
+      };
+      const jO = (await resO.json().catch(() => ({}))) as {
+        orders?: AdminOrderRow[];
+        error?: string;
+      };
+      if (resU.ok && Array.isArray(jU.users)) {
+        setUsers(mergeUserOverrides(jU.users));
+        const openUid = detailIdRef.current;
+        if (openUid) {
+          void fetchDetailProfileRef.current(openUid);
+        }
+      } else {
+        setUsers([]);
+        setUsersError(
+          jU.error ??
+            (resU.status === 401
+              ? t("usersError")
+              : resU.status === 403
+                ? t("usersForbidden")
+                : t("usersError"))
+        );
+      }
+      if (resO.ok && Array.isArray(jO.orders)) {
+        setRemoteOrders(jO.orders);
+      } else if (resO.ok) {
+        setRemoteOrders([]);
+      } else {
+        setRemoteOrders([]);
+        setOrdersError(
+          jO.error ?? t("usersOrdersFetchHint")
+        );
+      }
+    } catch {
+      setUsers([]);
+      setUsersError(t("usersError"));
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [getAuthHeader, t]);
+
+  useEffect(() => {
+    void loadUsersAndOrders();
+  }, [loadUsersAndOrders, user?.uid]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(BLOCKED_IP_STORAGE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw) as string[];
+        if (Array.isArray(p) && p.length) setBlockedIPs(p);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (blockedIPs.length) {
+      localStorage.setItem(BLOCKED_IP_STORAGE_KEY, JSON.stringify(blockedIPs));
+    }
+  }, [blockedIPs]);
+
+  useEffect(() => {
+    function syncFraud() {
+      setFraudItems(computeFraudAlertItems());
+    }
+    syncFraud();
+    window.addEventListener("lc-user-payment-history", syncFraud);
+    window.addEventListener("lc-wallet", syncFraud);
+    window.addEventListener("storage", syncFraud);
     return () => {
-      cancelled = true;
+      window.removeEventListener("lc-user-payment-history", syncFraud);
+      window.removeEventListener("lc-wallet", syncFraud);
+      window.removeEventListener("storage", syncFraud);
     };
-  }, [getAuthHeader]);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailProfile(null);
+      setDetailLoading(false);
+      setDetailFetchError(null);
+      return;
+    }
+    void fetchDetailProfile(detailId);
+  }, [detailId, fetchDetailProfile]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
@@ -154,43 +304,66 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
   }, [users, segF, statusF, q, remoteOrders]);
 
   const quickUser = quickId ? users.find((x) => x.id === quickId) : null;
-  const detailUser = detailId ? users.find((x) => x.id === detailId) : null;
+  const detailUser =
+    detailProfile ??
+    (detailId ? users.find((x) => x.id === detailId) ?? null : null);
 
   function setShadowBan(id: string, v: boolean) {
+    patchUserOverride(id, { shadowBanned: v });
     setUsers((prev) =>
       prev.map((u) => (u.id === id ? { ...u, shadowBanned: v } : u))
+    );
+    setDetailProfile((prev) =>
+      prev && prev.id === id ? { ...prev, shadowBanned: v } : prev
     );
   }
 
   function applyWalletAdjust(id: string) {
     const n = Number(walletInput);
     if (!Number.isFinite(n) || n === 0) return;
+    const u = users.find((x) => x.id === id);
+    if (!u) return;
+    const nextBal = Math.max(0, u.walletBalance + Math.round(n));
+    patchUserOverride(id, { walletBalance: nextBal });
     setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? { ...u, walletBalance: Math.max(0, u.walletBalance + Math.round(n)) }
-          : u
+      prev.map((x) =>
+        x.id === id ? { ...x, walletBalance: nextBal } : x
       )
     );
+    setDetailProfile((prev) =>
+      prev && prev.id === id ? { ...prev, walletBalance: nextBal } : prev
+    );
     setWalletInput("");
-    window.alert(t("walletAdjustDemo", { amount: Math.round(n).toLocaleString("en-IN") }));
+    setToast(t("walletAdjustDemo", { amount: Math.round(n).toLocaleString("en-IN") }));
   }
 
   function confirmBlock() {
     if (!blockModal?.id) return;
     const reason = blockModal.reason.trim();
     if (!reason) {
-      window.alert(t("banReasonRequired"));
+      setToast(t("banReasonRequired"));
       return;
     }
+    const bid = blockModal.id;
+    patchUserOverride(bid, {
+      blocked: true,
+      banReason: reason,
+      suspicious: true,
+    });
     setUsers((prev) =>
       prev.map((u) =>
-        u.id === blockModal.id
+        u.id === bid
           ? { ...u, blocked: true, banReason: reason, suspicious: true }
           : u
       )
     );
+    setDetailProfile((prev) =>
+      prev && prev.id === bid
+        ? { ...prev, blocked: true, banReason: reason, suspicious: true }
+        : prev
+    );
     setBlockModal(null);
+    setToast(t("usersBlockSaved"));
   }
 
   function toggleBlock(id: string, currentlyBlocked: boolean) {
@@ -198,10 +371,16 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
       setBlockModal({ id, reason: "" });
       return;
     }
+    patchUserOverride(id, { blocked: false, banReason: "" });
     setUsers((prev) =>
       prev.map((u) =>
         u.id === id ? { ...u, blocked: false, banReason: undefined } : u
       )
+    );
+    setDetailProfile((prev) =>
+      prev && prev.id === id
+        ? { ...prev, blocked: false, banReason: undefined }
+        : prev
     );
   }
 
@@ -210,6 +389,15 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
     if (!ip || blockedIPs.includes(ip)) return;
     setBlockedIPs((prev) => [...prev, ip]);
     setNewIp("");
+  }
+
+  async function copyUserId(uid: string) {
+    try {
+      await navigator.clipboard.writeText(uid);
+      setToast(t("userIdCopied"));
+    } catch {
+      setToast(t("userIdCopyFailed"));
+    }
   }
 
   const tabBtn = (id: Tab, label: string, icon: ReactNode) => (
@@ -229,13 +417,59 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-          {t("usersTitle")}
-        </h2>
-        <p className="text-sm text-slate-500">{t("usersSubtitleExtended")}</p>
+    <div className="relative space-y-6">
+      {toast ? (
+        <div
+          role="status"
+          className="fixed bottom-6 right-6 z-[100] max-w-md rounded-xl border border-emerald-500/30 bg-emerald-950 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-xl dark:bg-emerald-950/95"
+        >
+          {toast}
+        </div>
+      ) : null}
+
+      <div className="overflow-hidden rounded-3xl border border-violet-100/80 bg-gradient-to-r from-[#0066ff]/[0.12] via-violet-500/[0.08] to-fuchsia-100/20 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0066ff] to-violet-600 text-white shadow-lg shadow-violet-300/30 dark:shadow-violet-950/40">
+              <Users className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#0066ff]">
+                {t("usersHeroEyebrow")}
+              </p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white md:text-3xl">
+                {t("usersTitle")}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm font-medium text-slate-600 dark:text-slate-300">
+                {t("usersSubtitleExtended")}
+              </p>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                {t("usersHeroHint")}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadUsersAndOrders()}
+            disabled={usersLoading}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${usersLoading ? "animate-spin" : ""}`} />
+            {t("usersRefresh")}
+          </button>
+        </div>
       </div>
+
+      {usersError ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-100">
+          {usersError}
+        </p>
+      ) : null}
+      {ordersError ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100">
+          {ordersError}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         {tabBtn("users", t("usersTabCustomers"), <Users className="h-4 w-4" />)}
@@ -288,6 +522,7 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
                   <th className="p-3 font-bold">{t("colName")}</th>
                   <th className="p-3 font-bold">{t("colEmail")}</th>
                   <th className="p-3 font-bold">{t("userColCLV")}</th>
+                  <th className="p-3 font-bold">{t("userColWallet")}</th>
                   <th className="p-3 font-bold">{t("userColSegment")}</th>
                   <th className="p-3 font-bold">{t("colOrders")}</th>
                   <th className="p-3 font-bold">{t("colLastActive")}</th>
@@ -296,7 +531,21 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((u) => (
+                {usersLoading ? (
+                  <tr>
+                    <td colSpan={9} className="p-10 text-center text-sm text-slate-500">
+                      {t("usersLoading")}
+                    </td>
+                  </tr>
+                ) : !filteredUsers.length ? (
+                  <tr>
+                    <td colSpan={9} className="p-10 text-center text-sm text-slate-500">
+                      {usersError ? t("usersError") : t("usersEmpty")}
+                    </td>
+                  </tr>
+                ) : null}
+                {!usersLoading && filteredUsers.length > 0
+                  ? filteredUsers.map((u) => (
                   <tr
                     key={u.id}
                     className={cn(
@@ -309,6 +558,9 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
                     <td className="p-3 text-slate-600 dark:text-slate-400">{u.email}</td>
                     <td className="p-3 tabular-nums font-semibold">
                       ₹{u.totalSpent.toLocaleString("en-IN")}
+                    </td>
+                    <td className="p-3 tabular-nums text-slate-700 dark:text-slate-300">
+                      ₹{u.walletBalance.toLocaleString("en-IN")}
                     </td>
                     <td className="p-3">
                       <span
@@ -371,7 +623,8 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+                  : null}
               </tbody>
             </table>
           </div>
@@ -379,11 +632,48 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
       ) : null}
 
       {tab === "security" ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
+          <div
+            className={`rounded-2xl border p-4 ${
+              fraudItems.length > 0
+                ? "border-rose-300 bg-rose-50/90 dark:border-rose-900/50 dark:bg-rose-950/25"
+                : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/40 dark:bg-emerald-950/20"
+            }`}
+          >
+            <p className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-slate-100">
+              {fraudItems.length > 0 ? (
+                <AlertTriangle className="h-5 w-5 text-rose-600" />
+              ) : (
+                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+              )}
+              {t("usersFraudLiveTitle")}
+            </p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              {t("usersFraudLiveHint")}
+            </p>
+            {fraudItems.length > 0 ? (
+              <ul className="mt-3 list-inside list-disc text-sm text-rose-900/90 dark:text-rose-100/90">
+                {fraudItems.map((item) => (
+                  <li key={fraudAlertItemKey(item)}>
+                    {formatFraudAlertItem(item, t)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm font-medium text-emerald-900 dark:text-emerald-200">
+                {t("usersFraudAllClear")}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 dark:border-rose-900/40 dark:bg-rose-950/20">
             <p className="flex items-center gap-2 font-extrabold text-rose-900 dark:text-rose-200">
               <AlertTriangle className="h-5 w-5" />
               {t("fraudRulesTitle")}
+            </p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              {t("fraudRulesPolicyHint")}
             </p>
             <ul className="mt-2 list-inside list-disc text-sm text-rose-900/90 dark:text-rose-200/90">
               <li>{t("fraudRuleCancels")}</li>
@@ -431,6 +721,7 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
             </ul>
           </div>
         </div>
+        </div>
       ) : null}
 
       {quickUser ? (
@@ -449,8 +740,20 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
             <div className="mt-3 space-y-2 text-sm">
               <p className="font-bold">{quickUser.name}</p>
               <p className="text-slate-600">{quickUser.email}</p>
+              {quickUser.phone ? (
+                <p className="text-slate-600">
+                  {t("userColPhone")}: +91 {quickUser.phone}
+                </p>
+              ) : null}
+              <p className="font-mono text-[11px] text-slate-500">
+                UID: {quickUser.id}
+              </p>
               <p className="tabular-nums font-semibold text-[#0066ff]">
                 {t("userColCLV")}: ₹{quickUser.totalSpent.toLocaleString("en-IN")}
+              </p>
+              <p className="text-xs text-slate-600">
+                {t("colOrders")}: {quickUser.orders} · {t("userColWallet")}: ₹
+                {quickUser.walletBalance.toLocaleString("en-IN")}
               </p>
               <p>
                 {t("segmentLabel")}:{" "}
@@ -483,7 +786,7 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
       {detailUser ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <h3 className="text-lg font-extrabold">{detailUser.name}</h3>
               <button
                 type="button"
@@ -493,9 +796,35 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {detailFetchError ? (
+              <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100">
+                {detailFetchError}
+              </p>
+            ) : null}
+            {detailLoading ? (
+              <p className="mt-2 text-xs text-slate-500">{t("userProfileLoading")}</p>
+            ) : null}
             <p className="text-sm text-slate-500">{detailUser.email}</p>
+            {detailUser.phone ? (
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {t("userColPhone")}: +91 {detailUser.phone}
+              </p>
+            ) : null}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="font-mono text-[11px] text-slate-500">
+                {t("userColUid")}: {detailUser.id}
+              </p>
+              <button
+                type="button"
+                onClick={() => void copyUserId(detailUser.id)}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-0.5 text-[10px] font-bold dark:border-slate-600"
+              >
+                <Copy className="h-3 w-3" />
+                {t("userIdCopy")}
+              </button>
+            </div>
             <p className="mt-2 text-sm">
-              {t("userColCLV")}:{" "}
+              {t("colOrders")}: <strong>{detailUser.orders}</strong> · {t("userColCLV")}:{" "}
               <strong>₹{detailUser.totalSpent.toLocaleString("en-IN")}</strong> ·{" "}
               {t("walletBalance")}: ₹{detailUser.walletBalance.toLocaleString("en-IN")}
             </p>
@@ -560,10 +889,12 @@ export function AdminUsers({ initialQuery = "" }: { initialQuery?: string }) {
               </div>
               <div className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-700">
                 <p className="text-xs font-bold uppercase text-slate-500">
-                  {t("recentSearches")}
+                  {t("userRecentViews")}
                 </p>
                 <p className="mt-2 text-slate-600 dark:text-slate-400">
-                  {detailUser.lastSearches.join(" · ")}
+                  {detailUser.lastSearches.length
+                    ? detailUser.lastSearches.join(" · ")
+                    : t("userRecentViewsEmpty")}
                 </p>
               </div>
             </div>

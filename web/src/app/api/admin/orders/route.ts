@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAdminFirestore } from "@/lib/firebase-admin";
-import { verifyModuleAccess } from "@/lib/server-access";
+import { verifyModuleAccessAny } from "@/lib/server-access";
 import { parseUserOrderDocument } from "@/lib/user-order-firestore";
 import { userOrderToAdminRow } from "@/lib/admin-order-map";
 import type { AdminOrderRow, AdminTransaction } from "@/lib/admin-mock-data";
 
 export async function GET(req: Request) {
-  const gate = await verifyModuleAccess(req, "orders");
+  const gate = await verifyModuleAccessAny(req, ["orders", "payments", "users"]);
   if (!gate.ok) {
     return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
