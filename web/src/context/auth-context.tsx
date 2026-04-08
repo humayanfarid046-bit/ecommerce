@@ -21,7 +21,11 @@ import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/fire
 import { setFirebaseProfileSyncUid } from "@/lib/account-profile-storage";
 import { hydrateUserDataFromFirestore } from "@/lib/firebase/hydrate-user-data";
 import { clearAllSessionsExceptTheme } from "@/lib/clear-session-storage";
-import { normalizeAccessScope, resolveAccessScopeFromRecord, type AccessScope } from "@/lib/panel-access";
+import {
+  normalizeAccessScope,
+  resolveAccessScopeFromRecord,
+  type AccessScope,
+} from "@/lib/panel-access";
 
 export type AuthStatus = "loading" | "ready";
 
@@ -135,16 +139,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       return;
     }
-    const db = getFirebaseDb();
-    if (!db) {
-      setUser((prev) =>
-        prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
-      );
-      return;
-    }
-
     let cancelled = false;
     void (async () => {
+      const authClient = getFirebaseAuth();
+      const cu = authClient?.currentUser;
+      if (cu?.uid === user.uid) {
+        try {
+          const token = await cu.getIdToken();
+          const res = await fetch("/api/user/access-scope", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const json = (await res.json()) as { accessScope?: unknown };
+            const scope = normalizeAccessScope(json.accessScope);
+            if (!cancelled) {
+              setUser((prev) =>
+                prev ? { ...prev, accessScope: scope, accessScopeReady: true } : prev
+              );
+            }
+            return;
+          }
+        } catch {
+          /* fall back to client Firestore */
+        }
+      }
+
+      const db = getFirebaseDb();
+      if (!db) {
+        if (!cancelled) {
+          setUser((prev) =>
+            prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
+          );
+        }
+        return;
+      }
+
       try {
         const snap = await getDoc(doc(db, "users", user.uid, "profile", "account"));
         if (cancelled) return;
