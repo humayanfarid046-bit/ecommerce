@@ -22,7 +22,7 @@ This app is meant to run **entirely on Vercel** from the `web/` folder: UI, App 
 1. Push the repo to **GitHub** (or GitLab / Bitbucket supported by Vercel).
 2. [Vercel](https://vercel.com) → **Add New Project** → import the repo.
 3. **Root Directory:** set to **`web`** (strongly recommended). Vercel then installs and builds inside [`web/`](./web/) so `.next` output and serverless routes stay on correct paths. **Build Command** = `npm run build` (default), **Install** = `npm ci` per [`web/vercel.json`](./web/vercel.json). **Do not** add `npm run build --prefix web` in the dashboard when Root Directory is already `web` (that resolves to `web/web/`).
-4. **If you leave the Git root as the project root:** the repo [`vercel.json`](./vercel.json) runs `npm ci --prefix web` and `npm run build --prefix web`. **Do not** copy `.next` to the repo root (that breaks Lambda/Edge bundling). Prefer switching **Root Directory** to **`web`** if deploy fails after build.
+4. **If you leave the Git root as the project root:** the repo [`vercel.json`](./vercel.json) runs `npm ci` (monorepo root, so Vercel can detect `next`) **and** `npm ci --prefix web`, then `npm run build --prefix web`. **Do not** copy `.next` to the repo root (that breaks Lambda/Edge bundling). Prefer **Root Directory** = **`web`** when possible so only one `npm ci` is needed.
 5. **Framework Preset:** Next.js. **Output Directory:** leave **empty**.
 6. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
 
