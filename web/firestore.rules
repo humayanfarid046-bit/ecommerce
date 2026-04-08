@@ -5,8 +5,9 @@ rules_version = '2';
  * and `src/lib/*-firestore.ts`. Change rules + indexes together; CI can deploy from GitHub
  * (see `.github/workflows/firestore-deploy.yml`).
  *
- * Deploy (from `web/`): `npx firebase deploy --only firestore`
+ * Deploy (from `web/`): `npx firebase deploy --only firestore` or `npm run firebase:deploy:firestore`
  * Needs `.firebaserc` with project id (copy from `.firebaserc.example`).
+ * CI: repo Secrets `FIREBASE_PROJECT_ID` + `FIREBASE_SERVICE_ACCOUNT_JSON` → push these rules or Actions → Run workflow.
  *
  * Server-side Admin (`FIREBASE_SERVICE_ACCOUNT_JSON` on Vercel) bypasses these rules.
  *

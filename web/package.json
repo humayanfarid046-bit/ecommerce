@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint",
     "firebase:deploy": "firebase deploy --only firestore",
+    "firebase:deploy:firestore": "node scripts/deploy-firestore-from-env.cjs",
     "firebase:rules": "firebase deploy --only firestore:rules",
     "firebase:indexes": "firebase deploy --only firestore:indexes"
   },
