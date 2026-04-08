@@ -17,16 +17,23 @@
 
 This app is meant to run **entirely on Vercel** from the `web/` folder: UI, App Router, **Firestore**, and **Razorpay** API routes + webhooks live in the same deployment. The optional Express `server/` is only if you want a separate REST host.
 
+**Monorepo rule:** the Vercel project **Root Directory** must be **`web`**. If the project root is the **repository** root, the Next.js output is `web/.next`, but Vercel looks for `.next` at the project root → **Routes Manifest Could Not Be Found**, wrong Lambdas, or *No Next.js version detected*. There is **no** repo-root `vercel.json` by design; configuration lives in [`web/vercel.json`](./web/vercel.json).
+
 ### One-time setup
 
 1. Push the repo to **GitHub** (or GitLab / Bitbucket supported by Vercel).
 2. [Vercel](https://vercel.com) → **Add New Project** → import the repo.
-3. **Root Directory:** set to **`web`** (strongly recommended). Vercel then installs and builds inside [`web/`](./web/) so `.next` output and serverless routes stay on correct paths. **Build Command** = `npm run build` (default), **Install** = `npm ci` per [`web/vercel.json`](./web/vercel.json). **Do not** add `npm run build --prefix web` in the dashboard when Root Directory is already `web` (that resolves to `web/web/`).
-4. **If you leave the Git root as the project root:** the repo [`vercel.json`](./vercel.json) runs `npm ci` (monorepo root, so Vercel can detect `next`) **and** `npm ci --prefix web`, then `npm run build --prefix web`. **Do not** copy `.next` to the repo root (that breaks Lambda/Edge bundling). Prefer **Root Directory** = **`web`** when possible so only one `npm ci` is needed.
-5. **Framework Preset:** Next.js. **Output Directory:** leave **empty**.
-6. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
+3. **Settings → General → Root Directory:** **`web`** → Save.
+4. **Build & Development Settings:** **Framework Preset** = Next.js (auto). **Build Command** = `npm run build` (default). **Install Command** = `npm ci` (from [`web/vercel.json`](./web/vercel.json)). **Output Directory:** leave **empty**. **Do not** override Build with `npm run build --prefix web` (that is only for CLI builds from the repo root; with Root Directory `web` it would look for `web/web/`).
+5. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
 
 Local monorepo build from repo root: `npm run build` runs `npm ci --prefix web && npm run build --prefix web` (see root [`package.json`](./package.json)).
+
+### Troubleshooting: “Routes Manifest Could Not Be Found”
+
+1. **Root Directory** must be **`web`**, not the repo root. Redeploy after saving.
+2. Clear **Output Directory** in project settings (must be empty for Next.js unless you changed `distDir` in `next.config`).
+3. Remove any **Build Command** override that builds only from the monorepo root without `cd web`.
 
 ### Environment variables (Vercel → Project → Settings → Environment Variables)
 

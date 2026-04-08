@@ -10,6 +10,10 @@
 
 **Structure + Firestore paths / GitHub auto-deploy:** **[docs/PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md)**.
 
+### Vercel (important)
+
+Create the project from this repo, then **Settings → General → Root Directory** = **`web`**. Leave **Output Directory** empty. Do **not** point Build at the repo root only — the Next.js app lives in `web/`, so routes manifest and `.next` must be relative to **`web`**. Full steps: **[DEPLOY.md](./DEPLOY.md)**.
+
 ## Prerequisites
 
 - Node.js 18+
