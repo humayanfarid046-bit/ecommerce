@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LoginShoppingBagHero } from "@/components/login-shopping-bag-hero";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 
 type View = "login" | "register";
 
@@ -109,7 +110,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInEmail(id, password);
-      router.push("/account");
+      const to = await resolvePostLoginTarget();
+      router.push(to);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
@@ -127,11 +129,26 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signUpEmail(email.trim(), password);
-      router.push("/account");
+      const to = await resolvePostLoginTarget();
+      router.push(to);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function resolvePostLoginTarget(): Promise<"/admin" | "/account"> {
+    try {
+      const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+      if (!token) return "/account";
+      const res = await fetch("/api/user/access-scope", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = (await res.json().catch(() => ({}))) as { accessScope?: string };
+      return body.accessScope === "owner" ? "/admin" : "/account";
+    } catch {
+      return "/account";
     }
   }
 
