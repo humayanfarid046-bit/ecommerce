@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/admin-security-storage";
 import { Lock, ScrollText, Truck, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 
 export function AdminSettings() {
   const t = useTranslations("admin");
@@ -27,6 +28,10 @@ export function AdminSettings() {
   const [shipMetro, setShipMetro] = useState("40");
   const [shipRest, setShipRest] = useState("60");
   const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
+  const [bootstrapSecret, setBootstrapSecret] = useState("");
+  const [bootstrapMsg, setBootstrapMsg] = useState<string | null>(null);
+  const [bootstrapBusy, setBootstrapBusy] = useState(false);
+  const bootstrapEnabled = process.env.NEXT_PUBLIC_ADMIN_BOOTSTRAP_ENABLED === "true";
 
   const [rules, setRules] = useState<ShippingRulesState>(defaultShippingRules);
   const [previewSub, setPreviewSub] = useState("450");
@@ -250,11 +255,11 @@ export function AdminSettings() {
             </label>
           </div>
           <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">
-            {t("previewDelivery")}: ₹{quote.deliveryFee.toLocaleString("en-IN")} ·{" "}
-            {t("previewCodFee")}: ₹{quote.codHandling.toLocaleString("en-IN")} ·{" "}
+            {t("previewDelivery")}: â‚¹{quote.deliveryFee.toLocaleString("en-IN")} Â·{" "}
+            {t("previewCodFee")}: â‚¹{quote.codHandling.toLocaleString("en-IN")} Â·{" "}
             {quote.freeShippingApplied ? t("previewFreeShip") : t("previewPaidShip")}
             {quote.matchedRuleLabel
-              ? ` · ${quote.matchedRuleLabel}`
+              ? ` Â· ${quote.matchedRuleLabel}`
               : ""}
           </p>
         </div>
@@ -317,6 +322,64 @@ export function AdminSettings() {
               {user?.accessScope ?? "none"}
             </div>
           </label>
+          {bootstrapEnabled && user && user.accessScope !== "owner" ? (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-slate-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-50">
+              <p className="font-bold">One-time owner bootstrap</p>
+              <p className="mt-1 text-[11px] text-slate-600 dark:text-amber-100">
+                Enter the bootstrap secret to mark this logged-in account as
+                <code className="mx-1 rounded bg-slate-900 px-1 text-[10px] text-emerald-300">owner</code>
+                in Firestore (<code className="rounded bg-slate-900 px-1 text-[10px] text-emerald-300">users/{user.uid}/profile/account</code>).
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <input
+                  type="password"
+                  value={bootstrapSecret}
+                  onChange={(e) => setBootstrapSecret(e.target.value)}
+                  placeholder="Bootstrap secret"
+                  className="min-w-[200px] flex-1 rounded-lg border border-slate-300 px-3 py-2 text-xs dark:border-slate-600 dark:bg-slate-900"
+                />
+                <button
+                  type="button"
+                  disabled={bootstrapBusy || !bootstrapSecret.trim()}
+                  onClick={async () => {
+                    setBootstrapMsg(null);
+                    setBootstrapBusy(true);
+                    try {
+                      const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+                      if (!token) {
+                        setBootstrapMsg("Sign in again and retry.");
+                        return;
+                      }
+                      const res = await fetch("/api/admin/bootstrap-owner", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ secret: bootstrapSecret }),
+                      });
+                      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+                      if (!res.ok || !j.ok) {
+                        setBootstrapMsg(j.error ?? "Could not set owner scope.");
+                        return;
+                      }
+                      setBootstrapMsg("Success. Reload or sign out/in to refresh scope.");
+                    } catch (e) {
+                      setBootstrapMsg(e instanceof Error ? e.message : "Bootstrap failed.");
+                    } finally {
+                      setBootstrapBusy(false);
+                    }
+                  }}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {bootstrapBusy ? "Working..." : "Make this account owner"}
+                </button>
+              </div>
+              {bootstrapMsg ? (
+                <p className="mt-2 text-[11px] font-medium text-amber-900 dark:text-amber-100">{bootstrapMsg}</p>
+              ) : null}
+            </div>
+          ) : null}
           <ul className="mt-4 space-y-2 text-sm">
             <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
               <span>{t("accessOperations")}</span>
@@ -390,3 +453,8 @@ export function AdminSettings() {
     </div>
   );
 }
+
+
+
+
+
