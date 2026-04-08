@@ -62,7 +62,19 @@ const NONE: AccessPermissions = {
 };
 
 export function normalizeAccessScope(v: unknown): AccessScope {
-  return v === "owner" || v === "operations" || v === "catalog" ? v : "none";
+  const raw = String(v ?? "").trim().toLowerCase();
+  if (raw === "owner" || raw === "admin" || raw === "superadmin") return "owner";
+  if (raw === "operations" || raw === "ops") return "operations";
+  if (raw === "catalog") return "catalog";
+  return "none";
+}
+
+export function resolveAccessScopeFromRecord(
+  data: Record<string, unknown> | undefined
+): AccessScope {
+  if (!data) return "none";
+  if (data.isAdmin === true) return "owner";
+  return normalizeAccessScope(data.accessScope ?? data.scope ?? data.role);
 }
 
 export function permissionsForScope(scope: AccessScope): AccessPermissions {

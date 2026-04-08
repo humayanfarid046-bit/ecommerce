@@ -1,5 +1,10 @@
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
-import { normalizeAccessScope, canAccess, type AccessModule, type AccessScope } from "@/lib/panel-access";
+import {
+  resolveAccessScopeFromRecord,
+  canAccess,
+  type AccessModule,
+  type AccessScope,
+} from "@/lib/panel-access";
 
 type AccessResult =
   | { ok: true; uid: string; scope: AccessScope }
@@ -22,7 +27,9 @@ export async function verifyModuleAccess(
     const decoded = await adminAuth.verifyIdToken(m[1]!);
     const uid = decoded.uid;
     const snap = await db.doc(`users/${uid}/profile/account`).get();
-    const scope = normalizeAccessScope(snap.data()?.accessScope);
+    const scope = resolveAccessScopeFromRecord(
+      snap.data() as Record<string, unknown> | undefined
+    );
     if (!canAccess(scope, mod)) {
       return { ok: false, status: 403, error: "Access denied" };
     }

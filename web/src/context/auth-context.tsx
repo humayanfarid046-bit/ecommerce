@@ -21,7 +21,7 @@ import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/fire
 import { setFirebaseProfileSyncUid } from "@/lib/account-profile-storage";
 import { hydrateUserDataFromFirestore } from "@/lib/firebase/hydrate-user-data";
 import { clearAllSessionsExceptTheme } from "@/lib/clear-session-storage";
-import { normalizeAccessScope, type AccessScope } from "@/lib/panel-access";
+import { normalizeAccessScope, resolveAccessScopeFromRecord, type AccessScope } from "@/lib/panel-access";
 
 export type AuthStatus = "loading" | "ready";
 
@@ -129,7 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const snap = await getDoc(doc(db, "users", user.uid, "profile", "account"));
         if (cancelled) return;
-        const scope = normalizeAccessScope(snap.data()?.accessScope);
+        const scope = resolveAccessScopeFromRecord(
+          snap.data() as Record<string, unknown> | undefined
+        );
         setUser((prev) => (prev ? { ...prev, accessScope: scope } : prev));
       } catch {
         if (!cancelled) {
