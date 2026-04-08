@@ -43,7 +43,4 @@ jobs:
           fi
           echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "${RUNNER_TEMP}/firebase-ci.json"
           export GOOGLE_APPLICATION_CREDENTIALS="${RUNNER_TEMP}/firebase-ci.json"
-          node -e "JSON.parse(require('fs').readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS,'utf8'));" \
-            || { echo "::error::FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON (check repo Secret)."; exit 1; }
-          npx --yes firebase-tools@13 deploy --only firestore:rules --project "${FIREBASE_PROJECT_ID}" --non-interactive
-          npx --yes firebase-tools@13 deploy --only firestore:indexes --project "${FIREBASE_PROJECT_ID}" --non-interactive
+          npx --yes firebase-tools@latest deploy --only firestore --project "${FIREBASE_PROJECT_ID}" --non-interactive
