@@ -4,10 +4,6 @@ import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   /** Self-hosted Docker: copy `.next/standalone` + static assets (see web/Dockerfile). */
   output: "standalone",
-  /** Keeps Turbopack rooted to `web/` when a parent folder has its own package-lock.json */
-  turbopack: {
-    root: process.cwd(),
-  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
