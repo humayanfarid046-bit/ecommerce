@@ -21,6 +21,7 @@ import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/fire
 import { setFirebaseProfileSyncUid } from "@/lib/account-profile-storage";
 import { hydrateUserDataFromFirestore } from "@/lib/firebase/hydrate-user-data";
 import { clearAllSessionsExceptTheme } from "@/lib/clear-session-storage";
+import { isForcedOwnerUid } from "@/lib/owner-override";
 import {
   normalizeAccessScope,
   resolveAccessScopeFromRecord,
@@ -180,8 +181,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const scope = resolveAccessScopeFromRecord(
           snap.data() as Record<string, unknown> | undefined
         );
+        const effectiveScope =
+          scope === "none" && isForcedOwnerUid(user.uid) ? "owner" : scope;
         setUser((prev) =>
-          prev ? { ...prev, accessScope: scope, accessScopeReady: true } : prev
+          prev
+            ? { ...prev, accessScope: effectiveScope, accessScopeReady: true }
+            : prev
         );
       } catch (e) {
         if (process.env.NODE_ENV === "development") {
@@ -198,8 +203,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           );
         }
         if (!cancelled) {
+          const fallbackScope: AccessScope = isForcedOwnerUid(user.uid) ? "owner" : "none";
           setUser((prev) =>
-            prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
+            prev ? { ...prev, accessScope: fallbackScope, accessScopeReady: true } : prev
           );
         }
       }

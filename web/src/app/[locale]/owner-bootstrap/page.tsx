@@ -10,6 +10,8 @@ export default function OwnerBootstrapPage() {
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [checkBusy, setCheckBusy] = useState(false);
+  const [checkMsg, setCheckMsg] = useState<string | null>(null);
 
   async function makeOwner() {
     setMsg(null);
@@ -41,6 +43,27 @@ export default function OwnerBootstrapPage() {
       setMsg(e instanceof Error ? e.message : "Bootstrap failed.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function checkAccess() {
+    setCheckMsg(null);
+    setCheckBusy(true);
+    try {
+      const token = await getFirebaseAuth()?.currentUser?.getIdToken(true);
+      if (!token) {
+        setCheckMsg("Not signed in. Please login first.");
+        return;
+      }
+      const res = await fetch("/api/user/access-scope", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.text();
+      setCheckMsg(`status=${res.status} response=${body}`);
+    } catch (e) {
+      setCheckMsg(e instanceof Error ? e.message : "Access check failed.");
+    } finally {
+      setCheckBusy(false);
     }
   }
 
@@ -82,6 +105,25 @@ export default function OwnerBootstrapPage() {
       <p className="mt-4 text-xs text-slate-500">
         After success, disable bootstrap env vars for safety.
       </p>
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Quick access check</p>
+        <p className="mt-1 text-xs text-slate-500">
+          This runs <span className="font-mono">/api/user/access-scope</span> with your token and shows exact status.
+        </p>
+        <button
+          type="button"
+          onClick={checkAccess}
+          disabled={checkBusy}
+          className="mt-3 rounded-xl bg-[#0066ff] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {checkBusy ? "Checking..." : "Check access now"}
+        </button>
+        {checkMsg ? (
+          <p className="mt-3 break-all rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            {checkMsg}
+          </p>
+        ) : null}
+      </div>
       <Link href="/login" className="mt-2 inline-block text-sm font-bold text-[#0066ff] hover:underline">
         Go to login
       </Link>

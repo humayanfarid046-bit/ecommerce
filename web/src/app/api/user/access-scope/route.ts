@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminFirestore } from "@/lib/firebase-admin";
+import { isForcedOwnerUid } from "@/lib/owner-override";
 import { resolveAccessScopeFromRecord } from "@/lib/panel-access";
 import { verifyUserIdToken } from "@/lib/verify-user-token";
 
@@ -27,5 +28,8 @@ export async function GET(req: Request) {
     snap.data() as Record<string, unknown> | undefined
   );
 
-  return NextResponse.json({ accessScope });
+  const effectiveScope =
+    accessScope === "none" && isForcedOwnerUid(auth.uid) ? "owner" : accessScope;
+
+  return NextResponse.json({ accessScope: effectiveScope });
 }

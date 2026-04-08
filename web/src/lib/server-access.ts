@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
+import { isForcedOwnerUid } from "@/lib/owner-override";
 import {
   resolveAccessScopeFromRecord,
   canAccess,
@@ -27,9 +28,11 @@ export async function verifyModuleAccess(
     const decoded = await adminAuth.verifyIdToken(m[1]!);
     const uid = decoded.uid;
     const snap = await db.doc(`users/${uid}/profile/account`).get();
-    const scope = resolveAccessScopeFromRecord(
+    const resolvedScope = resolveAccessScopeFromRecord(
       snap.data() as Record<string, unknown> | undefined
     );
+    const scope =
+      resolvedScope === "none" && isForcedOwnerUid(uid) ? "owner" : resolvedScope;
     if (!canAccess(scope, mod)) {
       return { ok: false, status: 403, error: "Access denied" };
     }
