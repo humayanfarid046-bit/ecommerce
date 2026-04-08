@@ -3,26 +3,26 @@
  * Re-exports types from `product-model` for backward compatibility.
  */
 
-import { readCatalogProducts } from "@/lib/catalog-products-storage";
+import { getMergedProducts } from "@/lib/catalog-products-storage";
 import type { Product } from "@/lib/product-model";
 
 export type { Category, Product, Review } from "@/lib/product-model";
 export { categories } from "@/lib/product-model";
 
 export function getProducts(): Product[] {
-  return readCatalogProducts();
+  return getMergedProducts();
 }
 
 export function getProductById(id: string): Product | undefined {
-  return readCatalogProducts().find((p) => p.id === id);
+  return getMergedProducts().find((p) => p.id === id);
 }
 
 export function getProductBySlug(slug: string): Product | undefined {
-  return readCatalogProducts().find((p) => p.slug === slug);
+  return getMergedProducts().find((p) => p.slug === slug);
 }
 
 export function searchProducts(q: string): Product[] {
-  const products = readCatalogProducts();
+  const products = getMergedProducts();
   const s = q.trim().toLowerCase();
   if (!s) return products;
   if (s.startsWith("visual:") || s === "visual-search" || s === "visual") {
@@ -40,7 +40,7 @@ export function getFrequentlyBoughtTogether(
   productId: string,
   limit = 3
 ): Product[] {
-  const products = readCatalogProducts();
+  const products = getMergedProducts();
   const p = getProductById(productId);
   if (!p) return [];
   if (p.bundleIds?.length) {
@@ -60,7 +60,7 @@ export function getFrequentlyBoughtTogether(
 }
 
 export function getPeopleAlsoLiked(productId: string, limit = 4): Product[] {
-  const products = readCatalogProducts();
+  const products = getMergedProducts();
   const p = getProductById(productId);
   if (!p) return [];
   const fbtIds = new Set(
@@ -109,5 +109,5 @@ export function sortProductsByParam(
 }
 
 export function getBrandsSorted(): string[] {
-  return Array.from(new Set(readCatalogProducts().map((p) => p.brand))).sort();
+  return Array.from(new Set(getMergedProducts().map((p) => p.brand))).sort();
 }

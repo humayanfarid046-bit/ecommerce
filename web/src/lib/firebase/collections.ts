@@ -14,6 +14,8 @@
  * users/{uid}/returns/{returnId}    — return / refund requests
  * users/{uid}/productReviews/{id}   — product reviews (written via POST /api/reviews)
  * users/{uid}/supportThreads/{id}   — order-scoped support chat (user + admin replies)
+ *
+ * publicCatalog/manifest            — storefront product list (Admin API POST; client GET /api/catalog)
  */
 
 export const PROFILE_SEGMENT = "account";

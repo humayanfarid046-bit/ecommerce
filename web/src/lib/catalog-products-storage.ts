@@ -1,10 +1,57 @@
 /** Client-only catalog: products you add in Admin (localStorage). */
 
 import type { Product, Review } from "@/lib/product-model";
+import { mergeCatalogViews } from "@/lib/catalog-cloud";
 
 const KEY = "lc_store_catalog_v1";
 
+/** For cross-tab sync (refetch remote when another tab updates the catalogue). */
+export const CATALOG_LOCALSTORAGE_KEY = KEY;
+
 export const CATALOG_EVENT = "lc-catalog";
+
+/** In-memory snapshot from GET /api/catalog (Firestore). Browser-only. */
+let remoteCatalogSnapshot: Product[] = [];
+
+export function setRemoteCatalogSnapshot(next: Product[]): void {
+  remoteCatalogSnapshot = next;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(CATALOG_EVENT));
+  }
+}
+
+/** Merged view: localStorage + server catalog (same tab / other devices). */
+export function getMergedProducts(): Product[] {
+  if (typeof window === "undefined") return [];
+  return mergeCatalogViews(readCatalogProducts(), remoteCatalogSnapshot);
+}
+
+async function tryPushCatalogToCloud(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const { getFirebaseAuth } = await import("@/lib/firebase/client");
+    const { sanitizeProductForCloud } = await import("@/lib/catalog-cloud");
+    const auth = getFirebaseAuth();
+    const token = await auth?.currentUser?.getIdToken();
+    if (!token) return;
+    const products = readCatalogProducts().map(sanitizeProductForCloud);
+    const res = await fetch("/api/admin/catalog", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ products }),
+    });
+    if (res.ok) {
+      const r2 = await fetch("/api/catalog", { cache: "no-store" });
+      const j2 = (await r2.json()) as { products?: Product[] };
+      setRemoteCatalogSnapshot(Array.isArray(j2.products) ? j2.products : []);
+    }
+  } catch {
+    /* offline or not admin — ignore */
+  }
+}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -123,6 +170,11 @@ function normalizeProduct(raw: unknown): Product | null {
   return p;
 }
 
+/** Validate a row from Firestore or API (public GET). */
+export function parseStoredProduct(raw: unknown): Product | null {
+  return normalizeProduct(raw);
+}
+
 export function readCatalogProducts(): Product[] {
   if (typeof window === "undefined") return [];
   try {
@@ -145,6 +197,7 @@ export function writeCatalogProducts(next: Product[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent(CATALOG_EVENT));
+  void tryPushCatalogToCloud();
 }
 
 export function upsertCatalogProduct(product: Product): void {
