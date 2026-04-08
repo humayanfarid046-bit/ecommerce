@@ -62,7 +62,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (status !== "ready") return;
     if (!user) {
-      router.replace("/login");
+      router.replace("/");
       return;
     }
     if (!user.accessScopeReady) return;
@@ -71,11 +71,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     }
   }, [status, user, allowedHere, router]);
 
-  if (status === "ready" && user && !user.accessScopeReady) {
+  if (status !== "ready" || !user || !user.accessScopeReady) {
     return (
       <div className="flex min-h-[calc(100vh-0px)] items-center justify-center bg-[radial-gradient(circle_at_15%_20%,rgba(14,165,233,0.15),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(139,92,246,0.16),transparent_30%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] dark:bg-[radial-gradient(circle_at_15%_20%,rgba(14,165,233,0.2),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(139,92,246,0.2),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]">
         <p className="rounded-2xl border border-white/50 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-200">
-          {t("loadingPermissions")}
+          {!user ? "Signing out..." : t("loadingPermissions")}
         </p>
       </div>
     );
@@ -175,7 +175,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 onClick={() => {
                   void (async () => {
                     await signOut();
-                    router.replace("/login");
+                    router.replace("/");
                     router.refresh();
                   })();
                 }}
