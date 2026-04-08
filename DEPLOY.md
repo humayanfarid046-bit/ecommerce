@@ -25,7 +25,10 @@ This app is meant to run **entirely on Vercel** from the `web/` folder: UI, App 
    - **Recommended:** **`web`**. Then **Build Command** = `npm run build` (default) and **Install** follows [`web/vercel.json`](./web/vercel.json) (`npm ci`). **Do not** set Build Command to `npm run build --prefix web` — with Root Directory `web` that breaks (`web/web/package.json`).
    - **Alternative:** Leave Root Directory **empty** (repo root). The root [`package.json`](./package.json) `build` script runs `npm ci --prefix web` before `next build`, so the deploy works even when Vercel only installs the monorepo root (~94 packages). Root [`vercel.json`](./vercel.json) sets `buildCommand` to `npm run build` so that script runs. If you see *No Next.js version detected*, set Root Directory to **`web`** and use default build (`npm run build` from `web/` only).
 4. **Framework Preset:** Next.js (auto-detected).
-5. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
+5. **Output Directory:** leave **empty** (default). If you see *No Output Directory named "public"*, the project was treated like a static site — clear **Output Directory** in **Build & Development Settings** and ensure **Framework Preset** is **Next.js**, or set **Root Directory** to **`web`** and use defaults.
+6. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
+
+The repo root [`package.json`](./package.json) build runs `next build` in `web/`, then [`scripts/sync-web-to-root.mjs`](./scripts/sync-web-to-root.mjs) copies `web/.next` and `web/public` to the repo root so Vercel can deploy when the Git **root** is the project root (monorepo).
 
 ### Environment variables (Vercel → Project → Settings → Environment Variables)
 

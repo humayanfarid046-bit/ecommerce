@@ -1,5 +1,7 @@
 node_modules/
 .next/
+# Created by scripts/sync-web-to-root.mjs when building from monorepo root
+/public
 out/
 dist/
 .env
