@@ -30,6 +30,11 @@ export type AuthUser = {
   email: string | null;
   displayName: string | null;
   accessScope: AccessScope;
+  /**
+   * False until the first read of `users/{uid}/profile/account` completes.
+   * Avoids treating the initial placeholder `"none"` as real before Firestore responds.
+   */
+  accessScopeReady: boolean;
 };
 
 function mapFirebaseUser(u: FirebaseUser): AuthUser {
@@ -38,6 +43,7 @@ function mapFirebaseUser(u: FirebaseUser): AuthUser {
     email: u.email,
     displayName: u.displayName,
     accessScope: "none",
+    accessScopeReady: false,
   };
 }
 
@@ -121,9 +127,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.uid]);
 
   useEffect(() => {
-    if (!user?.uid || !isFirebaseConfigured()) return;
+    if (!user?.uid) return;
+
+    if (!isFirebaseConfigured()) {
+      setUser((prev) =>
+        prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
+      );
+      return;
+    }
     const db = getFirebaseDb();
-    if (!db) return;
+    if (!db) {
+      setUser((prev) =>
+        prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
+      );
+      return;
+    }
+
     let cancelled = false;
     void (async () => {
       try {
@@ -132,10 +151,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const scope = resolveAccessScopeFromRecord(
           snap.data() as Record<string, unknown> | undefined
         );
-        setUser((prev) => (prev ? { ...prev, accessScope: scope } : prev));
-      } catch {
+        setUser((prev) =>
+          prev ? { ...prev, accessScope: scope, accessScopeReady: true } : prev
+        );
+      } catch (e) {
+        if (process.env.NODE_ENV === "development") {
+          const detail =
+            e instanceof FirebaseError
+              ? `${e.code} — ${e.message}`
+              : e instanceof Error
+                ? e.message
+                : String(e);
+          console.warn(
+            "[auth] Could not read users/<uid>/profile/account (accessScope stays none).",
+            detail,
+            "If you see firestore/permission-denied, deploy web/firestore.rules or check Firebase project ID matches NEXT_PUBLIC_FIREBASE_PROJECT_ID."
+          );
+        }
         if (!cancelled) {
-          setUser((prev) => (prev ? { ...prev, accessScope: "none" } : prev));
+          setUser((prev) =>
+            prev ? { ...prev, accessScope: "none", accessScopeReady: true } : prev
+          );
         }
       }
     })();

@@ -1362,6 +1362,7 @@
     "activityEmpty": "No events yet.",
     "activityAddTest": "Add test entry",
     "activityManualNote": "Manual audit note",
+    "loadingPermissions": "Checking workspace access…",
     "accessDenied": "No access to this module",
     "accessDeniedHint": "Your account scope does not include this section.",
     "backToDashboard": "Back to dashboard",

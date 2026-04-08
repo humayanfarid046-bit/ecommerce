@@ -1362,6 +1362,7 @@
     "activityEmpty": "এখন কোনো ইভেন্ট নেই।",
     "activityAddTest": "টেস্ট এন্ট্রি যোগ",
     "activityManualNote": "ম্যানুয়াল অডিট নোট",
+    "loadingPermissions": "অ্যাক্সেস যাচাই করা হচ্ছে…",
     "accessDenied": "এই মডিউলে অ্যাক্সেস নেই",
     "accessDeniedHint": "আপনার অ্যাকাউন্ট স্কোপে এই অংশ নেই।",
     "backToDashboard": "ড্যাশবোর্ডে ফিরুন",

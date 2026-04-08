@@ -319,10 +319,10 @@ export function AdminSettings() {
           <label className="mt-3 block text-xs font-bold text-slate-500">
             {t("accessCurrent")}
             <div className="mt-1 rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950">
-              {user?.accessScope ?? "none"}
+              {user?.accessScopeReady ? (user?.accessScope ?? "none") : "…"}
             </div>
           </label>
-          {bootstrapEnabled && user && user.accessScope !== "owner" ? (
+          {bootstrapEnabled && user?.accessScopeReady && user.accessScope !== "owner" ? (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-slate-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-50">
               <p className="font-bold">One-time owner bootstrap</p>
               <p className="mt-1 text-[11px] text-slate-600 dark:text-amber-100">

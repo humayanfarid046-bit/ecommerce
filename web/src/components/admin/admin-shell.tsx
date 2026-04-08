@@ -65,10 +65,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
+    if (!user.accessScopeReady) return;
     if (!allowedHere) {
       router.replace("/");
     }
   }, [status, user, allowedHere, router]);
+
+  if (status === "ready" && user && !user.accessScopeReady) {
+    return (
+      <div className="flex min-h-[calc(100vh-0px)] items-center justify-center bg-slate-100 dark:bg-slate-950">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          {t("loadingPermissions")}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-0px)] bg-slate-100 dark:bg-slate-950">
