@@ -21,10 +21,11 @@ This app is meant to run **entirely on Vercel** from the `web/` folder: UI, App 
 
 1. Push the repo to **GitHub** (or GitLab / Bitbucket supported by Vercel).
 2. [Vercel](https://vercel.com) → **Add New Project** → import the repo.
-3. **Root Directory:** **`web` (required).** Vercel reads `package.json` from the project root to detect Next.js. If the root is the **repo** root, `next` is not there → *No Next.js version detected*. If you only point install/build at `web/` from the repo root without changing Root Directory, the same mismatch can happen. Setting **Root Directory** to `web` fixes both that and `next: command not found` (install and build run inside `web/`).
-4. **Framework Preset:** Next.js (auto-detected). **Build Command:** leave default **`npm run build`** (or empty so [`web/vercel.json`](./web/vercel.json) applies). **Do not** use `npm run build --prefix web` here — that is only for building from the **repo** root; with Root Directory `web` it resolves to `web/web/` and fails with `ENOENT` on `package.json`.
-5. **Install:** `npm ci` (set in `web/vercel.json`).
-6. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
+3. **Root Directory (pick one approach):**
+   - **Recommended:** **`web`**. Then **Build Command** = `npm run build` (default) and **Install** follows [`web/vercel.json`](./web/vercel.json) (`npm ci`). **Do not** set Build Command to `npm run build --prefix web` — with Root Directory `web` that breaks (`web/web/package.json`).
+   - **Alternative:** Leave Root Directory **empty** (repo root). Then Vercel must install dependencies **inside `web/`** or `next` is missing → `next: command not found` (only ~94 packages at repo root). The repo root [`vercel.json`](./vercel.json) sets `installCommand` / `buildCommand` for `web/` so the build can succeed. If you then see *No Next.js version detected*, switch to Root Directory **`web`** and clear custom Build/Install overrides so [`web/vercel.json`](./web/vercel.json) applies.
+4. **Framework Preset:** Next.js (auto-detected).
+5. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
 
 ### Environment variables (Vercel → Project → Settings → Environment Variables)
 
