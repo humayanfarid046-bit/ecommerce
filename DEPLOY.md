@@ -23,7 +23,7 @@ This app is meant to run **entirely on Vercel** from the `web/` folder: UI, App 
 2. [Vercel](https://vercel.com) → **Add New Project** → import the repo.
 3. **Root Directory (pick one approach):**
    - **Recommended:** **`web`**. Then **Build Command** = `npm run build` (default) and **Install** follows [`web/vercel.json`](./web/vercel.json) (`npm ci`). **Do not** set Build Command to `npm run build --prefix web` — with Root Directory `web` that breaks (`web/web/package.json`).
-   - **Alternative:** Leave Root Directory **empty** (repo root). Then Vercel must install dependencies **inside `web/`** or `next` is missing → `next: command not found` (only ~94 packages at repo root). The repo root [`vercel.json`](./vercel.json) sets `installCommand` / `buildCommand` for `web/` so the build can succeed. If you then see *No Next.js version detected*, switch to Root Directory **`web`** and clear custom Build/Install overrides so [`web/vercel.json`](./web/vercel.json) applies.
+   - **Alternative:** Leave Root Directory **empty** (repo root). The root [`package.json`](./package.json) `build` script runs `npm ci --prefix web` before `next build`, so the deploy works even when Vercel only installs the monorepo root (~94 packages). Root [`vercel.json`](./vercel.json) sets `buildCommand` to `npm run build` so that script runs. If you see *No Next.js version detected*, set Root Directory to **`web`** and use default build (`npm run build` from `web/` only).
 4. **Framework Preset:** Next.js (auto-detected).
 5. **Node.js:** `web/.nvmrc` pins **20** (matches `package.json` `engines`).
 
