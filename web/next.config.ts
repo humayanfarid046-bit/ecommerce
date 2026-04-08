@@ -1,18 +1,12 @@
-import path from "path";
-import { fileURLToPath } from "url";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-/** Monorepo root (parent of `web/`). Matches outputFileTracingRoot so Turbopack + tracing agree on Vercel. */
-const monorepoRoot = path.resolve(__dirname, "..");
 
 const nextConfig: NextConfig = {
   /** Self-hosted Docker: copy `.next/standalone` + static assets (see web/Dockerfile). */
   output: "standalone",
-  outputFileTracingRoot: monorepoRoot,
+  /** Keeps Turbopack rooted to `web/` when a parent folder has its own package-lock.json */
   turbopack: {
-    root: monorepoRoot,
+    root: process.cwd(),
   },
   images: {
     remotePatterns: [
