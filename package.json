@@ -1,6 +1,9 @@
 {
   "name": "ecommerce-monorepo",
   "private": true,
+  "engines": {
+    "node": "20.x || 24.x"
+  },
   "description": "Next.js storefront (web) + Express API (server) + optional Firebase Functions",
   "scripts": {
     "dev": "npm run dev --prefix web",
