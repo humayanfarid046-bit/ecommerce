@@ -54,10 +54,12 @@ export default function CartPage() {
   }, [items]);
 
   const itemTotal = useMemo(() => {
+    void catDiscTick;
     return lines.reduce((s, l) => s + effectiveLineTotalRupees(l.product, l.qty), 0);
   }, [lines, catDiscTick]);
 
   const delivery = useMemo(() => {
+    void shipTick;
     if (itemTotal === 0) return 0;
     const q = computeDeliveryQuote(itemTotal, "", false);
     return q.deliveryFee;

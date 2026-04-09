@@ -33,6 +33,7 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
   }, []);
 
   const rows = useMemo(() => {
+    void tick;
     const products = getProducts();
     return products.filter((p) => {
       if (query && !p.title.toLowerCase().includes(query.toLowerCase())) return false;

@@ -24,6 +24,7 @@ export function ComparePageClient() {
     .filter(Boolean) as NonNullable<ReturnType<typeof getProductById>>[];
 
   const rows: { label: string; values: string[] }[] = useMemo(() => {
+    void catDiscTick;
     const ru = (p: Product) =>
       effectiveUnitPriceAfterCategoryDiscount(p.price, p.categorySlug);
     return [

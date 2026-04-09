@@ -221,6 +221,7 @@ export function CheckoutShell() {
   }, [items]);
 
   const itemTotal = useMemo(() => {
+    void commerceSettingsTick;
     return lines.reduce((s, l) => s + effectiveLineTotalRupees(l.product, l.qty), 0);
   }, [lines, commerceSettingsTick]);
 
@@ -250,6 +251,7 @@ export function CheckoutShell() {
       : Math.min(25, Math.round(itemTotal * 0.02));
 
   const pricing = useMemo(() => {
+    void commerceSettingsTick;
     return computeCheckoutPricingBase({
       itemTotalRupees: itemTotal,
       pinDigits: deliveryPinDigits,

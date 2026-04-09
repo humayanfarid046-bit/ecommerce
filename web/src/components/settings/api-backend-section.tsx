@@ -45,7 +45,7 @@ export function ApiBackendSection() {
     return () => {
       cancelled = true;
     };
-  }, [configured, user?.uid]);
+  }, [configured, user]);
 
   if (!configured) {
     return (

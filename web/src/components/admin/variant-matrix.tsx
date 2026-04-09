@@ -58,11 +58,6 @@ export function VariantMatrix({
   const [sizesRaw, setSizesRaw] = useState("M, L, XL");
   const [colorsRaw, setColorsRaw] = useState("Red, Navy");
 
-  const variantSig = useMemo(
-    () => variants.map((v) => `${v.id}:${v.size}:${v.color}`).join("|"),
-    [variants]
-  );
-
   /** Keep matrix text fields in sync when parent loads or replaces variants (e.g. edit product). */
   useEffect(() => {
     if (variants.length === 0) return;
@@ -70,7 +65,7 @@ export function VariantMatrix({
     const colors = [...new Set(variants.map((v) => v.color))];
     setSizesRaw(sizes.join(", "));
     setColorsRaw(colors.join(", "));
-  }, [variantSig]);
+  }, [variants]);
 
   const uniqueColors = useMemo(() => {
     const set = new Set(variants.map((v) => v.color));

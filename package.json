@@ -11,20 +11,21 @@
     "dev:web": "npm run dev --prefix web",
     "dev:api": "npm run dev --prefix server",
     "build": "npm ci --prefix web && npm run build --prefix web",
-    "build:all": "npm ci --prefix web && npm run build --prefix web",
+    "build:all": "npm ci --prefix web && npm run build --prefix web && npm run verify:server",
     "start:web": "npm run start --prefix web",
     "start:api": "npm run start --prefix server",
     "stack:health": "node scripts/stack-health.mjs",
     "docker:up": "docker compose -f docker-compose.prod.yml up -d --build",
     "docker:down": "docker compose -f docker-compose.prod.yml down",
     "lint": "npm run lint --prefix web",
-    "install:all": "npm install --prefix web && npm install --prefix server"
+    "install:all": "npm install --prefix web && npm install --prefix server",
+    "verify:server": "node --check server/src/index.js && node --check server/src/middleware/auth.js",
+    "verify:stack": "npm run verify:server && npm run lint --prefix web && npx --prefix web tsc --noEmit && npm run build --prefix web"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
   "dependencies": {
-    "firebase": "^12.11.0",
-    "next": "16.2.2"
+    "firebase": "^12.11.0"
   }
 }

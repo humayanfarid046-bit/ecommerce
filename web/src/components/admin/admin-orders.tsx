@@ -517,7 +517,7 @@ export function AdminOrders() {
           )
         );
         const base = window.location.origin;
-        const link = `${base}/en/delivery/${token}`;
+        const link = `${base}/delivery/${token}`;
         try {
           await navigator.clipboard.writeText(link);
           setToast(`Rider assigned. Link copied: ${link}`);
@@ -530,7 +530,7 @@ export function AdminOrders() {
         setDeliveryActionBusy(false);
       }
     },
-    [getAuthHeader]
+    [getAuthHeader, trackDraft.timelineNote]
   );
 
   const markUndelivered = useCallback(
@@ -1522,7 +1522,7 @@ export function AdminOrders() {
                               </p>
                               {o.riderToken ? (
                                 <p className="font-mono">
-                                  Link: {`/en/delivery/${o.riderToken}`}
+                                  Link: {`/delivery/${o.riderToken}`}
                                 </p>
                               ) : null}
                               <p>

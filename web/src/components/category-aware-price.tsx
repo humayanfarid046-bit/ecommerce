@@ -16,8 +16,13 @@ export function useEffectiveUnitPrice(
     return () => window.removeEventListener("lc-category-discount", fn);
   }, []);
   return useMemo(
-    () =>
-      effectiveUnitPriceAfterCategoryDiscount(product.price, product.categorySlug),
+    () => {
+      void tick;
+      return effectiveUnitPriceAfterCategoryDiscount(
+        product.price,
+        product.categorySlug
+      );
+    },
     [product.price, product.categorySlug, tick]
   );
 }

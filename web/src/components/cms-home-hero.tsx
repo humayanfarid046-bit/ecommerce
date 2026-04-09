@@ -48,7 +48,6 @@ function CmsSlides({ slides }: { slides: CmsBannerSlide[] }) {
           <Link href={href} className="pointer-events-auto absolute inset-0 z-0 block">
             <picture className="block h-full w-full">
               <source media="(max-width: 767px)" srcSet={mobile} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={desktop}
                 alt=""

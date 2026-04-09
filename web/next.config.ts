@@ -3,23 +3,29 @@ import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-/** Directory containing this config (`web/`). Must match `turbopack.root` to avoid local/Turbopack warnings. */
+/** Directory containing this config (`web/`). */
 const webRoot = path.dirname(fileURLToPath(import.meta.url));
 
-/** Vercel serverless expects default `.next` layout; `standalone` breaks post-build (ENOENT routes-manifest-*.json). */
+/** Vercel: default `.next` layout; skip monorepo tracing roots (can confuse output paths if project root ≠ `web/`). */
 const isVercel = Boolean(process.env.VERCEL);
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: webRoot,
-  turbopack: {
-    root: webRoot,
-  },
-  /** Docker / `node server.js` only — not used on Vercel (see web/Dockerfile). */
-  ...(!isVercel ? { output: "standalone" as const } : {}),
+  /** Local/Docker: align tracing + Turbopack with `web/` as app root. */
+  ...(isVercel
+    ? {
+        /** Monorepo: parent folder so tracing matches repo root (multiple lockfiles). Does not move `.next`. */
+        outputFileTracingRoot: path.join(webRoot, ".."),
+      }
+    : {
+        outputFileTracingRoot: webRoot,
+        turbopack: { root: webRoot },
+        output: "standalone" as const,
+      }),
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
+      { protocol: "https", hostname: "api.qrserver.com", pathname: "/**" },
     ],
   },
 };

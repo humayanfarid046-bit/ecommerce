@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { Link } from "@/i18n/navigation";
+import { use, useEffect, useMemo, useState } from "react";
 
 type RiderOrder = {
   userId: string;
@@ -22,9 +24,9 @@ type RiderOrder = {
 export default function DeliveryAgentPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ locale: string; token: string }>;
 }) {
-  const token = params.token;
+  const { token } = use(params);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<RiderOrder | null>(null);
@@ -162,9 +164,12 @@ export default function DeliveryAgentPage({
             <div className="rounded-xl border p-3">
               <p className="text-sm font-medium">Scan on Delivery (UPI)</p>
               {qrSrc ? (
-                <img
+                <Image
                   src={qrSrc}
                   alt="UPI QR"
+                  width={160}
+                  height={160}
+                  unoptimized
                   className="mt-2 h-40 w-40 rounded-lg border object-cover"
                 />
               ) : null}
@@ -206,12 +211,12 @@ export default function DeliveryAgentPage({
 
       {error ? <p className="text-sm text-rose-600">{error}</p> : null}
       {order.status === "delivered" ? (
-        <a
-          href={`/en/help?orderId=${encodeURIComponent(order.orderId)}&type=feedback`}
+        <Link
+          href={`/help?orderId=${encodeURIComponent(order.orderId)}&type=feedback`}
           className="inline-block rounded-lg border px-3 py-2 text-sm font-medium"
         >
           Request Customer Feedback
-        </a>
+        </Link>
       ) : null}
     </main>
   );
