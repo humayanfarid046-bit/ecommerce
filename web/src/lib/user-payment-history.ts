@@ -5,10 +5,7 @@ import {
   getFirebaseAuth,
   getFirebaseDb,
 } from "@/lib/firebase/client";
-import {
-  loadPaymentHistoryFromFirestore,
-  savePaymentHistoryToFirestore,
-} from "@/lib/payment-history-firestore";
+import { savePaymentHistoryToFirestore } from "@/lib/payment-history-firestore";
 
 const KEY = "lc_user_payment_history_v1";
 

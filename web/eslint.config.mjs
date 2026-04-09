@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Node deploy helpers (CommonJS `require` is intentional)
+    "scripts/**",
   ]),
   {
     rules: {
