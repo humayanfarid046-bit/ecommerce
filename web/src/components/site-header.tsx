@@ -102,7 +102,7 @@ export function SiteHeader() {
               href="/admin"
               className="hidden px-2 text-sm font-semibold text-white hover:underline lg:block"
             >
-              {t("becomeSeller")}
+              Admin
             </Link>
             <Link
               href="/wishlist"
@@ -193,7 +193,7 @@ export function SiteHeader() {
             className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             onClick={() => setDrawerOpen(false)}
           >
-            {t("becomeSeller")}
+            Admin
           </Link>
           <Link
             href="/help"

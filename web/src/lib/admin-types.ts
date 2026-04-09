@@ -21,6 +21,25 @@ export type AdminOrderRow = {
   deliveryPin?: string;
   /** COD only — before phone confirmation; localStorage may override. */
   codConfirmationSeed?: "awaiting" | "confirmed";
+  riderName?: string;
+  riderPhone?: string;
+  riderToken?: string;
+  deliveryOtp?: string;
+  deliveryOtpVerifiedAt?: number;
+  cashCollectedRupees?: number;
+  lineItems?: Array<{
+    variantId: string;
+    productId: string;
+    qty: number;
+  }>;
+  riderTokenExpiresAt?: number;
+  riderTokenRevokedAt?: number;
+  deliveryPartnerId?: string;
+  deliveryPartnerName?: string;
+  paymentStatus?: "PENDING" | "PAID";
+  deliveryAddress?: string;
+  /** RTO marked by rider; awaiting admin Stock In to restore inventory. */
+  rtoPendingStockIn?: boolean;
 };
 
 export type UserSegment = "premium" | "new" | "inactive";

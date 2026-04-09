@@ -36,6 +36,32 @@ export type UserOrderRecord = {
   customerName?: string;
   customerPhone?: string;
   deliveryPin?: string;
+  lineItems?: Array<{
+    variantId: string;
+    productId: string;
+    qty: number;
+  }>;
+  riderName?: string;
+  riderPhone?: string;
+  riderToken?: string;
+  deliveryOtp?: string;
+  deliveryOtpVerifiedAt?: number;
+  cashCollectedRupees?: number;
+  deliveredAt?: string;
+  undeliveredReason?: string;
+  riderTokenExpiresAt?: number;
+  riderTokenRevokedAt?: number;
+  paymentStatus?: "PENDING" | "PAID";
+  deliveryPartnerId?: string;
+  deliveryPartnerName?: string;
+  deliveryAddress?: string;
+  deliveredById?: string;
+  deliveredByName?: string;
+  paidAt?: string;
+  /** Rider marked RTO; inventory not yet restocked until admin Stock In. */
+  rtoPendingStockIn?: boolean;
+  rtoMarkedAt?: number;
+  rtoStockInAt?: number;
 };
 
 export function parseUserOrderDocument(
@@ -61,6 +87,10 @@ export function parseUserOrderDocument(
       ? (statusRaw as UserOrderRecord["status"])
       : "placed";
 
+  const rtoPending =
+    x.rtoPendingStockIn === true ||
+    (typeof x.rtoPendingStockIn === "string" && x.rtoPendingStockIn === "true");
+
   return {
     id,
     placedAt: typeof x.placedAt === "string" ? x.placedAt : "",
@@ -83,6 +113,57 @@ export function parseUserOrderDocument(
       typeof x.customerPhone === "string" ? x.customerPhone : undefined,
     deliveryPin:
       typeof x.deliveryPin === "string" ? x.deliveryPin : undefined,
+    lineItems: Array.isArray(x.lineItems)
+      ? x.lineItems
+          .map((it) => {
+            const row = it as Record<string, unknown>;
+            const variantId =
+              typeof row.variantId === "string" ? row.variantId : "";
+            const productId =
+              typeof row.productId === "string" ? row.productId : variantId;
+            const qty = Math.max(0, Math.floor(Number(row.qty) || 0));
+            if (!variantId || !qty) return null;
+            return { variantId, productId, qty };
+          })
+          .filter((it): it is { variantId: string; productId: string; qty: number } => Boolean(it))
+      : undefined,
+    riderName: typeof x.riderName === "string" ? x.riderName : undefined,
+    riderPhone: typeof x.riderPhone === "string" ? x.riderPhone : undefined,
+    riderToken: typeof x.riderToken === "string" ? x.riderToken : undefined,
+    deliveryOtp: typeof x.deliveryOtp === "string" ? x.deliveryOtp : undefined,
+    deliveryOtpVerifiedAt:
+      typeof x.deliveryOtpVerifiedAt === "number"
+        ? x.deliveryOtpVerifiedAt
+        : undefined,
+    cashCollectedRupees:
+      typeof x.cashCollectedRupees === "number" ? x.cashCollectedRupees : undefined,
+    deliveredAt: typeof x.deliveredAt === "string" ? x.deliveredAt : undefined,
+    undeliveredReason:
+      typeof x.undeliveredReason === "string" ? x.undeliveredReason : undefined,
+    riderTokenExpiresAt:
+      typeof x.riderTokenExpiresAt === "number" ? x.riderTokenExpiresAt : undefined,
+    riderTokenRevokedAt:
+      typeof x.riderTokenRevokedAt === "number" ? x.riderTokenRevokedAt : undefined,
+    paymentStatus:
+      x.paymentStatus === "PAID" || x.paymentStatus === "PENDING"
+        ? x.paymentStatus
+        : undefined,
+    deliveryPartnerId:
+      typeof x.deliveryPartnerId === "string" ? x.deliveryPartnerId : undefined,
+    deliveryPartnerName:
+      typeof x.deliveryPartnerName === "string" ? x.deliveryPartnerName : undefined,
+    deliveryAddress:
+      typeof x.deliveryAddress === "string" ? x.deliveryAddress : undefined,
+    deliveredById:
+      typeof x.deliveredById === "string" ? x.deliveredById : undefined,
+    deliveredByName:
+      typeof x.deliveredByName === "string" ? x.deliveredByName : undefined,
+    paidAt: typeof x.paidAt === "string" ? x.paidAt : undefined,
+    rtoPendingStockIn: rtoPending ? true : undefined,
+    rtoMarkedAt:
+      typeof x.rtoMarkedAt === "number" ? x.rtoMarkedAt : undefined,
+    rtoStockInAt:
+      typeof x.rtoStockInAt === "number" ? x.rtoStockInAt : undefined,
   };
 }
 

@@ -1,7 +1,7 @@
 /** Client-only catalog: products you add in Admin (localStorage). */
 
 import type { Product, Review } from "@/lib/product-model";
-import { mergeCatalogViews } from "@/lib/catalog-cloud";
+import { mergeCatalogViews, sanitizeProductForCloud } from "@/lib/catalog-cloud";
 
 const KEY = "lc_store_catalog_v1";
 
@@ -9,6 +9,22 @@ const KEY = "lc_store_catalog_v1";
 export const CATALOG_LOCALSTORAGE_KEY = KEY;
 
 export const CATALOG_EVENT = "lc-catalog";
+export const CATALOG_SAVE_STATUS_EVENT = "lc-catalog-save-status";
+
+export type CatalogSaveStatus =
+  | "local_saved"
+  | "local_saved_compact"
+  | "local_failed"
+  | "cloud_synced"
+  | "cloud_sync_failed"
+  | "cloud_skipped_auth";
+
+function dispatchSaveStatus(status: CatalogSaveStatus): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent(CATALOG_SAVE_STATUS_EVENT, { detail: { status } })
+  );
+}
 
 /** In-memory snapshot from GET /api/catalog (Firestore). Browser-only. */
 let remoteCatalogSnapshot: Product[] = [];
@@ -56,10 +72,12 @@ async function tryPushCatalogToCloud(): Promise<void> {
   if (typeof window === "undefined") return;
   try {
     const { getFirebaseAuth } = await import("@/lib/firebase/client");
-    const { sanitizeProductForCloud } = await import("@/lib/catalog-cloud");
     const auth = getFirebaseAuth();
     const token = await auth?.currentUser?.getIdToken();
-    if (!token) return;
+    if (!token) {
+      dispatchSaveStatus("cloud_skipped_auth");
+      return;
+    }
     const products = readCatalogProducts().map(sanitizeProductForCloud);
     const res = await fetch("/api/admin/catalog", {
       method: "POST",
@@ -72,9 +90,12 @@ async function tryPushCatalogToCloud(): Promise<void> {
     if (res.ok) {
       const next = await fetchRemoteCatalogSnapshot();
       setRemoteCatalogSnapshot(next);
+      dispatchSaveStatus("cloud_synced");
+      return;
     }
+    dispatchSaveStatus("cloud_sync_failed");
   } catch {
-    /* offline or not admin — ignore */
+    dispatchSaveStatus("cloud_sync_failed");
   }
 }
 
@@ -220,7 +241,20 @@ export function readCatalogProducts(): Product[] {
 
 export function writeCatalogProducts(next: Product[]): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next));
+    dispatchSaveStatus("local_saved");
+  } catch {
+    // Quota-safe fallback: strip data URLs and large fields so product rows still persist.
+    const compact = next.map(sanitizeProductForCloud);
+    try {
+      localStorage.setItem(KEY, JSON.stringify(compact));
+      dispatchSaveStatus("local_saved_compact");
+    } catch {
+      dispatchSaveStatus("local_failed");
+      return;
+    }
+  }
   window.dispatchEvent(new CustomEvent(CATALOG_EVENT));
   void tryPushCatalogToCloud();
 }

@@ -32,7 +32,7 @@ import { ConversionFunnel } from "@/components/admin/conversion-funnel";
 import { PaymentSplitChart } from "@/components/admin/payment-split-chart";
 import { RegionIndiaPanel } from "@/components/admin/region-india-panel";
 import { LiveActivityFeed } from "@/components/admin/live-activity-feed";
-import { AlertTriangle, TrendingUp, Users, Search } from "lucide-react";
+import { AlertTriangle, TrendingUp, Users, Search, Truck, Wallet, MapPin } from "lucide-react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { Link, useRouter } from "@/i18n/navigation";
 
@@ -69,6 +69,43 @@ export function AdminDashboard() {
   const [customerFind, setCustomerFind] = useState("");
   const [fraudItems, setFraudItems] = useState(() => computeFraudAlertItems());
   const [srv, setSrv] = useState<SrvStats | null>(null);
+  const [invAlerts, setInvAlerts] = useState<
+    {
+      alertId: string;
+      title: string;
+      variantId: string;
+      available: number;
+      reorderLevel: number;
+      status: "open" | "resolved";
+    }[]
+  >([]);
+  const [deliveryOps, setDeliveryOps] = useState<{
+    pendingOutForDelivery: number;
+    pendingTodayPlacedOutForDelivery: number;
+    topPerformer: { partnerId: string; partnerName: string; deliveredToday: number } | null;
+    avgDeliveryMinutesToday: number | null;
+    liveRiders: Array<{
+      uid: string;
+      name: string;
+      disabled: boolean;
+      dutyOnline: boolean;
+      outForDeliveryCount: number;
+      lastLat: number | null;
+      lastLng: number | null;
+    }>;
+  } | null>(null);
+  const [riderWalletPayload, setRiderWalletPayload] = useState<{
+    wallets: Array<{
+      uid: string;
+      name: string;
+      disabled: boolean;
+      cashInHandRupees: number;
+      onlineReportedLifetimeRupees: number;
+      lastSettledAt: number | null;
+    }>;
+    totals: { cashWithRidersRupees: number; onlineLifetimeReportedRupees: number };
+  } | null>(null);
+  const [walletBusyUid, setWalletBusyUid] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +136,116 @@ export function AdminDashboard() {
             paymentMix: Array.isArray(j.paymentMix) ? j.paymentMix : [],
             regionOrders: Array.isArray(j.regionOrders) ? j.regionOrders : [],
             hourlyToday: Array.isArray(j.hourlyToday) ? j.hourlyToday : [],
+          });
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+        if (!token) return;
+        const res = await fetch("/api/admin/inventory", {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          alerts?: {
+            alertId: string;
+            title: string;
+            variantId: string;
+            available: number;
+            reorderLevel: number;
+            status: "open" | "resolved";
+          }[];
+        };
+        if (!cancelled && Array.isArray(j.alerts)) {
+          setInvAlerts(j.alerts);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+        if (!token) return;
+        const [resOps, resW] = await Promise.all([
+          fetch("/api/admin/delivery-ops", {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          }),
+          fetch("/api/admin/rider-wallets", {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          }),
+        ]);
+        const jOps = (await resOps.json().catch(() => ({}))) as {
+          pendingOutForDelivery?: number;
+          pendingTodayPlacedOutForDelivery?: number;
+          topPerformer?: {
+            partnerId: string;
+            partnerName: string;
+            deliveredToday: number;
+          } | null;
+          avgDeliveryMinutesToday?: number | null;
+          liveRiders?: Array<{
+            uid: string;
+            name: string;
+            disabled: boolean;
+            dutyOnline: boolean;
+            outForDeliveryCount: number;
+            lastLat: number | null;
+            lastLng: number | null;
+          }>;
+        };
+        const jW = (await resW.json().catch(() => ({}))) as {
+          wallets?: Array<{
+            uid: string;
+            name: string;
+            disabled: boolean;
+            cashInHandRupees: number;
+            onlineReportedLifetimeRupees: number;
+            lastSettledAt: number | null;
+          }>;
+          totals?: { cashWithRidersRupees: number; onlineLifetimeReportedRupees: number };
+        };
+        if (cancelled) return;
+        if (
+          resOps.ok &&
+          typeof jOps.pendingOutForDelivery === "number" &&
+          Array.isArray(jOps.liveRiders)
+        ) {
+          setDeliveryOps({
+            pendingOutForDelivery: jOps.pendingOutForDelivery,
+            pendingTodayPlacedOutForDelivery: jOps.pendingTodayPlacedOutForDelivery ?? 0,
+            topPerformer: jOps.topPerformer ?? null,
+            avgDeliveryMinutesToday:
+              typeof jOps.avgDeliveryMinutesToday === "number"
+                ? jOps.avgDeliveryMinutesToday
+                : null,
+            liveRiders: jOps.liveRiders,
+          });
+        }
+        if (resW.ok && Array.isArray(jW.wallets) && jW.totals) {
+          setRiderWalletPayload({
+            wallets: jW.wallets,
+            totals: jW.totals,
           });
         }
       } catch {
@@ -253,6 +400,36 @@ export function AdminDashboard() {
     router.push(`/admin/users?q=${encodeURIComponent(s)}`);
   }
 
+  async function settleRiderCash(uid: string) {
+    setWalletBusyUid(uid);
+    try {
+      const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+      if (!token) return;
+      const res = await fetch("/api/admin/rider-wallets", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "settle", riderUid: uid }),
+      });
+      if (!res.ok) return;
+      const resW = await fetch("/api/admin/rider-wallets", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      const jW = (await resW.json().catch(() => ({}))) as {
+        wallets?: NonNullable<typeof riderWalletPayload>["wallets"];
+        totals?: { cashWithRidersRupees: number; onlineLifetimeReportedRupees: number };
+      };
+      if (Array.isArray(jW.wallets) && jW.totals) {
+        setRiderWalletPayload({ wallets: jW.wallets, totals: jW.totals });
+      }
+    } finally {
+      setWalletBusyUid(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -310,6 +487,141 @@ export function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-[#0066ff]" aria-hidden />
+              <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                Delivery operations
+              </p>
+            </div>
+            {deliveryOps ? (
+              <>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                    <p className="text-[10px] font-bold uppercase text-slate-500">Out for delivery</p>
+                    <p className="text-2xl font-extrabold tabular-nums">
+                      {deliveryOps.pendingOutForDelivery}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                    <p className="text-[10px] font-bold uppercase text-slate-500">Placed today (OFD)</p>
+                    <p className="text-2xl font-extrabold tabular-nums">
+                      {deliveryOps.pendingTodayPlacedOutForDelivery}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                    <p className="text-[10px] font-bold uppercase text-slate-500">Top today</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">
+                      {deliveryOps.topPerformer
+                        ? `${deliveryOps.topPerformer.partnerName} (${deliveryOps.topPerformer.deliveredToday})`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                    <p className="text-[10px] font-bold uppercase text-slate-500">Avg time (today)</p>
+                    <p className="text-2xl font-extrabold tabular-nums">
+                      {deliveryOps.avgDeliveryMinutesToday != null
+                        ? `${deliveryOps.avgDeliveryMinutesToday.toFixed(0)}m`
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs font-bold text-slate-500">Live riders</p>
+                <ul className="mt-1 max-h-40 space-y-1 overflow-y-auto text-xs">
+                  {deliveryOps.liveRiders.map((r) => (
+                    <li
+                      key={r.uid}
+                      className="flex flex-wrap items-center justify-between gap-1 rounded-lg border border-slate-100 px-2 py-1 dark:border-slate-700"
+                    >
+                      <span className={r.disabled ? "text-slate-400 line-through" : ""}>
+                        {r.name}
+                        {r.dutyOnline ? (
+                          <span className="ml-1 text-emerald-600">· on duty</span>
+                        ) : (
+                          <span className="ml-1 text-slate-400">· off</span>
+                        )}
+                        {r.outForDeliveryCount > 0 ? (
+                          <span className="ml-1 font-mono text-[#0066ff]">
+                            · OFD {r.outForDeliveryCount}
+                          </span>
+                        ) : null}
+                      </span>
+                      {r.lastLat != null && r.lastLng != null ? (
+                        <a
+                          href={`https://www.google.com/maps?q=${r.lastLat},${r.lastLng}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-0.5 text-[#0066ff]"
+                        >
+                          <MapPin className="h-3 w-3" /> Map
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">No GPS</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-slate-500">Loading…</p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-emerald-700 dark:text-emerald-400" aria-hidden />
+              <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                Rider wallet (COD cash-in-hand)
+              </p>
+            </div>
+            {riderWalletPayload ? (
+              <>
+                <div className="mt-3 flex flex-wrap gap-3 text-sm">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-slate-500">Cash with riders</p>
+                    <p className="text-xl font-extrabold tabular-nums text-emerald-800 dark:text-emerald-200">
+                      ₹{riderWalletPayload.totals.cashWithRidersRupees.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-slate-500">Online reported (lifetime)</p>
+                    <p className="text-xl font-extrabold tabular-nums text-slate-800 dark:text-slate-100">
+                      ₹{riderWalletPayload.totals.onlineLifetimeReportedRupees.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                </div>
+                <ul className="mt-3 max-h-44 space-y-1 overflow-y-auto text-xs">
+                  {riderWalletPayload.wallets.map((w) => (
+                    <li
+                      key={w.uid}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-white/80 px-2 py-1.5 dark:border-emerald-900/40 dark:bg-slate-900/40"
+                    >
+                      <span className={w.disabled ? "text-slate-400 line-through" : ""}>
+                        {w.name}{" "}
+                        <span className="font-mono text-[10px] text-slate-500">{w.uid.slice(0, 6)}…</span>
+                      </span>
+                      <span className="tabular-nums font-bold">
+                        ₹{w.cashInHandRupees.toLocaleString("en-IN")}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={walletBusyUid === w.uid || w.cashInHandRupees <= 0 || w.disabled}
+                        onClick={() => void settleRiderCash(w.uid)}
+                        className="rounded-lg bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white disabled:opacity-40"
+                      >
+                        {walletBusyUid === w.uid ? "…" : "Settle"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-slate-500">Loading…</p>
+            )}
+          </div>
+        </div>
 
       {fraudItems.length > 0 ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-rose-300 bg-rose-50 p-4 dark:border-rose-900/60 dark:bg-rose-950/30 sm:flex-row sm:items-start sm:gap-4">
@@ -407,6 +719,34 @@ export function AdminDashboard() {
       <MultiLayerSalesChart />
 
       <LowStockActionCenter />
+
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 dark:border-rose-900/50 dark:bg-rose-950/25">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-extrabold text-rose-900 dark:text-rose-100">
+            Inventory low-stock alerts ({invAlerts.filter((a) => a.status === "open").length})
+          </p>
+          <Link
+            href="/admin/inventory"
+            className="text-xs font-bold text-[#0066ff] hover:underline"
+          >
+            Open inventory ops
+          </Link>
+        </div>
+        <div className="mt-2 space-y-1 text-sm">
+          {invAlerts
+            .filter((a) => a.status === "open")
+            .slice(0, 6)
+            .map((a) => (
+              <p key={a.alertId}>
+                <span className="font-mono text-xs">{a.variantId}</span> - {a.title}{" "}
+                (available {a.available}, reorder {a.reorderLevel})
+              </p>
+            ))}
+          {invAlerts.filter((a) => a.status === "open").length === 0 ? (
+            <p className="text-slate-500">No open low-stock alert.</p>
+          ) : null}
+        </div>
+      </div>
 
       <AdminCustomerSync />
     </div>

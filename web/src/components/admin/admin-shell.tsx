@@ -4,6 +4,7 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import {
   LayoutDashboard,
   Package,
+  Boxes,
   ShoppingBag,
   Users,
   CreditCard,
@@ -33,6 +34,7 @@ const nav: {
 }[] = [
   { href: "/admin", key: "navDashboard", icon: LayoutDashboard, module: "dashboard" },
   { href: "/admin/products", key: "navProducts", icon: Package, module: "products" },
+  { href: "/admin/inventory", key: "navInventory", icon: Boxes, module: "inventory" },
   { href: "/admin/orders", key: "navOrders", icon: ShoppingBag, module: "orders" },
   { href: "/admin/users", key: "navUsers", icon: Users, module: "users" },
   { href: "/admin/payments", key: "navPayments", icon: CreditCard, module: "payments" },

@@ -3,6 +3,7 @@ export type AccessScope = "owner" | "operations" | "catalog" | "none";
 export type AccessModule =
   | "dashboard"
   | "products"
+  | "inventory"
   | "orders"
   | "users"
   | "payments"
@@ -16,6 +17,7 @@ export type AccessPermissions = Record<AccessModule, boolean>;
 const OWNER: AccessPermissions = {
   dashboard: true,
   products: true,
+  inventory: true,
   orders: true,
   users: true,
   payments: true,
@@ -28,6 +30,7 @@ const OWNER: AccessPermissions = {
 const OPERATIONS: AccessPermissions = {
   dashboard: true,
   products: false,
+  inventory: true,
   orders: true,
   users: false,
   payments: true,
@@ -40,6 +43,7 @@ const OPERATIONS: AccessPermissions = {
 const CATALOG: AccessPermissions = {
   dashboard: true,
   products: true,
+  inventory: true,
   orders: false,
   users: false,
   payments: false,
@@ -52,6 +56,7 @@ const CATALOG: AccessPermissions = {
 const NONE: AccessPermissions = {
   dashboard: false,
   products: false,
+  inventory: false,
   orders: false,
   users: false,
   payments: false,

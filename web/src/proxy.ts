@@ -5,7 +5,17 @@ import { routing } from "./i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
-  void request;
+  const p = request.nextUrl.pathname;
+  const isDeliveryRoute =
+    p === "/delivery/dashboard" ||
+    /^\/(en|bn)\/delivery\/dashboard\/?$/.test(p);
+  if (isDeliveryRoute) {
+    const role = (request.cookies.get("lc_role")?.value ?? "").toUpperCase();
+    if (role !== "DELIVERY_PARTNER" && role !== "ADMIN") {
+      const locale = p.startsWith("/bn") ? "bn" : "en";
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
+  }
   return intlMiddleware(request);
 }
 

@@ -49,7 +49,11 @@ import {
 } from "@/lib/wallet-storage";
 import { getWalletGlobalSettings } from "@/lib/wallet-settings";
 import { recordUserPayment } from "@/lib/user-payment-history";
-import { canUseFirestoreSync, getFirebaseDb } from "@/lib/firebase/client";
+import {
+  canUseFirestoreSync,
+  getFirebaseAuth,
+  getFirebaseDb,
+} from "@/lib/firebase/client";
 import { setAdminOrderFirebaseUid } from "@/lib/admin-order-firebase-uid";
 import { saveUserOrderToFirestore } from "@/lib/user-order-firestore";
 import { prependOrderPlacedNotification } from "@/lib/notifications-storage";
@@ -370,8 +374,41 @@ export function CheckoutShell() {
     const orderUid = user?.uid;
     const orderWalletUid = walletUid;
     setOverlay("processing");
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       const id = `LC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      try {
+        const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+        if (!token) {
+          setOverlay("none");
+          alert("Please sign in again to confirm inventory.");
+          return;
+        }
+        const invRes = await fetch("/api/inventory/commit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderId: id,
+            lines: lines.map((l) => ({
+              variantId: l.product.id,
+              productId: l.product.id,
+              qty: l.qty,
+            })),
+          }),
+        });
+        if (!invRes.ok) {
+          const j = (await invRes.json().catch(() => ({}))) as { error?: string };
+          setOverlay("none");
+          alert(j.error ?? "Some items are out of stock. Please update cart.");
+          return;
+        }
+      } catch {
+        setOverlay("none");
+        alert("Could not verify stock right now. Please try again.");
+        return;
+      }
       if (walletAppliedPaise > 0) {
         const debited = debitWalletPaise(
           orderWalletUid,
@@ -445,6 +482,16 @@ export function CheckoutShell() {
             customerPhone: customerPhone || undefined,
             deliveryPin: deliveryPinDigits || undefined,
             hubCity: deliveryCity.trim() || undefined,
+            deliveryAddress: addressSummaryLine || undefined,
+            paymentStatus:
+              methodLabel.toUpperCase().includes("COD") ? "PENDING" : "PAID",
+            lineItems: lines
+              .map((l) => ({
+                variantId: String(l.product.id || "").trim(),
+                productId: String(l.product.id || "").trim(),
+                qty: Math.max(1, Math.floor(Number(l.qty) || 1)),
+              }))
+              .filter((l) => l.variantId),
           }).then(() => {
             try {
               setAdminOrderFirebaseUid(id, orderUid);

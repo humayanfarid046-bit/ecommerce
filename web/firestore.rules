@@ -32,6 +32,38 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    /**
+     * Checkout (including COD) writes once via `saveUserOrderToFirestore` — same path as other methods.
+     * Clients may not update orders after create (prevents faking status/totals); Admin SDK merges updates.
+     */
+    function userOrderCreateValid(orderId) {
+      let d = request.resource.data;
+      return d.keys().hasOnly([
+        'id', 'placedAt', 'totalRupees', 'methodLabel', 'paymentTxnId',
+        'itemCount', 'status', 'shipmentStep', 'itemTitle', 'updatedAt',
+        'customerName', 'customerPhone', 'deliveryPin', 'hubCity', 'lineItems',
+        'paymentStatus', 'deliveryAddress'
+      ])
+        && d.id == orderId
+        && d.id is string && d.id.size() > 0 && d.id.size() <= 120
+        && d.placedAt is string && d.placedAt.size() > 0 && d.placedAt.size() <= 80
+        && d.totalRupees is number && d.totalRupees >= 0 && d.totalRupees <= 50000000
+        && d.methodLabel is string && d.methodLabel.size() > 0 && d.methodLabel.size() <= 500
+        && d.paymentTxnId is string && d.paymentTxnId.size() > 0 && d.paymentTxnId.size() <= 200
+        && d.itemCount is int && d.itemCount >= 1 && d.itemCount <= 1000
+        && d.status == 'placed'
+        && d.shipmentStep is int && d.shipmentStep == 0
+        && d.itemTitle is string && d.itemTitle.size() <= 2000
+        && d.updatedAt is int && d.updatedAt > 0
+        && d.customerName is string && d.customerName.size() > 0 && d.customerName.size() <= 200
+        && (!d.keys().hasAny(['customerPhone']) || (d.customerPhone is string && d.customerPhone.size() <= 20))
+        && (!d.keys().hasAny(['deliveryPin']) || (d.deliveryPin is string && d.deliveryPin.size() <= 10))
+        && (!d.keys().hasAny(['lineItems']) || (d.lineItems is list && d.lineItems.size() <= 200))
+        && (!d.keys().hasAny(['paymentStatus']) || d.paymentStatus in ['PENDING', 'PAID'])
+        && (!d.keys().hasAny(['deliveryAddress']) || (d.deliveryAddress is string && d.deliveryAddress.size() <= 500))
+        && (!d.keys().hasAny(['hubCity']) || (d.hubCity is string && d.hubCity.size() <= 120));
+    }
+
     /** Allowed profile document ids under `users/{uid}/profile/{docId}`. */
     function allowedProfileDoc(docId) {
       return docId in [
@@ -41,7 +73,8 @@ service cloud.firestore {
         'compare',
         'paymentHistory',
         'recentlyViewed',
-        'wishlist'
+        'wishlist',
+        'delivery'
       ];
     }
 
@@ -49,7 +82,8 @@ service cloud.firestore {
 
       match /orders/{orderId} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId);
+        allow create: if isOwner(userId) && userOrderCreateValid(orderId);
+        allow update: if false;
         allow delete: if isOwner(userId);
       }
 
@@ -79,6 +113,37 @@ service cloud.firestore {
         allow read, create, update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
+    }
+
+    /** Inventory is server-managed via Admin SDK + API only. */
+    match /inventoryVariants/{docId} {
+      allow read, write: if false;
+    }
+    match /inventoryMovements/{docId} {
+      allow read, write: if false;
+    }
+    match /inventoryReservations/{docId} {
+      allow read, write: if false;
+    }
+    match /purchaseOrders/{docId} {
+      allow read, write: if false;
+    }
+    match /goodsReceipts/{docId} {
+      allow read, write: if false;
+    }
+    match /stockTransfers/{docId} {
+      allow read, write: if false;
+    }
+    match /inventoryAlerts/{docId} {
+      allow read, write: if false;
+    }
+
+    /** Rider COD wallet aggregates — Admin SDK only. */
+    match /riderWallets/{uid} {
+      allow read, write: if false;
+    }
+    match /riderWallets/{uid}/settlements/{sid} {
+      allow read, write: if false;
     }
   }
 }

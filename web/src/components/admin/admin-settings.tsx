@@ -15,6 +15,8 @@ import {
   saveTaxShippingConfig,
   getActivityLogs,
   appendActivityLog,
+  getDeliveryOpsPolicy,
+  saveDeliveryOpsPolicy,
   type ActivityLogEntry,
 } from "@/lib/admin-security-storage";
 import {
@@ -83,6 +85,7 @@ export function AdminSettings() {
   const [bootstrapSecret, setBootstrapSecret] = useState("");
   const [bootstrapMsg, setBootstrapMsg] = useState<string | null>(null);
   const [bootstrapBusy, setBootstrapBusy] = useState(false);
+  const [riderTokenExpiryHours, setRiderTokenExpiryHours] = useState<6 | 12 | 24>(12);
   const bootstrapEnabled = process.env.NEXT_PUBLIC_ADMIN_BOOTSTRAP_ENABLED === "true";
 
   const [rules, setRules] = useState<ShippingRulesState>(defaultShippingRules);
@@ -98,7 +101,27 @@ export function AdminSettings() {
     setTax(String(cfg.taxPercent));
     setShipMetro(String(cfg.metroFlat));
     setShipRest(String(cfg.restFlat));
+    setRiderTokenExpiryHours(getDeliveryOpsPolicy().riderTokenExpiryHours);
     setLogs(getActivityLogs());
+    void (async () => {
+      try {
+        const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+        if (!token) return;
+        const res = await fetch("/api/admin/delivery-policy", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          policy?: { riderTokenExpiryHours?: number };
+        };
+        const h = Number(j.policy?.riderTokenExpiryHours);
+        if (res.ok && (h === 6 || h === 12 || h === 24)) {
+          setRiderTokenExpiryHours(h);
+          saveDeliveryOpsPolicy({ riderTokenExpiryHours: h }, { log: false });
+        }
+      } catch {
+        /* ignore, keep local fallback */
+      }
+    })();
     const fn = () => {
       setRules(getShippingRules());
     };
@@ -107,6 +130,7 @@ export function AdminSettings() {
       setTax(String(c.taxPercent));
       setShipMetro(String(c.metroFlat));
       setShipRest(String(c.restFlat));
+      setRiderTokenExpiryHours(getDeliveryOpsPolicy().riderTokenExpiryHours);
     };
     const fnAct = () => setLogs(getActivityLogs());
     window.addEventListener("lc-shipping-rules", fn);
@@ -556,6 +580,64 @@ export function AdminSettings() {
                 </span>
               </li>
             </ul>
+            <div className="mt-5 rounded-xl border border-slate-200/90 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-950/40">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Delivery Ops Policy
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Rider link token expiry duration for delivery interface.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[6, 12, 24].map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setRiderTokenExpiryHours(h as 6 | 12 | 24)}
+                    className={cn(
+                      "rounded-lg border px-3 py-1.5 text-xs font-bold",
+                      riderTokenExpiryHours === h
+                        ? "border-[#0066ff] bg-[#0066ff] text-white"
+                        : "border-slate-300 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                    )}
+                  >
+                    {h}h
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  saveDeliveryOpsPolicy({ riderTokenExpiryHours }, { log: false });
+                  try {
+                    const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+                    if (!token) {
+                      setToast("Policy saved locally. Sign in to sync server policy.");
+                      return;
+                    }
+                    const res = await fetch("/api/admin/delivery-policy", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({ riderTokenExpiryHours }),
+                    });
+                    const j = (await res.json().catch(() => ({}))) as { error?: string };
+                    if (!res.ok) {
+                      setToast(j.error ?? "Server policy save failed.");
+                      return;
+                    }
+                    saveDeliveryOpsPolicy({ riderTokenExpiryHours });
+                    setToast("Delivery ops policy saved (server enforced).");
+                  } catch {
+                    setToast("Policy saved locally; server sync failed.");
+                  }
+                }}
+                className="mt-3 rounded-lg bg-violet-600 px-4 py-2 text-xs font-bold text-white"
+              >
+                Save Delivery Policy
+              </button>
+            </div>
           </SettingsSectionCard>
         </div>
       )}

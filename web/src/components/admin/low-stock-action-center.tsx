@@ -95,11 +95,11 @@ export function LowStockActionCenter() {
         </div>
         <div className="flex flex-wrap gap-2">
           <a
-            href="mailto:suppliers@libas.demo?subject=Reorder%20request"
+            href="mailto:ops@ajhlibas.com?subject=Stock%20replenishment%20request"
             className="inline-flex items-center gap-1 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-950 shadow-sm hover:bg-amber-100/80 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-100 dark:hover:bg-slate-800"
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            {t("contactSupplier")}
+            {t("lowStockNotify")}
           </a>
           <Link
             href="/"

@@ -5,6 +5,7 @@ import { saveShippingRules, type ShippingRulesState } from "@/lib/shipping-rules
 const TAX_KEY = "lc_tax_shipping_v1";
 const ROLE_KEY = "lc_admin_role_v1";
 const ACT_KEY = "lc_admin_activity_v1";
+const DELIVERY_OPS_POLICY_KEY = "lc_delivery_ops_policy_v1";
 const MAX_LOGS = 120;
 
 export type TaxShippingConfig = {
@@ -14,15 +15,24 @@ export type TaxShippingConfig = {
   restFlat: number;
 };
 
+export type DeliveryOpsPolicy = {
+  riderTokenExpiryHours: 6 | 12 | 24;
+};
+
 export const defaultTaxShipping: TaxShippingConfig = {
   taxPercent: 18,
   metroFlat: 40,
   restFlat: 60,
 };
 
+export const defaultDeliveryOpsPolicy: DeliveryOpsPolicy = {
+  riderTokenExpiryHours: 12,
+};
+
 export const ADMIN_MODULES = [
   "dashboard",
   "products",
+  "inventory",
   "orders",
   "users",
   "payments",
@@ -42,6 +52,7 @@ export type RolePreset = "super" | "orders_only" | "catalog_only";
 export const fullPermissions: AdminPermissions = {
   dashboard: true,
   products: true,
+  inventory: true,
   orders: true,
   users: true,
   payments: true,
@@ -56,6 +67,7 @@ const PRESETS: Record<RolePreset, AdminPermissions> = {
   orders_only: {
     dashboard: true,
     products: false,
+    inventory: true,
     orders: true,
     users: false,
     payments: true,
@@ -68,6 +80,7 @@ const PRESETS: Record<RolePreset, AdminPermissions> = {
   catalog_only: {
     dashboard: true,
     products: true,
+    inventory: true,
     orders: false,
     users: false,
     payments: false,
@@ -102,8 +115,44 @@ function readTax(): TaxShippingConfig {
   }
 }
 
+function readDeliveryOpsPolicy(): DeliveryOpsPolicy {
+  if (typeof window === "undefined") return defaultDeliveryOpsPolicy;
+  try {
+    const s = localStorage.getItem(DELIVERY_OPS_POLICY_KEY);
+    if (!s) return defaultDeliveryOpsPolicy;
+    const p = JSON.parse(s) as Partial<DeliveryOpsPolicy>;
+    const hours = Number(p.riderTokenExpiryHours);
+    if (hours === 6 || hours === 12 || hours === 24) {
+      return { riderTokenExpiryHours: hours };
+    }
+    return defaultDeliveryOpsPolicy;
+  } catch {
+    return defaultDeliveryOpsPolicy;
+  }
+}
+
 export function getTaxShippingConfig(): TaxShippingConfig {
   return readTax();
+}
+
+export function getDeliveryOpsPolicy(): DeliveryOpsPolicy {
+  return readDeliveryOpsPolicy();
+}
+
+export function saveDeliveryOpsPolicy(
+  next: DeliveryOpsPolicy,
+  opts?: { log?: boolean }
+): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(DELIVERY_OPS_POLICY_KEY, JSON.stringify(next));
+  if (opts?.log !== false) {
+    appendActivityLog({
+      actor: "admin",
+      action: "settings.delivery_ops_policy_saved",
+      detail: `rider token expiry ${next.riderTokenExpiryHours}h`,
+    });
+  }
+  window.dispatchEvent(new CustomEvent("lc-admin-settings"));
 }
 
 export function saveTaxShippingConfig(
@@ -169,6 +218,7 @@ export function pathnameToAdminModule(pathname: string): AdminModule {
   if (!next) return "dashboard";
   const map: Record<string, AdminModule> = {
     products: "products",
+    inventory: "inventory",
     orders: "orders",
     users: "users",
     payments: "payments",

@@ -27,6 +27,7 @@ import {
   resolveAccessScopeFromRecord,
   type AccessScope,
 } from "@/lib/panel-access";
+import { normalizeAppRole, type AppRole } from "@/lib/rbac";
 
 export type AuthStatus = "loading" | "ready";
 
@@ -35,6 +36,7 @@ export type AuthUser = {
   email: string | null;
   displayName: string | null;
   accessScope: AccessScope;
+  role: AppRole;
   /**
    * False until the first read of `users/{uid}/profile/account` completes.
    * Avoids treating the initial placeholder `"none"` as real before Firestore responds.
@@ -48,6 +50,7 @@ function mapFirebaseUser(u: FirebaseUser): AuthUser {
     email: u.email,
     displayName: u.displayName,
     accessScope: "none",
+    role: "CUSTOMER",
     accessScopeReady: false,
   };
 }
@@ -153,11 +156,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.ok) {
-            const json = (await res.json()) as { accessScope?: unknown };
+            const json = (await res.json()) as { accessScope?: unknown; role?: unknown };
             const scope = normalizeAccessScope(json.accessScope);
+            const role = normalizeAppRole(json.role);
             if (!cancelled) {
               setUser((prev) =>
-                prev ? { ...prev, accessScope: scope, accessScopeReady: true } : prev
+                prev
+                  ? { ...prev, accessScope: scope, role, accessScopeReady: true }
+                  : prev
               );
             }
             return;
@@ -183,11 +189,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const scope = resolveAccessScopeFromRecord(
           snap.data() as Record<string, unknown> | undefined
         );
+        const role = normalizeAppRole(
+          (snap.data() as Record<string, unknown> | undefined)?.role
+        );
         const effectiveScope =
           scope === "none" && isForcedOwnerUid(user.uid) ? "owner" : scope;
         setUser((prev) =>
           prev
-            ? { ...prev, accessScope: effectiveScope, accessScopeReady: true }
+            ? { ...prev, accessScope: effectiveScope, role, accessScopeReady: true }
             : prev
         );
       } catch (e) {
@@ -216,6 +225,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [user?.uid]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const role = user?.role ?? "CUSTOMER";
+    document.cookie = `lc_role=${encodeURIComponent(role)}; path=/; max-age=2592000; samesite=lax`;
+  }, [user?.role]);
 
   const signInEmail = useCallback(async (email: string, password: string) => {
     const auth = getFirebaseAuth();

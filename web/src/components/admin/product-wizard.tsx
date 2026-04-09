@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
 import { useTranslations } from "next-intl";
 import { categories, getProductById } from "@/lib/storefront-catalog";
@@ -11,6 +11,7 @@ import {
   slugifyName,
 } from "@/lib/product-admin-meta";
 import {
+  CATALOG_SAVE_STATUS_EVENT,
   newCatalogProductId,
   upsertCatalogProduct,
 } from "@/lib/catalog-products-storage";
@@ -56,6 +57,8 @@ function variantsFromProduct(p: import("@/lib/product-model").Product): VariantR
 }
 
 type Img = GalleryItem;
+const MIN_UPLOAD_IMAGE_SIDE = 1000;
+const MIN_CHECKLIST_IMAGES = 3;
 
 type Props = {
   editProductId: string | null;
@@ -89,6 +92,7 @@ export function ProductWizard({
   const [toast, setToast] = useState<string | null>(null);
   /** Hex for PDP gallery frame behind photos (optional) */
   const [galleryBg, setGalleryBg] = useState("");
+  const [imageSizeOk, setImageSizeOk] = useState<Record<string, boolean>>({});
 
   const priceDemo = getProductById(targetId)?.price ?? 1999;
 
@@ -101,6 +105,40 @@ export function ProductWizard({
     const tid = window.setTimeout(() => setToast(null), 4000);
     return () => window.clearTimeout(tid);
   }, [toast]);
+
+  useEffect(() => {
+    const onSaveStatus = (evt: Event) => {
+      const ce = evt as CustomEvent<{ status?: string }>;
+      const status = ce.detail?.status;
+      if (status === "local_saved") {
+        setToast("Saved locally. Syncing cloud...");
+        return;
+      }
+      if (status === "local_saved_compact") {
+        setToast("Saved locally (optimized). Syncing cloud...");
+        return;
+      }
+      if (status === "local_failed") {
+        setToast("Save failed locally. Please reduce images and try again.");
+        return;
+      }
+      if (status === "cloud_synced") {
+        setToast("Cloud sync complete.");
+        return;
+      }
+      if (status === "cloud_sync_failed") {
+        setToast("Cloud sync failed. Local save kept.");
+        return;
+      }
+      if (status === "cloud_skipped_auth") {
+        setToast("Saved locally. Sign in to sync to cloud.");
+      }
+    };
+    window.addEventListener(CATALOG_SAVE_STATUS_EVENT, onSaveStatus);
+    return () => {
+      window.removeEventListener(CATALOG_SAVE_STATUS_EVENT, onSaveStatus);
+    };
+  }, []);
 
   const loadProduct = useCallback(
     (id: string, dup: boolean) => {
@@ -170,7 +208,53 @@ export function ProductWizard({
     return (d.textContent || "").trim();
   }
 
-  const saveMeta = () => {
+  async function readImageSize(src: string): Promise<{ width: number; height: number } | null> {
+    if (typeof window === "undefined") return null;
+    return new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => resolve({ width: im.naturalWidth, height: im.naturalHeight });
+      im.onerror = () => resolve(null);
+      im.src = src;
+    });
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const next: Record<string, boolean> = {};
+      for (const im of images) {
+        const dim = await readImageSize(im.src);
+        next[im.id] = Boolean(
+          dim && dim.width >= MIN_UPLOAD_IMAGE_SIDE && dim.height >= MIN_UPLOAD_IMAGE_SIDE
+        );
+      }
+      if (!cancelled) setImageSizeOk(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [images]);
+
+  const checklist = useMemo(() => {
+    const minCountOk = images.length >= MIN_CHECKLIST_IMAGES;
+    const resolutionOk = images.length > 0 && images.every((im) => imageSizeOk[im.id] === true);
+    const altTexts = images.map((i) => (i.alt ?? "").toLowerCase().trim()).filter(Boolean);
+    const colorOk = altTexts.some((a) =>
+      /(color|colour|rong|shade|navy|black|blue|red|green|white|cream|pink|yellow|grey)/.test(a)
+    );
+    const fabricOk = altTexts.some((a) =>
+      /(fabric|texture|kapor|cotton|silk|linen|denim|knit|weave|stitch)/.test(a)
+    );
+    return {
+      minCountOk,
+      resolutionOk,
+      colorOk,
+      fabricOk,
+      allOk: minCountOk && resolutionOk && colorOk && fabricOk,
+    };
+  }, [images, imageSizeOk]);
+
+  const saveMeta = async () => {
     const fh = Number(flashH);
     const fp = Number(flashPct);
     const flash =
@@ -199,6 +283,25 @@ export function ProductWizard({
     const uniqColors = [...new Set(variants.map((v) => v.color))];
     const descPlain = stripHtml(descHtml) || name.trim() || "Product";
     const imgs = images.map((i) => i.src).filter(Boolean);
+    if (imgs.length < MIN_CHECKLIST_IMAGES) {
+      setToast(`Please upload at least ${MIN_CHECKLIST_IMAGES} clear product photos.`);
+      return;
+    }
+    for (let i = 0; i < imgs.length; i += 1) {
+      const dim = await readImageSize(imgs[i]!);
+      if (!dim || dim.width < MIN_UPLOAD_IMAGE_SIDE || dim.height < MIN_UPLOAD_IMAGE_SIDE) {
+        setToast(
+          `Image ${i + 1} is too small. Minimum ${MIN_UPLOAD_IMAGE_SIDE}x${MIN_UPLOAD_IMAGE_SIDE}px required.`
+        );
+        return;
+      }
+    }
+    if (!checklist.colorOk || !checklist.fabricOk) {
+      setToast(
+        "Image checklist failed: add ALT text showing one color-focused photo and one fabric/texture-focused photo."
+      );
+      return;
+    }
     const bgHex = galleryBg.trim();
     const validBg =
       bgHex && /^#[0-9A-Fa-f]{3,8}$/.test(bgHex) ? bgHex : undefined;
@@ -241,7 +344,7 @@ export function ProductWizard({
       imageAlts: Object.keys(imageAlts).length ? imageAlts : undefined,
     });
     window.dispatchEvent(new CustomEvent("lc-catalog"));
-    setToast(t("wizardSavedDemo"));
+    setToast("Saving...");
   };
 
   const steps = 6;
@@ -465,6 +568,31 @@ export function ProductWizard({
         <div className="space-y-4">
           <p className="mb-2 text-xs font-bold text-slate-500">{t("uploadImages")}</p>
           <ImageDropCrop items={images} onChange={setImages} />
+          <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-600 dark:bg-slate-900">
+            <p className="font-bold text-slate-700 dark:text-slate-200">
+              Quality checklist (live)
+            </p>
+            <ul className="mt-2 space-y-1">
+              <li className={checklist.minCountOk ? "text-emerald-600" : "text-rose-600"}>
+                {checklist.minCountOk ? "PASS" : "FAIL"} - Minimum {MIN_CHECKLIST_IMAGES} photos
+              </li>
+              <li className={checklist.resolutionOk ? "text-emerald-600" : "text-rose-600"}>
+                {checklist.resolutionOk ? "PASS" : "FAIL"} - Each photo &gt;= {MIN_UPLOAD_IMAGE_SIDE}x
+                {MIN_UPLOAD_IMAGE_SIDE}px
+              </li>
+              <li className={checklist.colorOk ? "text-emerald-600" : "text-rose-600"}>
+                {checklist.colorOk ? "PASS" : "FAIL"} - At least one color-focused ALT text
+              </li>
+              <li className={checklist.fabricOk ? "text-emerald-600" : "text-rose-600"}>
+                {checklist.fabricOk ? "PASS" : "FAIL"} - At least one fabric/texture ALT text
+              </li>
+            </ul>
+            <p className={checklist.allOk ? "mt-2 text-emerald-700" : "mt-2 text-amber-700"}>
+              {checklist.allOk
+                ? "Ready to publish."
+                : "Fix failed items before saving product."}
+            </p>
+          </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-600 dark:bg-slate-800/40">
             <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
               {t("galleryBgLabel")}
@@ -571,7 +699,7 @@ export function ProductWizard({
           <p className="text-[11px] text-slate-500">{t("wizardFlashHint")}</p>
           <button
             type="button"
-            onClick={saveMeta}
+            onClick={() => void saveMeta()}
             className="rounded-xl bg-[#0066ff] px-4 py-2 text-sm font-extrabold text-white"
           >
             {t("saveSeoFlash")}
@@ -601,7 +729,7 @@ export function ProductWizard({
         ) : (
           <button
             type="button"
-            onClick={saveMeta}
+            onClick={() => void saveMeta()}
             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white"
           >
             {t("saveProduct")}

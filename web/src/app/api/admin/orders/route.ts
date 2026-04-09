@@ -82,6 +82,29 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     orders: rows,
+    riderPerformance: (() => {
+      const m = new Map<string, { partnerId: string; partnerName: string; cashCollected: number; deliveredCount: number }>();
+      for (const r of rows) {
+        const pid = r.deliveryPartnerId?.trim();
+        if (!pid) continue;
+        const cur =
+          m.get(pid) ??
+          {
+            partnerId: pid,
+            partnerName: r.deliveryPartnerName?.trim() || "Delivery Partner",
+            cashCollected: 0,
+            deliveredCount: 0,
+          };
+        if (r.paymentMethod === "COD" && r.paymentStatus === "PAID") {
+          cur.cashCollected += Math.max(0, Number(r.amount) || 0);
+        }
+        if (r.status === "delivered") {
+          cur.deliveredCount += 1;
+        }
+        m.set(pid, cur);
+      }
+      return [...m.values()].sort((a, b) => b.cashCollected - a.cashCollected);
+    })(),
     transactions: transactions.slice(0, 200),
     summary: {
       ordersToday,

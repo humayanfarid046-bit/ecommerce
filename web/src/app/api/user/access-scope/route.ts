@@ -3,6 +3,7 @@ import { getAdminFirestore } from "@/lib/firebase-admin";
 import { isForcedOwnerUid } from "@/lib/owner-override";
 import { resolveAccessScopeFromRecord } from "@/lib/panel-access";
 import { verifyUserIdToken } from "@/lib/verify-user-token";
+import { normalizeAppRole } from "@/lib/rbac";
 
 /**
  * Returns the caller's panel access scope by reading Firestore with the Admin SDK
@@ -30,6 +31,11 @@ export async function GET(req: Request) {
 
   const effectiveScope =
     accessScope === "none" && isForcedOwnerUid(auth.uid) ? "owner" : accessScope;
+  const d = snap.data() as Record<string, unknown> | undefined;
+  let role = normalizeAppRole(d?.role);
+  if (role === "CUSTOMER" && ["owner", "operations", "catalog"].includes(effectiveScope)) {
+    role = "ADMIN";
+  }
 
-  return NextResponse.json({ accessScope: effectiveScope });
+  return NextResponse.json({ accessScope: effectiveScope, role });
 }

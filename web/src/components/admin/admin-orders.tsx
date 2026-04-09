@@ -53,6 +53,7 @@ import type { UserOrderRecord } from "@/lib/user-order-firestore";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { ensureMisleadingDemoAllowed } from "@/lib/deploy-safety";
 import { getTaxPercent } from "@/lib/admin-security-storage";
+import { getDeliveryOpsPolicy } from "@/lib/admin-security-storage";
 import {
   buildBulkInvoiceHtmlDocument,
   getInvoiceHsn,
@@ -69,7 +70,7 @@ function mapAdminStatusToFirestore(
     case "pending":
       return "processing";
     case "shipped":
-      return "shipped";
+      return "out_for_delivery";
     case "delivered":
       return "delivered";
     case "cancelled":
@@ -136,6 +137,19 @@ export function AdminOrders() {
   const [deliveryOtpDraft, setDeliveryOtpDraft] = useState("");
   const [firebaseUidDraft, setFirebaseUidDraft] = useState("");
   const [trackingBusy, setTrackingBusy] = useState(false);
+  const [deliveryActionBusy, setDeliveryActionBusy] = useState(false);
+  const [deliveryPartners, setDeliveryPartners] = useState<
+    Array<{ uid: string; name: string; phone: string; email: string; disabled?: boolean }>
+  >([]);
+  const [newRider, setNewRider] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    password: "",
+  });
+  const [riderPerf, setRiderPerf] = useState<
+    Array<{ partnerId: string; partnerName: string; cashCollected: number; deliveredCount: number }>
+  >([]);
 
   const ordersFirstLoadRef = useRef(true);
   const ordersSeenIdsRef = useRef<Set<string>>(new Set());
@@ -161,15 +175,31 @@ export function AdminOrders() {
         fetch("/api/admin/orders", { headers }),
         fetch("/api/admin/users", { headers }),
       ]);
+      const resP = await fetch("/api/admin/delivery-partners", { headers });
       const resR = await fetch("/api/admin/returns", { headers });
       const jO = (await resO.json().catch(() => ({}))) as {
         orders?: AdminOrderRow[];
+        riderPerformance?: Array<{
+          partnerId: string;
+          partnerName: string;
+          cashCollected: number;
+          deliveredCount: number;
+        }>;
       };
       const jU = (await resU.json().catch(() => ({}))) as {
         users?: AdminUserRow[];
       };
       const jR = (await resR.json().catch(() => ({}))) as {
         returns?: AdminReturnReq[];
+      };
+      const jP = (await resP.json().catch(() => ({}))) as {
+        partners?: Array<{
+          uid: string;
+          name: string;
+          phone: string;
+          email: string;
+          disabled?: boolean;
+        }>;
       };
       if (resO.ok && Array.isArray(jO.orders)) {
         const incoming = jO.orders;
@@ -183,6 +213,7 @@ export function AdminOrders() {
         ordersFirstLoadRef.current = false;
         ordersSeenIdsRef.current = new Set(incoming.map((o) => o.id));
         setOrders(incoming);
+        setRiderPerf(Array.isArray(jO.riderPerformance) ? jO.riderPerformance : []);
         for (const o of incoming) {
           try {
             setAdminOrderFirebaseUid(o.id, o.customerId);
@@ -204,6 +235,11 @@ export function AdminOrders() {
       }
       if (resR.ok && Array.isArray(jR.returns)) {
         setReturns(jR.returns);
+      }
+      if (resP.ok && Array.isArray(jP.partners)) {
+        setDeliveryPartners(jP.partners);
+      } else {
+        setDeliveryPartners([]);
       }
     } catch {
       setOrders([]);
@@ -322,6 +358,24 @@ export function AdminOrders() {
         return;
       }
       try {
+        let deliveryOtpAttempt: string | undefined;
+        let skipOtpVerification: boolean | undefined;
+        if (nextStatus === "delivered" && row.deliveryOtp) {
+          const useOtp = window.confirm(
+            "OK = enter delivery OTP. Cancel = use master bypass (emergency only)."
+          );
+          if (useOtp) {
+            const entered = window.prompt(
+              "Enter customer delivery OTP before marking delivered",
+              ""
+            );
+            if (entered == null) return;
+            deliveryOtpAttempt = entered.replace(/\D/g, "").slice(0, 6);
+          } else {
+            if (!window.confirm("Mark delivered without OTP? (Master bypass)")) return;
+            skipOtpVerification = true;
+          }
+        }
         const res = await fetch("/api/admin/order", {
           method: "PATCH",
           headers: {
@@ -333,6 +387,8 @@ export function AdminOrders() {
             orderId: id,
             shipmentStep: statusToStep(nextStatus),
             status: mapAdminStatusToFirestore(nextStatus),
+            deliveryOtpAttempt,
+            skipOtpVerification,
           }),
         });
         const j = (await res.json().catch(() => ({}))) as { error?: string };
@@ -402,6 +458,155 @@ export function AdminOrders() {
       setTrackingBusy(false);
     }
   };
+
+  const assignRider = useCallback(
+    async (o: AdminOrderRow) => {
+      if (!o.customerId) return;
+      const riderName = window.prompt("Rider name", o.riderName ?? "");
+      if (riderName == null) return;
+      const riderPhone = window.prompt("Rider phone", o.riderPhone ?? "");
+      if (riderPhone == null) return;
+      const etaSlot =
+        window.prompt("Delivery slot (e.g. 4:00 PM - 6:00 PM)", trackDraft.timelineNote || "") ??
+        "";
+      const token =
+        o.riderToken ??
+        `${o.id.slice(-6)}-${Math.random().toString(36).slice(2, 10)}`.toLowerCase();
+      const expiryHours = getDeliveryOpsPolicy().riderTokenExpiryHours;
+      const tokenExpiresAt = Date.now() + expiryHours * 60 * 60 * 1000;
+      setDeliveryActionBusy(true);
+      try {
+        const res = await fetch("/api/admin/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({
+            userId: o.customerId,
+            orderId: o.id,
+            riderName: riderName.trim(),
+            riderPhone: riderPhone.trim(),
+            riderToken: token,
+            riderTokenExpiresAt: tokenExpiresAt,
+            status: "out_for_delivery",
+            shipmentStep: 2,
+            eta: etaSlot.trim() || undefined,
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? "Failed to assign rider");
+          return;
+        }
+        setOrders((prev) =>
+          prev.map((x) =>
+            x.id === o.id
+              ? {
+                  ...x,
+                  status: "shipped",
+                  riderName: riderName.trim(),
+                  riderPhone: riderPhone.trim(),
+                  riderToken: token,
+                  riderTokenExpiresAt: tokenExpiresAt,
+                  riderTokenRevokedAt: undefined,
+                  privateNote: etaSlot.trim() ? `ETA: ${etaSlot.trim()}` : x.privateNote,
+                }
+              : x
+          )
+        );
+        const base = window.location.origin;
+        const link = `${base}/en/delivery/${token}`;
+        try {
+          await navigator.clipboard.writeText(link);
+          setToast(`Rider assigned. Link copied: ${link}`);
+        } catch {
+          setToast(`Rider assigned. Link: ${link}`);
+        }
+      } catch {
+        setToast("Failed to assign rider");
+      } finally {
+        setDeliveryActionBusy(false);
+      }
+    },
+    [getAuthHeader]
+  );
+
+  const markUndelivered = useCallback(
+    async (o: AdminOrderRow) => {
+      if (!o.customerId) return;
+      const reason = window.prompt("Undelivered reason", "Customer not reachable");
+      if (reason == null) return;
+      setDeliveryActionBusy(true);
+      try {
+        const res = await fetch("/api/admin/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({
+            userId: o.customerId,
+            orderId: o.id,
+            action: "mark_undelivered",
+            undeliveredReason: reason,
+            lineItems: o.lineItems ?? [],
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? "Failed to mark undelivered");
+          return;
+        }
+        setOrders((prev) =>
+          prev.map((x) => (x.id === o.id ? { ...x, status: "cancelled" } : x))
+        );
+        setToast("Marked undelivered and restock triggered.");
+      } catch {
+        setToast("Failed to mark undelivered");
+      } finally {
+        setDeliveryActionBusy(false);
+      }
+    },
+    [getAuthHeader]
+  );
+
+  const revokeRiderToken = useCallback(
+    async (o: AdminOrderRow) => {
+      if (!o.customerId) return;
+      setDeliveryActionBusy(true);
+      try {
+        const res = await fetch("/api/admin/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({
+            userId: o.customerId,
+            orderId: o.id,
+            action: "revoke_rider_token",
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? "Failed to revoke rider link");
+          return;
+        }
+        setOrders((prev) =>
+          prev.map((x) =>
+            x.id === o.id ? { ...x, riderTokenRevokedAt: Date.now() } : x
+          )
+        );
+        setToast("Rider link revoked.");
+      } catch {
+        setToast("Failed to revoke rider link");
+      } finally {
+        setDeliveryActionBusy(false);
+      }
+    },
+    [getAuthHeader]
+  );
 
   const fetchCourierDemo = () => {
     if (!ensureMisleadingDemoAllowed()) {
@@ -526,6 +731,129 @@ export function AdminOrders() {
 
   const customerOrders = (cid: string) => orders.filter((o) => o.customerId === cid);
 
+  const assignDeliveryPartner = useCallback(
+    async (o: AdminOrderRow, partnerId: string) => {
+      const p = deliveryPartners.find((x) => x.uid === partnerId);
+      if (!o.customerId || !p) return;
+      try {
+        const res = await fetch("/api/admin/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({
+            userId: o.customerId,
+            orderId: o.id,
+            deliveryPartnerId: p.uid,
+            deliveryPartnerName: p.name,
+            status: "processing",
+            shipmentStep: 1,
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? "Failed to assign delivery partner");
+          return;
+        }
+        setOrders((prev) =>
+          prev.map((x) =>
+            x.id === o.id
+              ? { ...x, deliveryPartnerId: p.uid, deliveryPartnerName: p.name }
+              : x
+          )
+        );
+        setToast("Delivery partner assigned.");
+      } catch {
+        setToast("Failed to assign delivery partner");
+      }
+    },
+    [deliveryPartners, getAuthHeader]
+  );
+
+  const createDeliveryPartner = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/delivery-partners", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getAuthHeader()),
+        },
+        body: JSON.stringify(newRider),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setToast(j.error ?? "Failed to create delivery partner");
+        return;
+      }
+      setNewRider({ name: "", phone: "", email: "", password: "" });
+      setToast("Delivery partner created.");
+      void loadOrdersData();
+    } catch {
+      setToast("Failed to create delivery partner");
+    }
+  }, [getAuthHeader, loadOrdersData, newRider]);
+
+  const patchDeliveryPartner = useCallback(
+    async (uid: string, action: "block" | "unblock" | "delete") => {
+      try {
+        const res = await fetch("/api/admin/delivery-partners", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({ uid, action }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? "Partner update failed");
+          return;
+        }
+        setToast(action === "delete" ? "Partner deleted." : "Partner updated.");
+        void loadOrdersData();
+      } catch {
+        setToast("Partner update failed");
+      }
+    },
+    [getAuthHeader, loadOrdersData]
+  );
+
+  const stockInRto = useCallback(
+    async (o: AdminOrderRow) => {
+      if (!o.customerId) return;
+      setDeliveryActionBusy(true);
+      try {
+        const res = await fetch("/api/admin/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getAuthHeader()),
+          },
+          body: JSON.stringify({
+            userId: o.customerId,
+            orderId: o.id,
+            action: "stock_in_rto",
+          }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          setToast(j.error ?? "Stock-in failed");
+          return;
+        }
+        setOrders((prev) =>
+          prev.map((x) => (x.id === o.id ? { ...x, rtoPendingStockIn: false } : x))
+        );
+        setToast("Inventory restocked from RTO.");
+      } catch {
+        setToast("Stock-in failed");
+      } finally {
+        setDeliveryActionBusy(false);
+      }
+    },
+    [getAuthHeader]
+  );
+
   return (
     <div className="relative space-y-8">
       {toast ? (
@@ -568,6 +896,92 @@ export function AdminOrders() {
           {usersLoadError}
         </div>
       ) : null}
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <p className="text-sm font-extrabold">Invite Delivery Partner (Admin only)</p>
+        <div className="mt-3 grid gap-2 md:grid-cols-4">
+          <input
+            value={newRider.name}
+            onChange={(e) => setNewRider((x) => ({ ...x, name: e.target.value }))}
+            placeholder="Name"
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+          />
+          <input
+            value={newRider.phone}
+            onChange={(e) => setNewRider((x) => ({ ...x, phone: e.target.value }))}
+            placeholder="Phone"
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+          />
+          <input
+            value={newRider.email}
+            onChange={(e) => setNewRider((x) => ({ ...x, email: e.target.value }))}
+            placeholder="Email"
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+          />
+          <input
+            type="password"
+            value={newRider.password}
+            onChange={(e) => setNewRider((x) => ({ ...x, password: e.target.value }))}
+            placeholder="Temp Password"
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => void createDeliveryPartner()}
+          className="mt-3 rounded-lg bg-[#0066ff] px-3 py-1.5 text-xs font-bold text-white"
+        >
+          Create Delivery Partner
+        </button>
+        {deliveryPartners.length > 0 ? (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-bold text-slate-500">Active accounts</p>
+            <ul className="max-h-48 space-y-1 overflow-y-auto text-xs">
+              {deliveryPartners.map((p) => (
+                <li
+                  key={p.uid}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800/50"
+                >
+                  <span className={p.disabled ? "text-slate-400 line-through" : ""}>
+                    {p.name} <span className="font-mono text-[10px]">{p.uid.slice(0, 8)}…</span>
+                    {p.disabled ? " (blocked)" : ""}
+                  </span>
+                  <span className="flex gap-1">
+                    {p.disabled ? (
+                      <button
+                        type="button"
+                        onClick={() => void patchDeliveryPartner(p.uid, "unblock")}
+                        className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white"
+                      >
+                        Unblock
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void patchDeliveryPartner(p.uid, "block")}
+                        className="rounded bg-slate-600 px-2 py-0.5 text-[10px] font-bold text-white"
+                      >
+                        Block
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("Delete this delivery partner permanently?")) {
+                          void patchDeliveryPartner(p.uid, "delete");
+                        }
+                      }}
+                      className="rounded bg-rose-600 px-2 py-0.5 text-[10px] font-bold text-white"
+                    >
+                      Delete
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
         <p className="text-xs font-bold uppercase text-slate-500">{t("orderFiltersAdvanced")}</p>
@@ -672,6 +1086,7 @@ export function AdminOrders() {
               <th className="p-3 font-bold">{t("colAmount")}</th>
               <th className="p-3 font-bold">{t("orderColPay")}</th>
               <th className="p-3 font-bold">{t("colPin")}</th>
+              <th className="p-3 font-bold">Rider</th>
               <th className="p-3 font-bold">{t("colCodPanel")}</th>
               <th className="p-3 font-bold">{t("colStatus")}</th>
               <th className="p-3 font-bold">{t("colPlaced")}</th>
@@ -685,26 +1100,26 @@ export function AdminOrders() {
                   key={`sk-${i}`}
                   className="border-b border-slate-100 dark:border-slate-800"
                 >
-                  <td colSpan={11} className="p-3">
+                  <td colSpan={12} className="p-3">
                     <div className="h-3 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
                   </td>
                 </tr>
               ))
             ) : ordersError ? (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-sm text-slate-500">
+                <td colSpan={12} className="p-8 text-center text-sm text-slate-500">
                   {t("ordersLoadFailed")}
                 </td>
               </tr>
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-sm text-slate-500">
+                <td colSpan={12} className="p-8 text-center text-sm text-slate-500">
                   {t("ordersEmpty")}
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-sm text-slate-500">
+                <td colSpan={12} className="p-8 text-center text-sm text-slate-500">
                   {t("ordersNoMatch")}
                 </td>
               </tr>
@@ -754,6 +1169,25 @@ export function AdminOrders() {
                   <td className="p-3 tabular-nums">₹{o.amount.toLocaleString("en-IN")}</td>
                   <td className="p-3 text-xs">{o.paymentMethod}</td>
                   <td className="p-3 font-mono text-[11px] text-slate-600">{pin}</td>
+                  <td className="p-3 text-xs">
+                    <select
+                      value={o.deliveryPartnerId ?? ""}
+                      onChange={(e) => {
+                        const pid = e.target.value;
+                        if (pid) void assignDeliveryPartner(o, pid);
+                      }}
+                      className="w-40 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] dark:border-slate-600 dark:bg-slate-950"
+                    >
+                      <option value="">Assign Rider</option>
+                      {deliveryPartners
+                        .filter((p) => !p.disabled)
+                        .map((p) => (
+                        <option key={p.uid} value={p.uid}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="p-3 text-[11px]">
                     {o.paymentMethod === "COD" ? (
                       <div className="space-y-1">
@@ -792,21 +1226,28 @@ export function AdminOrders() {
                     )}
                   </td>
                   <td className="p-3">
-                    <select
-                      value={o.status}
-                      onChange={(e) =>
-                        void setStatus(
-                          o.id,
-                          e.target.value as AdminOrderRow["status"]
-                        )
-                      }
-                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold dark:border-slate-600 dark:bg-slate-950"
-                    >
-                      <option value="pending">{t("status_pending")}</option>
-                      <option value="shipped">{t("status_shipped")}</option>
-                      <option value="delivered">{t("status_delivered")}</option>
-                      <option value="cancelled">{t("status_cancelled")}</option>
-                    </select>
+                    <div className="space-y-1">
+                      <select
+                        value={o.status}
+                        onChange={(e) =>
+                          void setStatus(
+                            o.id,
+                            e.target.value as AdminOrderRow["status"]
+                          )
+                        }
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold dark:border-slate-600 dark:bg-slate-950"
+                      >
+                        <option value="pending">{t("status_pending")}</option>
+                        <option value="shipped">{t("status_shipped")}</option>
+                        <option value="delivered">{t("status_delivered")}</option>
+                        <option value="cancelled">{t("status_cancelled")}</option>
+                      </select>
+                      {o.rtoPendingStockIn ? (
+                        <p className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                          RTO — restock pending
+                        </p>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="p-3 text-xs text-slate-500">{o.placedAt}</td>
                   <td className="p-3">
@@ -844,7 +1285,7 @@ export function AdminOrders() {
                 </tr>
                 {expanded === o.id ? (
                   <tr className="bg-slate-50 dark:bg-slate-800/50">
-                    <td colSpan={11} className="p-4">
+                    <td colSpan={12} className="p-4">
                       <div className="mb-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-sm dark:border-slate-600 dark:bg-slate-950/40">
                         <p className="text-xs font-bold uppercase text-slate-500">
                           {t("shippingQuotePreview")}
@@ -871,6 +1312,21 @@ export function AdminOrders() {
                           })()}
                         </p>
                       </div>
+                      {o.rtoPendingStockIn ? (
+                        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50/90 p-4 dark:border-amber-800 dark:bg-amber-950/40">
+                          <p className="text-sm font-extrabold text-amber-950 dark:text-amber-100">
+                            RTO pending — rider returned; restock inventory when goods arrive.
+                          </p>
+                          <button
+                            type="button"
+                            disabled={deliveryActionBusy}
+                            onClick={() => void stockInRto(o)}
+                            className="mt-2 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                          >
+                            Stock In (restore inventory)
+                          </button>
+                        </div>
+                      ) : null}
                       {o.paymentMethod === "COD" ? (
                         <div className="mb-4 rounded-xl border border-violet-200 bg-violet-50/80 p-4 dark:border-violet-900/40 dark:bg-violet-950/40">
                           <p className="flex items-center gap-2 text-xs font-bold text-violet-900 dark:text-violet-200">
@@ -1015,7 +1471,51 @@ export function AdminOrders() {
                               <Bell className="h-3 w-3" />
                               {t("notifySmsWa")}
                             </button>
+                            <button
+                              type="button"
+                              disabled={deliveryActionBusy}
+                              onClick={() => void assignRider(o)}
+                              className="rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-900 disabled:opacity-50 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100"
+                            >
+                              Assign Rider + Copy Link
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deliveryActionBusy}
+                              onClick={() => void markUndelivered(o)}
+                              className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-900 disabled:opacity-50 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100"
+                            >
+                              Undelivered → Restock
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deliveryActionBusy || !o.riderToken}
+                              onClick={() => void revokeRiderToken(o)}
+                              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-800 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            >
+                              Revoke Rider Link
+                            </button>
                           </div>
+                          {(o.riderName || o.riderPhone || o.riderToken) && (
+                            <div className="rounded-lg border border-slate-200 p-2 text-xs dark:border-slate-700">
+                              <p>
+                                Rider: {o.riderName || "—"} {o.riderPhone ? `(${o.riderPhone})` : ""}
+                              </p>
+                              {o.riderToken ? (
+                                <p className="font-mono">
+                                  Link: {`/en/delivery/${o.riderToken}`}
+                                </p>
+                              ) : null}
+                              <p>
+                                Token:
+                                {o.riderTokenRevokedAt
+                                  ? " Revoked"
+                                  : o.riderTokenExpiresAt && o.riderTokenExpiresAt > 0
+                                    ? ` Expires ${new Date(o.riderTokenExpiresAt).toLocaleString("en-IN")}`
+                                    : " No expiry"}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -1115,6 +1615,40 @@ export function AdminOrders() {
           </div>
         </div>
       ) : null}
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+          Rider Performance
+        </h3>
+        <div className="mt-3 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-slate-500">
+                <th className="p-2">Rider</th>
+                <th className="p-2">Delivered</th>
+                <th className="p-2">Cash Collected</th>
+              </tr>
+            </thead>
+            <tbody>
+              {riderPerf.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="p-2 text-slate-400">
+                    No rider data yet.
+                  </td>
+                </tr>
+              ) : (
+                riderPerf.map((r) => (
+                  <tr key={r.partnerId} className="border-t border-slate-200 dark:border-slate-700">
+                    <td className="p-2">{r.partnerName}</td>
+                    <td className="p-2">{r.deliveredCount}</td>
+                    <td className="p-2">Rs {r.cashCollected.toLocaleString("en-IN")}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <div>
         <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">

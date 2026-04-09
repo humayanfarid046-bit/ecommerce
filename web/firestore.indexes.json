@@ -1,5 +1,5 @@
 {
-  "_comment": "Only composite indexes belong here. Single-field collection-group indexes are auto-managed; Firebase rejects redundant entries. Admin orderBy fallbacks exist in API routes.",
+  "_comment": "Composite indexes for collection-group queries. Single-field overrides below for orderBy / equality scans. Deploy: npm run firebase:deploy:firestore (from web/).",
   "indexes": [
     {
       "collectionGroup": "productReviews",
@@ -8,12 +8,54 @@
         { "fieldPath": "productId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "deliveryPartnerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
     {
       "collectionGroup": "orders",
       "fieldPath": "id",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "fieldPath": "placedAt",
+      "indexes": [
+        {
+          "order": "DESCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        },
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "fieldPath": "riderToken",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "fieldPath": "status",
       "indexes": [
         {
           "order": "ASCENDING",
