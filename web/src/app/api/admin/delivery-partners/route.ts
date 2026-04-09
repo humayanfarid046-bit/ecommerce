@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
-import { verifyModuleAccess } from "@/lib/server-access";
+import { verifyModuleAccess, verifyModuleAccessAny } from "@/lib/server-access";
 import { normalizeAppRole } from "@/lib/rbac";
 
 export async function GET(req: Request) {
@@ -44,8 +44,18 @@ export async function GET(req: Request) {
   return NextResponse.json({ partners: rows });
 }
 
+/** BD-style 01… / 880… / 10-digit mobile → E.164 for Firebase Auth; omit if invalid (profile still stores digits). */
+function phoneToE164(digits: string): string | undefined {
+  if (!digits) return undefined;
+  if (digits.startsWith("880") && digits.length >= 12) return `+${digits}`;
+  if (digits.startsWith("0") && digits.length >= 10) return `+880${digits.slice(1)}`;
+  if (digits.length === 10 && digits.startsWith("1")) return `+880${digits}`;
+  if (digits.length >= 11) return `+${digits}`;
+  return undefined;
+}
+
 export async function POST(req: Request) {
-  const gate = await verifyModuleAccess(req, "users");
+  const gate = await verifyModuleAccessAny(req, ["orders", "users"]);
   if (!gate.ok) {
     return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
@@ -65,7 +75,7 @@ export async function POST(req: Request) {
   };
   const email = String(body.email ?? "").trim().toLowerCase();
   const name = String(body.name ?? "").trim() || "Delivery Partner";
-  const phone = String(body.phone ?? "").replace(/\D/g, "");
+  const phoneDigits = String(body.phone ?? "").replace(/\D/g, "");
   const password = String(body.password ?? "").trim();
   if (!email || !password || password.length < 6) {
     return NextResponse.json(
@@ -73,18 +83,19 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+  const phoneE164 = phoneToE164(phoneDigits);
   try {
     const created = await auth.createUser({
       email,
       password,
       displayName: name,
-      phoneNumber: phone ? `+${phone}` : undefined,
+      ...(phoneE164 ? { phoneNumber: phoneE164 } : {}),
       emailVerified: true,
     });
     await db.doc(`users/${created.uid}/profile/account`).set(
       {
         displayName: name,
-        phone,
+        phone: phoneDigits,
         role: "DELIVERY_PARTNER",
         accessScope: "none",
         invitedBy: gate.uid,
@@ -102,7 +113,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const gate = await verifyModuleAccess(req, "users");
+  const gate = await verifyModuleAccessAny(req, ["orders", "users"]);
   if (!gate.ok) {
     return NextResponse.json({ error: gate.error }, { status: gate.status });
   }

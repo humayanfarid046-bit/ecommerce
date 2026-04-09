@@ -150,6 +150,7 @@ export function AdminOrders() {
   const [riderPerf, setRiderPerf] = useState<
     Array<{ partnerId: string; partnerName: string; cashCollected: number; deliveredCount: number }>
   >([]);
+  const [riderCreateBusy, setRiderCreateBusy] = useState(false);
 
   const ordersFirstLoadRef = useRef(true);
   const ordersSeenIdsRef = useRef<Set<string>>(new Set());
@@ -772,6 +773,13 @@ export function AdminOrders() {
   );
 
   const createDeliveryPartner = useCallback(async () => {
+    const email = newRider.email.trim().toLowerCase();
+    const password = newRider.password.trim();
+    if (!email || password.length < 6) {
+      setToast("Email and password (min 6 characters) are required.");
+      return;
+    }
+    setRiderCreateBusy(true);
     try {
       const res = await fetch("/api/admin/delivery-partners", {
         method: "POST",
@@ -779,7 +787,7 @@ export function AdminOrders() {
           "Content-Type": "application/json",
           ...(await getAuthHeader()),
         },
-        body: JSON.stringify(newRider),
+        body: JSON.stringify({ ...newRider, email, password }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -791,6 +799,8 @@ export function AdminOrders() {
       void loadOrdersData();
     } catch {
       setToast("Failed to create delivery partner");
+    } finally {
+      setRiderCreateBusy(false);
     }
   }, [getAuthHeader, loadOrdersData, newRider]);
 
@@ -898,7 +908,12 @@ export function AdminOrders() {
       ) : null}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-        <p className="text-sm font-extrabold">Invite Delivery Partner (Admin only)</p>
+        <p className="text-sm font-extrabold">
+          Invite delivery partner (orders or users access)
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Requires email + password (min 6 chars). Phone optional (BD: 01… or 880…).
+        </p>
         <div className="mt-3 grid gap-2 md:grid-cols-4">
           <input
             value={newRider.name}
@@ -928,10 +943,14 @@ export function AdminOrders() {
         </div>
         <button
           type="button"
+          disabled={riderCreateBusy || tableBusy}
           onClick={() => void createDeliveryPartner()}
-          className="mt-3 rounded-lg bg-[#0066ff] px-3 py-1.5 text-xs font-bold text-white"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#0066ff] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
         >
-          Create Delivery Partner
+          {riderCreateBusy ? (
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          ) : null}
+          {riderCreateBusy ? "Creating…" : "Create delivery partner"}
         </button>
         {deliveryPartners.length > 0 ? (
           <div className="mt-4 space-y-2">
