@@ -6,7 +6,7 @@ import { getAddressPinsForAdmin, type AddressPinRow } from "@/lib/address-pins-s
 import {
   topWishlistedProductIds,
 } from "@/lib/wishlist-counts-sync";
-import { getProductById } from "@/lib/mock-data";
+import { getProductById } from "@/lib/storefront-catalog";
 import {
   getCouponRules,
   saveCouponRules,

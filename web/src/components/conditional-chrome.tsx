@@ -37,7 +37,7 @@ export function ConditionalChrome({
       <SeoHeadInjector />
       <AnnouncementBar />
       {header}
-      <main className="flex-1 bg-[#F9FAFB] pb-16 pt-0 dark:bg-slate-950 md:pb-6">
+      <main className="min-w-0 w-full max-w-full flex-1 overflow-x-hidden bg-[#F9FAFB] pb-16 pt-0 dark:bg-slate-950 md:pb-6">
         {children}
       </main>
       <MobileBottomNav />

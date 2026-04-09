@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { ProductCard } from "@/components/product-card";
 import { ContinueShoppingSection } from "@/components/continue-shopping-section";
 import { InstagramFeed } from "@/components/instagram-feed";

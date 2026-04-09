@@ -20,10 +20,36 @@ export function setRemoteCatalogSnapshot(next: Product[]): void {
   }
 }
 
+/** Single-flight GET /api/catalog so every surface (home, PDP, auth) shares one request. */
+let inflightRemoteFetch: Promise<Product[]> | null = null;
+
+export async function fetchRemoteCatalogSnapshot(): Promise<Product[]> {
+  if (!inflightRemoteFetch) {
+    inflightRemoteFetch = (async () => {
+      try {
+        const res = await fetch("/api/catalog", { cache: "no-store" });
+        const j = (await res.json()) as { products?: Product[] };
+        return Array.isArray(j.products) ? j.products : [];
+      } catch {
+        return [];
+      }
+    })();
+    void inflightRemoteFetch.finally(() => {
+      inflightRemoteFetch = null;
+    });
+  }
+  return inflightRemoteFetch;
+}
+
 /** Merged view: localStorage + server catalog (same tab / other devices). */
 export function getMergedProducts(): Product[] {
   if (typeof window === "undefined") return [];
   return mergeCatalogViews(readCatalogProducts(), remoteCatalogSnapshot);
+}
+
+/** Storefront listing: merged localStorage + remote (GET /api/catalog). Empty until products exist in Admin or Firestore. */
+export function getStorefrontProducts(): Product[] {
+  return getMergedProducts();
 }
 
 async function tryPushCatalogToCloud(): Promise<void> {
@@ -44,9 +70,8 @@ async function tryPushCatalogToCloud(): Promise<void> {
       body: JSON.stringify({ products }),
     });
     if (res.ok) {
-      const r2 = await fetch("/api/catalog", { cache: "no-store" });
-      const j2 = (await r2.json()) as { products?: Product[] };
-      setRemoteCatalogSnapshot(Array.isArray(j2.products) ? j2.products : []);
+      const next = await fetchRemoteCatalogSnapshot();
+      setRemoteCatalogSnapshot(next);
     }
   } catch {
     /* offline or not admin — ignore */

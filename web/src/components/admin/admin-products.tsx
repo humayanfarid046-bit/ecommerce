@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { cn } from "@/lib/utils";
 import { ProductWizard } from "@/components/admin/product-wizard";
 import { ProductCatalog } from "@/components/admin/product-catalog";

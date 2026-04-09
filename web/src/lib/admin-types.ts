@@ -1,11 +1,11 @@
-/** Admin panel sample shapes; live catalogue comes from `readCatalogProducts`. */
+/** Admin panel TypeScript types; live catalogue comes from `readCatalogProducts`. */
 
 import { readCatalogProducts } from "@/lib/catalog-products-storage";
 
 export type AdminOrderRow = {
   id: string;
   customer: string;
-  /** Links to mockUsers / profile panel */
+  /** Links to user rows / profile panel */
   customerId: string;
   phone: string;
   amount: number;
@@ -17,7 +17,7 @@ export type AdminOrderRow = {
   payment: "success" | "failed" | "cod_pending";
   /** Internal admin note for fulfilment */
   privateNote?: string;
-  /** Delivery PIN for distance-based fee preview (demo). */
+  /** Delivery PIN for distance-based fee preview. */
   deliveryPin?: string;
   /** COD only — before phone confirmation; localStorage may override. */
   codConfirmationSeed?: "awaiting" | "confirmed";
@@ -33,7 +33,7 @@ export type AdminUserRow = {
   orders: number;
   blocked: boolean;
   lastActive: string;
-  /** Customer lifetime value (₹) — demo; align with orders sum in production */
+  /** Customer lifetime value (₹); align with orders sum when wired to your DB */
   totalSpent: number;
   segment: UserSegment;
   lastLogin: string;
@@ -68,7 +68,7 @@ export type AdminReturnReq = {
   orderId: string;
   reason: string;
   status: "pending" | "approved" | "rejected";
-  /** Demo proof image */
+  /** Customer proof image URL */
   imageProofUrl?: string;
   pickupDate?: string;
   refundMethod?: "wallet" | "bank" | null;
@@ -112,7 +112,7 @@ export const sparklineRevenue: number[] = [];
 export const sparklineUsers: number[] = [];
 export const sparklineVisitors: number[] = [];
 
-/** Hourly revenue for today (demo — IST business hours). */
+/** Hourly revenue for today (populate from analytics backend). */
 export const hourlySalesToday: { name: string; revenue: number }[] = [];
 
 export function deltaVsYesterdayPercent(today: number, yesterday: number): number {
@@ -179,45 +179,29 @@ export type SalesGraphPoint = {
   viewsPrev: number;
 };
 
-function hashSeed(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h;
-}
-
 /**
- * Multi-layer series: revenue, orders, product views + previous period for overlay.
+ * Sales graph series — zeros until a real analytics source is connected.
  */
 export function getSalesGraphData(
-  categoryId: AdminSalesGraphCategoryId,
+  _categoryId: AdminSalesGraphCategoryId,
   period: "week" | "month"
 ): SalesGraphPoint[] {
-  const h = hashSeed(`${categoryId}:${period}`);
   const labels =
     period === "week"
       ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
       : ["W1", "W2", "W3", "W4"];
-  const catMul = categoryId === "all" ? 1 : 0.55 + (h % 45) / 100;
-
-  return labels.map((name, i) => {
-    const base = (60000 + (h % 30) * 1200 + i * 9000) * catMul;
-    const revenue = Math.round(base + ((h + i * 7) % 8000) * 1.2);
-    const orders = Math.max(1, Math.round(14 + ((h + i * 3) % 22) + i * 3));
-    const views = Math.round(orders * 48 + 400 + ((h + i) % 180) * 12);
-    const prevFactor = 0.78 + ((h + i * 5) % 14) / 100;
-    return {
-      name,
-      revenue,
-      orders,
-      views,
-      revenuePrev: Math.round(revenue * prevFactor),
-      ordersPrev: Math.max(1, Math.round(orders * prevFactor)),
-      viewsPrev: Math.round(views * prevFactor),
-    };
-  });
+  return labels.map((name) => ({
+    name,
+    revenue: 0,
+    orders: 0,
+    views: 0,
+    revenuePrev: 0,
+    ordersPrev: 0,
+    viewsPrev: 0,
+  }));
 }
 
-/** Default low-stock alert threshold by price (smart threshold demo). */
+/** Default low-stock alert threshold by price. */
 export function defaultStockThreshold(price: number): number {
   if (price >= 15_000) return 2;
   if (price >= 5_000) return 5;
@@ -225,9 +209,8 @@ export function defaultStockThreshold(price: number): number {
   return 15;
 }
 
-function weeklySalesDemo(productId: string): number {
-  const h = hashSeed(productId);
-  return 4 + (h % 42);
+function estimatedWeeklySalesUnits(): number {
+  return 0;
 }
 
 export type LowStockActionRow = {
@@ -240,7 +223,7 @@ export type LowStockActionRow = {
   stock: number;
   threshold: number;
   weeklySalesUnits: number;
-  /** Internal ops / warehouse contact for low-stock alerts (demo). */
+  /** Internal ops / warehouse contact for low-stock alerts */
   opsContactEmail: string;
 };
 
@@ -261,7 +244,7 @@ export function getLowStockActionRows(): LowStockActionRow[] {
       price: p.price,
       stock,
       threshold,
-      weeklySalesUnits: weeklySalesDemo(p.id),
+      weeklySalesUnits: estimatedWeeklySalesUnits(),
       opsContactEmail,
     };
   });
@@ -369,7 +352,7 @@ export const mockReviewsMod: AdminReviewMod[] = [];
 
 export const mockActivityLogs: { who: string; action: string; at: string }[] = [];
 
-export const wishlistBehaviorDemo: {
+export const wishlistBehaviorMetrics: {
   product: string;
   views: number;
   wishlistAdds: number;

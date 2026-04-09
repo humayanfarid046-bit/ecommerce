@@ -1,10 +1,10 @@
-/** Legacy shape for account UI; real orders come from Firestore. */
+/** Account “My orders” UI model; populated from Firestore via `user-order-firestore`. */
 
 import type { UserOrderRecord } from "@/lib/user-order-firestore";
 
 export type OrderShipmentStep = 0 | 1 | 2 | 3;
 
-export type DemoOrder = {
+export type AccountOrder = {
   id: string;
   date: string;
   total: number;
@@ -18,17 +18,7 @@ export type DemoOrder = {
   trackingId?: string;
 };
 
-export const DEMO_ORDERS: DemoOrder[] = [];
-
-export function demoTotalSpent(): number {
-  return DEMO_ORDERS.reduce((s, o) => s + o.total, 0);
-}
-
-export function demoActiveOrderCount(): number {
-  return DEMO_ORDERS.filter((o) => o.step < 3).length;
-}
-
-export function demoOrderFromFirestoreRecord(r: UserOrderRecord): DemoOrder {
+export function orderFromFirestoreRecord(r: UserOrderRecord): AccountOrder {
   const dateStr = r.placedAt
     ? r.placedAt.slice(0, 10)
     : new Date().toISOString().slice(0, 10);
@@ -43,9 +33,7 @@ export function demoOrderFromFirestoreRecord(r: UserOrderRecord): DemoOrder {
     (r.itemCount > 0
       ? `${r.itemCount} item(s) · ${r.methodLabel}`
       : r.methodLabel || "Order");
-  const eta =
-    r.eta?.trim() ||
-    (step >= 3 ? "—" : "—");
+  const eta = r.eta?.trim() || (step >= 3 ? "—" : "—");
   return {
     id: r.id,
     date: dateStr,

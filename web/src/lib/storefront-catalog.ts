@@ -1,28 +1,32 @@
 /**
- * Product listing helpers. Inventory comes from `catalog-products-storage` (Admin / bulk import).
- * Re-exports types from `product-model` for backward compatibility.
+ * Storefront product helpers. Data comes from `catalog-products-storage` (Admin / Firestore).
+ * Re-exports types from `product-model` for convenience.
  */
 
-import { getMergedProducts } from "@/lib/catalog-products-storage";
+import {
+  getMergedProducts,
+  getStorefrontProducts,
+} from "@/lib/catalog-products-storage";
 import type { Product } from "@/lib/product-model";
 
 export type { Category, Product, Review } from "@/lib/product-model";
 export { categories } from "@/lib/product-model";
 
+/** Admin / SEO bulk tools — merged local + remote catalog only. */
 export function getProducts(): Product[] {
   return getMergedProducts();
 }
 
 export function getProductById(id: string): Product | undefined {
-  return getMergedProducts().find((p) => p.id === id);
+  return getStorefrontProducts().find((p) => p.id === id);
 }
 
 export function getProductBySlug(slug: string): Product | undefined {
-  return getMergedProducts().find((p) => p.slug === slug);
+  return getStorefrontProducts().find((p) => p.slug === slug);
 }
 
 export function searchProducts(q: string): Product[] {
-  const products = getMergedProducts();
+  const products = getStorefrontProducts();
   const s = q.trim().toLowerCase();
   if (!s) return products;
   if (s.startsWith("visual:") || s === "visual-search" || s === "visual") {
@@ -40,7 +44,7 @@ export function getFrequentlyBoughtTogether(
   productId: string,
   limit = 3
 ): Product[] {
-  const products = getMergedProducts();
+  const products = getStorefrontProducts();
   const p = getProductById(productId);
   if (!p) return [];
   if (p.bundleIds?.length) {
@@ -60,7 +64,7 @@ export function getFrequentlyBoughtTogether(
 }
 
 export function getPeopleAlsoLiked(productId: string, limit = 4): Product[] {
-  const products = getMergedProducts();
+  const products = getStorefrontProducts();
   const p = getProductById(productId);
   if (!p) return [];
   const fbtIds = new Set(
@@ -109,5 +113,5 @@ export function sortProductsByParam(
 }
 
 export function getBrandsSorted(): string[] {
-  return Array.from(new Set(getMergedProducts().map((p) => p.brand))).sort();
+  return Array.from(new Set(getStorefrontProducts().map((p) => p.brand))).sort();
 }

@@ -3,7 +3,7 @@ import { getAdminFirestore } from "@/lib/firebase-admin";
 import { verifyModuleAccessAny } from "@/lib/server-access";
 import { parseUserOrderDocument } from "@/lib/user-order-firestore";
 import { userOrderToAdminRow } from "@/lib/admin-order-map";
-import type { AdminOrderRow, AdminTransaction } from "@/lib/admin-mock-data";
+import type { AdminOrderRow, AdminTransaction } from "@/lib/admin-types";
 
 export async function GET(req: Request) {
   const gate = await verifyModuleAccessAny(req, ["orders", "payments", "users"]);

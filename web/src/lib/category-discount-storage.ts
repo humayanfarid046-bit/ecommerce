@@ -3,7 +3,7 @@
  * Client-only; cart/checkout read this for line totals.
  */
 
-import type { Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/storefront-catalog";
 
 export const CATEGORY_DISCOUNT_KEY = "lc_category_discount_v1";
 

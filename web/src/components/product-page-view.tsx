@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { getProductById, type Product } from "@/lib/mock-data";
+import { getProductById, type Product } from "@/lib/storefront-catalog";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductActions } from "@/components/product-actions";
 import { Star } from "lucide-react";
@@ -24,7 +24,11 @@ import { ProductShareRow } from "@/components/product-share-row";
 import { STORE_SHELL } from "@/lib/store-layout";
 import { absoluteUrl, getSiteUrl } from "@/lib/sitemap-build";
 import { Link } from "@/i18n/navigation";
-import { CATALOG_EVENT } from "@/lib/catalog-products-storage";
+import {
+  CATALOG_EVENT,
+  fetchRemoteCatalogSnapshot,
+  setRemoteCatalogSnapshot,
+} from "@/lib/catalog-products-storage";
 
 function truncateMeta(s: string, max: number) {
   const t = s.trim();
@@ -73,10 +77,31 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
   const tc = useTranslations("cart");
 
   useEffect(() => {
-    const sync = () => setProduct(getProductById(id) ?? null);
-    sync();
-    window.addEventListener(CATALOG_EVENT, sync);
-    return () => window.removeEventListener(CATALOG_EVENT, sync);
+    let cancelled = false;
+
+    const apply = () => {
+      setProduct(getProductById(id) ?? null);
+    };
+
+    window.addEventListener(CATALOG_EVENT, apply);
+
+    void (async () => {
+      setProduct(undefined);
+      try {
+        const remote = await fetchRemoteCatalogSnapshot();
+        if (cancelled) return;
+        setRemoteCatalogSnapshot(remote);
+        if (cancelled) return;
+        apply();
+      } catch {
+        if (!cancelled) apply();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(CATALOG_EVENT, apply);
+    };
   }, [id]);
 
   useEffect(() => {

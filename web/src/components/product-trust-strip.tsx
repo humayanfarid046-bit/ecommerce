@@ -2,7 +2,7 @@
 
 import { Eye, Package } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/storefront-catalog";
 import { getTrustSignals } from "@/lib/product-trust";
 
 type Props = { product: Product };

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useCompare } from "@/context/compare-context";
-import { getProductById, type Product } from "@/lib/mock-data";
+import { getProductById, type Product } from "@/lib/storefront-catalog";
 import { effectiveUnitPriceAfterCategoryDiscount } from "@/lib/category-discount-storage";
 import { useTranslations } from "next-intl";
 import { Scale, Star, Trash2 } from "lucide-react";

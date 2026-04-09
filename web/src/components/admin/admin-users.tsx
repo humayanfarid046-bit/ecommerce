@@ -16,7 +16,7 @@ import {
   type AdminUserRow,
   type UserSegment,
   type AdminOrderRow,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { cn } from "@/lib/utils";
 import {

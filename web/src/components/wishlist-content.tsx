@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { useWishlist } from "@/context/wishlist-context";
 import { useCart } from "@/context/cart-context";
 import { useCartFlight } from "@/context/cart-flight-context";
-import { getProductById, type Product } from "@/lib/mock-data";
+import { getProductById, type Product } from "@/lib/storefront-catalog";
 import { priceDropAmount } from "@/lib/wishlist-price-snapshot";
 import { effectiveUnitPriceAfterCategoryDiscount } from "@/lib/category-discount-storage";
 import { CategoryAwarePrice } from "@/components/category-aware-price";

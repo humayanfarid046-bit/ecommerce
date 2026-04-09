@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { Tag } from "lucide-react";
 
 const USAGE_DEMO = [

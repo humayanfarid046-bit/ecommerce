@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import type { Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/storefront-catalog";
 import { effectiveUnitPriceAfterCategoryDiscount } from "@/lib/category-discount-storage";
 import { cn } from "@/lib/utils";
 

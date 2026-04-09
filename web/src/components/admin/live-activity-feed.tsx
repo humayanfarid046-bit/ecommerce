@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import type { LiveFeedEvent } from "@/lib/admin-mock-data";
-import { liveOnlineUsers } from "@/lib/admin-mock-data";
+import type { LiveFeedEvent } from "@/lib/admin-types";
+import { liveOnlineUsers } from "@/lib/admin-types";
 import { Radio } from "lucide-react";
 
 type Props = {

@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useCart } from "@/context/cart-context";
 import { useCartFlight } from "@/context/cart-flight-context";
-import { getProductById } from "@/lib/mock-data";
+import { getProductById } from "@/lib/storefront-catalog";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";

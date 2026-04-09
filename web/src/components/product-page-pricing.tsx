@@ -1,6 +1,6 @@
 "use client";
 
-import type { Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/storefront-catalog";
 import { CategoryAwarePrice, useEffectiveUnitPrice } from "@/components/category-aware-price";
 import { FlashSaleBanner } from "@/components/flash-sale-banner";
 

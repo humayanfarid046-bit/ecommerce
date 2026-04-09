@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
 import { verifyModuleAccessAny } from "@/lib/server-access";
-import type { AdminUserRow } from "@/lib/admin-mock-data";
+import type { AdminUserRow } from "@/lib/admin-types";
 import {
   computeUserSegment,
   emptyAdminUserRow,

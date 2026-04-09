@@ -6,7 +6,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useCart } from "@/context/cart-context";
 import { useAuth } from "@/context/auth-context";
 import { useAddresses } from "@/context/addresses-context";
-import { getProductById, type Product } from "@/lib/mock-data";
+import { getProductById, type Product } from "@/lib/storefront-catalog";
 import { PriceSummary } from "@/components/price-summary";
 import { CheckoutProgress } from "@/components/checkout-progress";
 import { CheckoutProcessingOverlay } from "@/components/checkout-processing-overlay";
@@ -49,14 +49,13 @@ import {
 } from "@/lib/wallet-storage";
 import { getWalletGlobalSettings } from "@/lib/wallet-settings";
 import { recordUserPayment } from "@/lib/user-payment-history";
-import { readProfile } from "@/lib/account-profile-storage";
 import { canUseFirestoreSync, getFirebaseDb } from "@/lib/firebase/client";
 import { setAdminOrderFirebaseUid } from "@/lib/admin-order-firebase-uid";
 import { saveUserOrderToFirestore } from "@/lib/user-order-firestore";
 import { prependOrderPlacedNotification } from "@/lib/notifications-storage";
 import { effectiveLineTotalRupees } from "@/lib/category-discount-storage";
 
-const ORDER_COUNT_KEY = "lc_demo_order_count";
+const ORDER_COUNT_KEY = "lc_completed_order_count";
 
 function formatEta(d: Date) {
   return new Intl.DateTimeFormat("en-IN", {
@@ -68,7 +67,7 @@ function formatEta(d: Date) {
 
 export function CheckoutShell() {
   const { items, clear } = useCart();
-  const { user } = useAuth();
+  const { user, status: authStatus } = useAuth();
   const { addresses, update } = useAddresses();
   const t = useTranslations("checkout");
 
@@ -79,6 +78,7 @@ export function CheckoutShell() {
 
   const [guestEmail, setGuestEmail] = useState("");
   const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [guestLine1, setGuestLine1] = useState("");
   const [guestPin, setGuestPin] = useState("");
   const [guestCity, setGuestCity] = useState("");
@@ -151,35 +151,33 @@ export function CheckoutShell() {
   }, []);
 
   useEffect(() => {
-    setOrderCount(
-      Number(
-        typeof window !== "undefined"
-          ? localStorage.getItem(ORDER_COUNT_KEY) ?? "0"
-          : "0"
-      )
-    );
+    if (typeof window === "undefined") return;
+    const legacy = localStorage.getItem("lc_demo_order_count");
+    const cur = localStorage.getItem(ORDER_COUNT_KEY);
+    if (!cur && legacy) {
+      localStorage.setItem(ORDER_COUNT_KEY, legacy);
+      localStorage.removeItem("lc_demo_order_count");
+    }
+    setOrderCount(Number(localStorage.getItem(ORDER_COUNT_KEY) ?? "0"));
   }, []);
 
+  /** Fresh address step each visit — no profile/account pre-fill (name, email, phone, lines). */
   useEffect(() => {
-    if (!user) return;
-    if (guestName.trim() && guestEmail.trim()) return;
-    const p = readProfile();
-    if (!guestName.trim()) {
-      const n = p.displayName?.trim() || user.displayName?.trim();
-      if (n) setGuestName(n);
-    }
-    if (!guestEmail.trim() && user.email) setGuestEmail(user.email);
-  }, [user, guestName, guestEmail]);
+    setGuestName("");
+    setGuestEmail("");
+    setGuestPhone("");
+    setGuestLine1("");
+    setGuestPin("");
+    setGuestCity("");
+    setGuestState("");
+  }, []);
 
   function magicCheckoutFill() {
     if (!user) return;
-    const p = readProfile();
     const a =
       addresses.find((x) => x.label === "Home") ?? addresses[0];
     if (!a) return;
     setUseGuestForm(true);
-    setGuestName(p.displayName?.trim() || user.displayName || guestName);
-    setGuestEmail(user.email ?? guestEmail);
     setGuestLine1(a.line1);
     setGuestPin(a.pin);
     setGuestCity(a.city);
@@ -279,16 +277,27 @@ export function CheckoutShell() {
     }
   }, [applicableCoupons, appliedCoupon]);
 
+  const accountHasEmail = Boolean(user?.email?.includes("@"));
+  const contactEmailOk =
+    accountHasEmail || guestEmail.trim().includes("@");
+  const contactPhoneDigits = guestPhone.replace(/\D/g, "").slice(0, 10);
+  const contactPhoneOk = contactPhoneDigits.length === 10;
+  const fullNameOk = guestName.trim().length >= 3;
+
   const guestValid =
-    guestEmail.trim().includes("@") &&
-    guestName.trim().length > 1 &&
+    contactEmailOk &&
+    contactPhoneOk &&
+    fullNameOk &&
     guestLine1.trim().length > 3 &&
     guestPin.replace(/\D/g, "").length === 6 &&
     guestCity.trim().length > 0;
 
-  const canPlaceAddress =
-    (!useGuestForm && hasSaved && Boolean(addrId)) ||
-    (useGuestForm && guestValid);
+  const canPlaceAddress = Boolean(user) &&
+    contactEmailOk &&
+    contactPhoneOk &&
+    fullNameOk &&
+    ((!useGuestForm && hasSaved && Boolean(addrId)) ||
+      (useGuestForm && guestValid));
 
   const payableBeforeWallet = Math.max(0, pricing.subtotalBeforeWallet);
   const walletBalanceRupees = Math.floor(walletPaise / 100);
@@ -353,12 +362,8 @@ export function CheckoutShell() {
     setOpenStep(2);
   }
 
-  function demoSimulatePaymentFailure() {
-    setOverlay("processing");
-    window.setTimeout(() => setOverlay("failed"), 2000);
-  }
-
   function placeOrder(opts?: { fromRazorpay?: boolean; paymentTxnId?: string }) {
+    if (!user?.uid) return;
     if (!canPlaceAddress) return;
     if (!opts?.fromRazorpay && !paymentValid()) return;
     const methodLabel = opts?.fromRazorpay ? t("paymentRazorpay") : payLabel;
@@ -413,13 +418,8 @@ export function CheckoutShell() {
       try {
         const db = getFirebaseDb();
         if (db && orderUid && canUseFirestoreSync(orderUid)) {
-          const p = readProfile();
-          const customerName = useGuestForm
-            ? guestName.trim()
-            : (p.displayName?.trim() ||
-                user?.displayName?.trim() ||
-                "Customer");
-          const customerPhone = p.phone?.trim() || "";
+          const customerName = guestName.trim() || "Customer";
+          const customerPhone = contactPhoneDigits || "";
           const deliveryPinDigits = useGuestForm
             ? guestPin.replace(/\D/g, "").slice(0, 6)
             : (selectedAddr?.pin ?? "").replace(/\D/g, "").slice(0, 6);
@@ -477,14 +477,14 @@ export function CheckoutShell() {
       clear();
       setOverlay("none");
       setPlaced(true);
-    }, 2000);
+    }, 1200);
   }
 
   const successPayLabel = placedMethodLabel || payLabel;
 
   if (placed && orderId) {
     const waText = encodeURIComponent(
-      `Hi Libas — Order ${orderId} (demo). ${successPayLabel}`
+      `Hi — Order ${orderId}. Paid via ${successPayLabel}. Please confirm dispatch.`
     );
     return (
       <div className="mx-auto max-w-lg px-4 py-16 md:py-24">
@@ -570,6 +570,52 @@ export function CheckoutShell() {
     );
   }
 
+  if (authStatus === "loading") {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center md:py-24">
+        <p className="text-sm text-neutral-500">{t("sessionLoading")}</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 md:py-24">
+        <div className="glass rounded-3xl border border-amber-200/80 bg-amber-50/90 p-8 text-center dark:border-amber-900/40 dark:bg-amber-950/30">
+          <Lock className="mx-auto h-12 w-12 text-amber-600 dark:text-amber-400" />
+          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+            {t("loginRequiredTitle")}
+          </h1>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            {t("loginRequiredBody")}
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => setShowOtp(true)}
+              className="rounded-2xl bg-[#0066ff] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0052cc]"
+            >
+              {t("quickOtp")}
+            </button>
+            <Link
+              href="/login?returnUrl=%2Fcheckout"
+              className="rounded-2xl border border-slate-300 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-900 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            >
+              {t("signInHint")}
+            </Link>
+          </div>
+          <Link
+            href="/cart"
+            className="mt-6 inline-block text-sm font-medium text-[#0066ff] underline"
+          >
+            {t("backToCart")}
+          </Link>
+        </div>
+        <CheckoutOtpModal open={showOtp} onClose={() => setShowOtp(false)} />
+      </div>
+    );
+  }
+
   return (
     <>
       <CheckoutProcessingOverlay
@@ -606,36 +652,11 @@ export function CheckoutShell() {
           {t("singlePageHint")}
         </p>
 
-        {!user ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-3 text-sm dark:border-amber-900/40 dark:bg-amber-950/30">
-            <span className="font-medium text-amber-950 dark:text-amber-100">
-              {t("guestOrLogin")}
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowOtp(true)}
-              className="rounded-lg bg-[#0066ff] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0052cc]"
-            >
-              {t("quickOtp")}
-            </button>
-            <span className="text-amber-700/80 dark:text-amber-200/80">{t("orWord")}</span>
-            <Link
-              href="/login"
-              className="font-bold text-[#0066ff] underline hover:text-[#0052cc]"
-            >
-              {t("signInHint")}
-            </Link>
-            <span className="text-neutral-600 dark:text-neutral-400">
-              {t("guestCheckoutHint")}
-            </span>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            {t("signedInCheckout", {
-              email: user.email ?? user.displayName ?? "—",
-            })}
-          </p>
-        )}
+        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+          {t("signedInCheckout", {
+            email: user.email ?? user.displayName ?? "—",
+          })}
+        </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
@@ -689,6 +710,8 @@ export function CheckoutShell() {
                   setEditAddr={setEditAddr}
                   guestEmail={guestEmail}
                   setGuestEmail={setGuestEmail}
+                  guestPhone={guestPhone}
+                  setGuestPhone={setGuestPhone}
                   guestName={guestName}
                   setGuestName={setGuestName}
                   guestLine1={guestLine1}
@@ -704,6 +727,7 @@ export function CheckoutShell() {
                   onContinue={continueFromAddress}
                   showMagicCheckout={Boolean(user && addresses.length > 0 && useGuestForm)}
                   onMagicCheckout={magicCheckoutFill}
+                  accountEmail={user?.email ?? null}
                 />
               ) : null}
             </section>
@@ -927,7 +951,6 @@ export function CheckoutShell() {
                   onRazorpayPaid={(paymentId) =>
                     placeOrder({ fromRazorpay: true, paymentTxnId: paymentId })
                   }
-                  onDemoSimulatePaymentFailure={demoSimulatePaymentFailure}
                 />
               ) : null}
             </section>

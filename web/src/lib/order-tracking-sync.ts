@@ -1,9 +1,9 @@
-/** Client-only: admin updates → user order tracker (demo). */
+/** Client-only: admin updates → user order tracker (localStorage bridge). */
 
-import type { OrderShipmentStep } from "@/lib/demo-orders";
+import type { OrderShipmentStep } from "@/lib/account-order-view";
 
 export type OrderTrackingPayload = {
-  /** Shipment step 0–3 (matches DemoOrder.step) */
+  /** Shipment step 0–3 (matches AccountOrder.step) */
   step: OrderShipmentStep;
   trackingId?: string;
   /** Shown on user timeline / location line */

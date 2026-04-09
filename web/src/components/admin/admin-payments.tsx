@@ -6,7 +6,7 @@ import {
   mockTransactions,
   mockPayouts,
   type AdminTransaction,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { appendActivityLog } from "@/lib/admin-security-storage";
 import { confirmCodOrder } from "@/lib/cod-order-sync";

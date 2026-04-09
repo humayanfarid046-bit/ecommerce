@@ -8,7 +8,7 @@ import {
   extractAverageRgb,
   rankProductsByImageColor,
 } from "@/lib/visual-search";
-import { getProducts } from "@/lib/mock-data";
+import { getStorefrontProducts } from "@/lib/catalog-products-storage";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/navigation";
@@ -114,7 +114,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
     setOpen(false);
     try {
       const rgb = await extractAverageRgb(f);
-      const pool = products.length ? products : getProducts();
+      const pool = products.length ? products : getStorefrontProducts();
       const ranked = rankProductsByImageColor(pool, rgb);
       const ids = ranked.map((p) => p.id).slice(0, 48);
       const rankedIds = encodeURIComponent(ids.join(","));

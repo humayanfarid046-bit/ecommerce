@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
 import { useTranslations } from "next-intl";
-import { categories, getProductById } from "@/lib/mock-data";
+import { categories, getProductById } from "@/lib/storefront-catalog";
 import type { Product } from "@/lib/product-model";
 import {
   getProductMeta,

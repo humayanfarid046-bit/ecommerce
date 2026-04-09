@@ -1,4 +1,4 @@
-/** In-app notification items (localStorage demo). */
+/** In-app notification items (localStorage; real events from checkout, etc.). */
 
 export type AppNotification = {
   id: string;
@@ -68,27 +68,5 @@ export function prependOrderPlacedNotification(
 }
 
 export function seedIfEmpty(): AppNotification[] {
-  const existing = readNotifications();
-  if (existing.length > 0) return existing;
-  const now = Date.now();
-  const seed: AppNotification[] = [
-    {
-      id: "n_welcome",
-      type: "coupon",
-      titleKey: "welcomeTitle",
-      bodyKey: "welcomeBody",
-      read: false,
-      createdAt: now - 3_600_000,
-    },
-    {
-      id: "n_order_demo",
-      type: "order",
-      titleKey: "orderSampleTitle",
-      bodyKey: "orderSampleBody",
-      read: false,
-      createdAt: now - 7_200_000,
-    },
-  ];
-  writeNotifications(seed);
   return readNotifications();
 }

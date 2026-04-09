@@ -1,4 +1,4 @@
-/** Demo coupon rules for checkout + admin. */
+/** Coupon rules for checkout + admin (stored in localStorage). */
 
 export type CouponDef = {
   code: string;
@@ -53,7 +53,7 @@ export function saveCouponRules(rules: CouponDef[]) {
   window.dispatchEvent(new CustomEvent("lc-coupons"));
 }
 
-/** `orderCount` from localStorage demo — 0 = new user for coupon rules */
+/** `orderCount` from localStorage — 0 = new user for coupon rules */
 export function getApplicableCoupons(
   cartTotalRupees: number,
   opts: { orderCount?: number } = {}
@@ -63,7 +63,9 @@ export function getApplicableCoupons(
     opts.orderCount ??
     Number(
       typeof window !== "undefined"
-        ? localStorage.getItem("lc_demo_order_count") ?? "0"
+        ? localStorage.getItem("lc_completed_order_count") ??
+            localStorage.getItem("lc_demo_order_count") ??
+            "0"
         : "0"
     );
   const isNewUser = oc === 0;

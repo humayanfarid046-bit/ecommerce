@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { setSnapshot } from "@/lib/wishlist-price-snapshot";
-import { getProductById } from "@/lib/mock-data";
+import { getProductById } from "@/lib/storefront-catalog";
 import type { Product } from "@/lib/product-model";
 import { computeDeliveryQuote } from "@/lib/shipping-rules-storage";
 import {

@@ -14,7 +14,7 @@ import {
   type AdminOrderRow,
   type AdminReturnReq,
   type AdminUserRow,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import {
   InvoicePrintButton,
   ShippingLabelButton,
@@ -137,6 +137,14 @@ export function AdminOrders() {
   const [firebaseUidDraft, setFirebaseUidDraft] = useState("");
   const [trackingBusy, setTrackingBusy] = useState(false);
 
+  const ordersFirstLoadRef = useRef(true);
+  const ordersSeenIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    ordersFirstLoadRef.current = true;
+    ordersSeenIdsRef.current = new Set();
+  }, [user?.uid]);
+
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => setToast(null), 4200);
@@ -164,8 +172,18 @@ export function AdminOrders() {
         returns?: AdminReturnReq[];
       };
       if (resO.ok && Array.isArray(jO.orders)) {
-        setOrders(jO.orders);
-        for (const o of jO.orders) {
+        const incoming = jO.orders;
+        if (!ordersFirstLoadRef.current) {
+          const seen = ordersSeenIdsRef.current;
+          const newcomers = incoming.filter((o) => !seen.has(o.id));
+          if (newcomers.length > 0) {
+            setToast(t("newOrderToast", { id: newcomers[0]!.id }));
+          }
+        }
+        ordersFirstLoadRef.current = false;
+        ordersSeenIdsRef.current = new Set(incoming.map((o) => o.id));
+        setOrders(incoming);
+        for (const o of incoming) {
           try {
             setAdminOrderFirebaseUid(o.id, o.customerId);
           } catch {
@@ -198,6 +216,14 @@ export function AdminOrders() {
   useEffect(() => {
     void loadOrdersData();
   }, [loadOrdersData, user?.uid]);
+
+  useEffect(() => {
+    const tick = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void loadOrdersData();
+    }, 45_000);
+    return () => window.clearInterval(tick);
+  }, [loadOrdersData]);
 
   useEffect(() => {
     if (!expanded) return;

@@ -1,4 +1,4 @@
-import { getFrequentlyBoughtTogether } from "@/lib/mock-data";
+import { getFrequentlyBoughtTogether } from "@/lib/storefront-catalog";
 import { ProductCard } from "@/components/product-card";
 import { getTranslations } from "next-intl/server";
 import { PRODUCT_GRID } from "@/lib/store-layout";

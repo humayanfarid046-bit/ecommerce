@@ -1,6 +1,6 @@
 /** Merge demo admin edits (block, wallet, shadow) so they survive refresh — client only. */
 
-import type { AdminUserRow } from "@/lib/admin-mock-data";
+import type { AdminUserRow } from "@/lib/admin-types";
 
 const KEY = "lc_admin_user_overrides_v1";
 

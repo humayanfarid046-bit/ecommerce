@@ -1,4 +1,4 @@
-import type { AdminOrderRow } from "@/lib/admin-mock-data";
+import type { AdminOrderRow } from "@/lib/admin-types";
 import type { UserOrderRecord } from "@/lib/user-order-firestore";
 
 /** For dashboard payment pie chart keys. */

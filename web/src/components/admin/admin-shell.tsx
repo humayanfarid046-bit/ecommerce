@@ -139,7 +139,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <p className="mt-4 px-4 text-[10px] font-medium uppercase tracking-wider text-slate-400/90">
-            {t("demoNote")}
+            {t("workspaceNote")}
           </p>
         </aside>
 

@@ -1,4 +1,5 @@
-import { getProductById, getProducts, type Product } from "@/lib/mock-data";
+import { getProductById, type Product } from "@/lib/storefront-catalog";
+import { getStorefrontProducts } from "@/lib/catalog-products-storage";
 
 export function getRecommendationsForWishlist(
   wishlistIds: string[],
@@ -11,7 +12,7 @@ export function getRecommendationsForWishlist(
     if (p) cats.add(p.categorySlug);
   }
   const exclude = new Set(wishlistIds);
-  return getProducts()
+  return getStorefrontProducts()
     .filter(
       (p) =>
         !exclude.has(p.id) && cats.has(p.categorySlug) && p.inStock

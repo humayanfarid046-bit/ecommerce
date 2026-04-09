@@ -49,7 +49,6 @@ type Props = {
   grandTotalRupees?: number;
   receiptId?: string;
   onRazorpayPaid?: (paymentId: string) => void;
-  onDemoSimulatePaymentFailure?: () => void;
 };
 
 function cardBrandStyle(brand: SavedCardDemo["brand"]) {
@@ -88,7 +87,6 @@ export function CheckoutPaymentStep({
   grandTotalRupees = 0,
   receiptId = "checkout",
   onRazorpayPaid,
-  onDemoSimulatePaymentFailure,
 }: Props) {
   const t = useTranslations("checkout");
   const [gw, setGw] = useState(() => getGatewaySettings());
@@ -454,16 +452,6 @@ export function CheckoutPaymentStep({
           {t("payAndPlace")}
         </RippleButton>
       )}
-
-      {onDemoSimulatePaymentFailure ? (
-        <button
-          type="button"
-          onClick={onDemoSimulatePaymentFailure}
-          className="w-full text-center text-[11px] font-medium text-slate-400 underline decoration-dotted hover:text-[#0066ff]"
-        >
-          {t("demoSimulatePaymentFailure")}
-        </button>
-      ) : null}
     </div>
   );
 }

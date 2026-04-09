@@ -8,8 +8,8 @@ export default function AccountWishlistPage() {
   const ta = useTranslations("account");
 
   return (
-    <div>
-      <h1 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
+    <div className="min-w-0">
+      <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
         {t("title")}
       </h1>
       <p className="mt-1 text-sm text-slate-500">{ta("wishlistAccountHint")}</p>

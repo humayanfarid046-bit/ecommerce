@@ -6,11 +6,7 @@ import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { useRecent } from "@/context/recent-context";
-import { getProductById } from "@/lib/mock-data";
-import {
-  demoActiveOrderCount,
-  demoTotalSpent,
-} from "@/lib/demo-orders";
+import { getProductById } from "@/lib/storefront-catalog";
 import { getUserPaymentHistory } from "@/lib/user-payment-history";
 import { useTranslations } from "next-intl";
 import {
@@ -87,8 +83,8 @@ export default function AccountOverviewPage() {
   useEffect(() => {
     function syncOrderStats() {
       if (!user?.uid) {
-        setOrderCount(demoActiveOrderCount());
-        setTotalSpent(demoTotalSpent());
+        setOrderCount(0);
+        setTotalSpent(0);
         return;
       }
       const pay = getUserPaymentHistory().filter((p) => p.status === "success");
@@ -102,8 +98,8 @@ export default function AccountOverviewPage() {
   }, [user?.uid]);
 
   return (
-    <div className="space-y-10">
-      <header className="glass flex flex-col gap-6 rounded-3xl border border-slate-200/80 p-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="account-prose-tight space-y-8 sm:space-y-10">
+      <header className="glass flex flex-col gap-6 rounded-3xl border border-slate-200/80 p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <ProfileAvatarPreview
             imageSrc={profile.photoDataUrl}
@@ -131,7 +127,7 @@ export default function AccountOverviewPage() {
         </div>
       </header>
 
-      <div className="glass flex flex-col gap-4 rounded-2xl border border-slate-200/80 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="glass flex flex-col gap-4 rounded-2xl border border-slate-200/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0066ff]/10 text-[#0066ff]">
             <Wallet className="h-5 w-5" />
@@ -157,7 +153,7 @@ export default function AccountOverviewPage() {
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
           {t("quickStats")}
         </h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mt-3 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-4">
           <div className="glass rounded-2xl border border-slate-200/80 p-4">
             <div className="flex items-center gap-2 text-slate-500">
               <ShoppingBag className="h-4 w-4 text-[#0066ff]" />
@@ -207,9 +203,11 @@ export default function AccountOverviewPage() {
               <li key={p.id}>
                 <Link
                   href={`/product/${p.id}`}
-                  className="glass flex justify-between rounded-xl border border-slate-200/60 px-4 py-3 text-sm text-slate-700 transition hover:border-[#0066ff]/30 hover:bg-white"
+                  className="glass flex min-w-0 justify-between gap-2 rounded-xl border border-slate-200/60 px-3 py-3 text-sm text-slate-700 transition hover:border-[#0066ff]/30 hover:bg-white sm:px-4"
                 >
-                  <span className="line-clamp-1 font-medium">{p.title}</span>
+                  <span className="min-w-0 line-clamp-2 font-medium sm:line-clamp-1">
+                    {p.title}
+                  </span>
                   <span className="shrink-0 text-slate-500">
                     <CategoryAwarePrice product={p} variant="inline" />
                   </span>

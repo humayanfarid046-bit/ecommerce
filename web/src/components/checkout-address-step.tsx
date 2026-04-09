@@ -7,8 +7,8 @@ import {
   MapPin,
   Pencil,
   Sparkles,
-  User,
   Mail,
+  Phone,
   Home,
   Building2,
   Briefcase,
@@ -27,6 +27,8 @@ type Props = {
   setEditAddr: (a: SavedAddress) => void;
   guestEmail: string;
   setGuestEmail: (v: string) => void;
+  guestPhone: string;
+  setGuestPhone: (v: string) => void;
   guestName: string;
   setGuestName: (v: string) => void;
   guestLine1: string;
@@ -42,6 +44,8 @@ type Props = {
   onContinue: () => void;
   showMagicCheckout?: boolean;
   onMagicCheckout?: () => void;
+  /** When set, email field is hidden — order updates use the signed-in account email. */
+  accountEmail?: string | null;
 };
 
 const inputClass =
@@ -72,6 +76,8 @@ export function CheckoutAddressStep({
   setEditAddr,
   guestEmail,
   setGuestEmail,
+  guestPhone,
+  setGuestPhone,
   guestName,
   setGuestName,
   guestLine1,
@@ -87,9 +93,11 @@ export function CheckoutAddressStep({
   onContinue,
   showMagicCheckout,
   onMagicCheckout,
+  accountEmail = null,
 }: Props) {
   const t = useTranslations("checkout");
   const ta = useTranslations("account");
+  const showEmailInput = !accountEmail?.includes("@");
 
   function labelTitle(l: SavedAddress["label"]) {
     if (l === "Home") return ta("labelHome");
@@ -102,6 +110,69 @@ export function CheckoutAddressStep({
     <div className="space-y-5 border-t border-neutral-200/80 p-4 pt-5 dark:border-slate-700 sm:p-5">
       {hasSaved && !useGuestForm ? (
         <>
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/80 dark:bg-slate-800/40">
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <Phone className="h-3.5 w-3.5" />
+              {t("deliveryContactTitle")}
+            </p>
+            <label className={labelClass}>
+              {t("guestFullName")}
+              <input
+                type="text"
+                autoComplete="name"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                className={inputClass}
+                placeholder={t("fullNamePlaceholder")}
+              />
+            </label>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className={labelClass}>
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone className="h-3 w-3" />
+                  {t("guestPhone")}
+                </span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  value={guestPhone}
+                  onChange={(e) =>
+                    setGuestPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  className={cn(inputClass, "font-mono tracking-wide")}
+                  placeholder="10-digit mobile"
+                />
+              </label>
+              {showEmailInput ? (
+                <label className={labelClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />
+                    {t("guestEmail")}
+                  </span>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className={inputClass}
+                    placeholder="you@email.com"
+                  />
+                </label>
+              ) : (
+                <div className="flex flex-col justify-end rounded-xl border border-emerald-200/70 bg-emerald-50/80 px-3 py-2.5 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-100">
+                  <span className="font-bold uppercase tracking-wide text-emerald-800/90 dark:text-emerald-200/90">
+                    {t("contactEmailFromAccountLabel")}
+                  </span>
+                  <span className="mt-1 break-all font-medium">{accountEmail}</span>
+                </div>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              {t("contactRequiredHint")}
+            </p>
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
               <MapPin className="h-4 w-4 text-[#0066ff]" aria-hidden />
@@ -204,54 +275,88 @@ export function CheckoutAddressStep({
           </div>
 
           {showMagicCheckout && onMagicCheckout ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#0066ff]/25 bg-[#0066ff]/[0.06] px-4 py-3 dark:border-[#0066ff]/35 dark:bg-[#0066ff]/10">
-              <Sparkles className="h-4 w-4 shrink-0 text-[#0066ff]" />
-              <p className="min-w-0 flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">
-                {t("magicCheckoutTitle")}
+            <div className="space-y-2 rounded-2xl border border-[#0066ff]/25 bg-[#0066ff]/[0.06] px-4 py-3 dark:border-[#0066ff]/35 dark:bg-[#0066ff]/10">
+              <div className="flex flex-wrap items-center gap-2">
+                <Sparkles className="h-4 w-4 shrink-0 text-[#0066ff]" />
+                <p className="min-w-0 flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                  {t("magicCheckoutTitle")}
+                </p>
+                <button
+                  type="button"
+                  onClick={onMagicCheckout}
+                  className="shrink-0 rounded-xl bg-[#0066ff] px-4 py-2 text-xs font-bold text-white hover:bg-[#0052cc]"
+                >
+                  {t("magicCheckoutCta")}
+                </button>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                {t("magicCheckoutAddressOnly")}
               </p>
-              <button
-                type="button"
-                onClick={onMagicCheckout}
-                className="shrink-0 rounded-xl bg-[#0066ff] px-4 py-2 text-xs font-bold text-white hover:bg-[#0052cc]"
-              >
-                {t("magicCheckoutCta")}
-              </button>
             </div>
           ) : null}
 
-          {/* Contact */}
+          {/* Contact — name + phone for delivery; email only if account has no email */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/80 dark:bg-slate-800/40">
             <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              <User className="h-3.5 w-3.5" />
-              {t("addressSectionContact")}
+              <Phone className="h-3.5 w-3.5" />
+              {t("deliveryContactTitle")}
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <label className={labelClass}>
+              {t("guestFullName")}
+              <input
+                type="text"
+                autoComplete="name"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                className={inputClass}
+                placeholder={t("fullNamePlaceholder")}
+              />
+            </label>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className={labelClass}>
                 <span className="inline-flex items-center gap-1.5">
-                  <Mail className="h-3 w-3" />
-                  {t("guestEmail")}
+                  <Phone className="h-3 w-3" />
+                  {t("guestPhone")}
                 </span>
                 <input
-                  type="email"
-                  autoComplete="email"
-                  value={guestEmail}
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="you@email.com"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  value={guestPhone}
+                  onChange={(e) =>
+                    setGuestPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  className={cn(inputClass, "font-mono tracking-wide")}
+                  placeholder="10-digit mobile"
                 />
               </label>
-              <label className={labelClass}>
-                {t("guestFullName")}
-                <input
-                  type="text"
-                  autoComplete="name"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className={inputClass}
-                  placeholder={t("fullNamePlaceholder")}
-                />
-              </label>
+              {showEmailInput ? (
+                <label className={labelClass}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />
+                    {t("guestEmail")}
+                  </span>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className={inputClass}
+                    placeholder="you@email.com"
+                  />
+                </label>
+              ) : (
+                <div className="flex flex-col justify-end rounded-xl border border-emerald-200/70 bg-emerald-50/80 px-3 py-2.5 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-100">
+                  <span className="font-bold uppercase tracking-wide text-emerald-800/90 dark:text-emerald-200/90">
+                    {t("contactEmailFromAccountLabel")}
+                  </span>
+                  <span className="mt-1 break-all font-medium">{accountEmail}</span>
+                </div>
+              )}
             </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              {t("contactRequiredHint")}
+            </p>
           </div>
 
           {/* Street */}

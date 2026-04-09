@@ -222,3 +222,29 @@ html.dark .glass-card-product {
   }
 }
 
+/* —— Mobile layout guardrails (no horizontal scroll; fluid media) —— */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Account / user panels: readable type on small phones */
+@media (max-width: 479.98px) {
+  .account-prose-tight h1 {
+    font-size: clamp(1.125rem, 4.2vw + 0.75rem, 1.5rem);
+  }
+}
+

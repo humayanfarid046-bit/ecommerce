@@ -46,7 +46,7 @@ export function AccountSidebar({
   return (
     <>
       <nav
-        className="flex gap-1 overflow-x-auto pb-1 lg:hidden"
+        className="flex w-full min-w-0 flex-wrap gap-2 lg:hidden"
         aria-label="Account"
       >
         {resolved.map(({ href, label, icon: Icon }) => {
@@ -56,14 +56,14 @@ export function AccountSidebar({
               key={href}
               href={href}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-bold transition",
+                "inline-flex min-h-[2.5rem] min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 py-2 text-left text-[11px] font-bold leading-tight transition sm:text-xs",
                 active
                   ? "bg-[#0066ff] text-white shadow-md shadow-[#0066ff]/20"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               )}
             >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 break-words">{label}</span>
             </Link>
           );
         })}

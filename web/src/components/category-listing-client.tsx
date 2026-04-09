@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/product-card";
 import {
   filterProducts,
   sortProductsByParam,
-} from "@/lib/mock-data";
+} from "@/lib/storefront-catalog";
 import { PRODUCT_GRID, STORE_SHELL } from "@/lib/store-layout";
 import { FilterListingShell } from "@/components/filter-listing-shell";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";

@@ -60,7 +60,7 @@ export default function AccountPaymentsPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 sm:space-y-10">
       <div>
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
           {t("paymentsTitle")}
@@ -72,7 +72,7 @@ export default function AccountPaymentsPage() {
 
       <section
         id="wallet-add-money"
-        className="glass rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80"
+        className="glass rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80 sm:p-6"
       >
         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
           <Wallet className="h-5 w-5 text-[#0066ff]" />
@@ -81,7 +81,7 @@ export default function AccountPaymentsPage() {
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
           {t("giftCardsHint")}
         </p>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-4 rounded-xl bg-gradient-to-r from-[#0066ff]/8 to-[#7c3aed]/10 px-5 py-4 dark:from-[#0066ff]/15 dark:to-[#7c3aed]/15">
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-4 rounded-xl bg-gradient-to-r from-[#0066ff]/8 to-[#7c3aed]/10 px-3 py-4 dark:from-[#0066ff]/15 dark:to-[#7c3aed]/15 sm:px-5">
           <div>
             <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
               {t("storeBalance")}
@@ -178,9 +178,9 @@ export default function AccountPaymentsPage() {
         </button>
       </section>
 
-      <section className="glass rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
-          <Smartphone className="h-5 w-5 text-[#0066ff]" />
+      <section className="glass rounded-2xl border border-slate-200/80 p-4 dark:border-slate-700/80 sm:p-6">
+        <h2 className="flex flex-wrap items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
+          <Smartphone className="h-5 w-5 shrink-0 text-[#0066ff]" />
           {t("upiSectionTitle")}
         </h2>
         <form onSubmit={saveUpi} className="mt-4 space-y-4">

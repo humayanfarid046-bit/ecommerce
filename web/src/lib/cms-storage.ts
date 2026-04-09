@@ -1,6 +1,6 @@
 /** Client-only CMS / homepage config. */
 
-import { readCatalogProducts } from "@/lib/catalog-products-storage";
+import { getStorefrontProducts } from "@/lib/catalog-products-storage";
 
 const KEY = "lc_cms_v1";
 
@@ -198,7 +198,7 @@ export function getProductsForCustomSection(sec: CmsCustomSection) {
   const lim = Math.min(Math.max(sec.limit, 1), 24);
   if (!sec.productIds.length) return [];
   const set = new Set(sec.productIds);
-  return readCatalogProducts().filter((p) => set.has(p.id)).slice(0, lim);
+  return getStorefrontProducts().filter((p) => set.has(p.id)).slice(0, lim);
 }
 
 export const homeSectionLabels: Record<HomeSectionKey, string> = {

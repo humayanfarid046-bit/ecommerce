@@ -21,7 +21,7 @@ import {
   sparklineRevenue,
   sparklineUsers,
   sparklineVisitors,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import type { AdminStatsPayload } from "@/lib/admin-stats-types";
 import { MultiLayerSalesChart } from "@/components/admin/multi-layer-sales-chart";
 import { SparklineMini } from "@/components/admin/sparkline-mini";

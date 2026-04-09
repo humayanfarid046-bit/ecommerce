@@ -18,7 +18,7 @@ import {
   getSalesGraphData,
   type AdminSalesGraphCategoryId,
   type SalesGraphPoint,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import { Download, Printer, Layers } from "lucide-react";
 
 type ChartRow = SalesGraphPoint & { viewsK: number; viewsPrevK: number };

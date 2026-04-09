@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { Timestamp } from "firebase-admin/firestore";
 import { getAdminFirestore } from "@/lib/firebase-admin";
 import { verifyModuleAccess } from "@/lib/server-access";
-import type { AdminReturnReq } from "@/lib/admin-mock-data";
+import type { AdminReturnReq } from "@/lib/admin-types";
 
 function tsMs(v: unknown): number {
   if (typeof v === "number") return v;

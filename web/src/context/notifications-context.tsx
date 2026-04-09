@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useWishlist } from "@/context/wishlist-context";
-import { getProductById } from "@/lib/mock-data";
+import { getProductById } from "@/lib/storefront-catalog";
 import { priceDropAmount } from "@/lib/wishlist-price-snapshot";
 import { effectiveUnitPriceAfterCategoryDiscount } from "@/lib/category-discount-storage";
 import {

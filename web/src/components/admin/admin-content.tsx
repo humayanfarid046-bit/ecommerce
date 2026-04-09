@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
 import {
   Bell,

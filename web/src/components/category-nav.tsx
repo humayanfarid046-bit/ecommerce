@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { useState } from "react";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";

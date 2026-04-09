@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRecent } from "@/context/recent-context";
-import { getProductById } from "@/lib/mock-data";
+import { getProductById } from "@/lib/storefront-catalog";
 import { ProductCard } from "@/components/product-card";
 import { useTranslations } from "next-intl";
 import { PRODUCT_GRID } from "@/lib/store-layout";

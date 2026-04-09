@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useTranslations } from "next-intl";
@@ -9,6 +10,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LoginShoppingBagHero } from "@/components/login-shopping-bag-hero";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { safeReturnPath } from "@/lib/safe-return-path";
 
 type View = "login" | "register";
 
@@ -50,10 +52,30 @@ const btnSecondary =
 const linkAccent =
   "text-xs font-bold text-[#0066ff] transition hover:text-[#0052cc] hover:underline";
 
-export default function LoginPage() {
-  const { signInEmail, signUpEmail, requestOtp } = useAuth();
+async function resolvePostLoginTarget(returnUrl: string | null): Promise<string> {
+  const safe = safeReturnPath(returnUrl);
+  if (safe) return safe;
+  try {
+    const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+    if (!token) return "/account";
+    const res = await fetch("/api/user/access-scope", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      accessScope?: string;
+    };
+    return body.accessScope === "owner" ? "/admin" : "/account";
+  } catch {
+    return "/account";
+  }
+}
+
+function LoginPageContent() {
+  const searchParams = useSearchParams();
+  const { signInEmail, signUpEmail, requestOtp, user, status } = useAuth();
   const router = useRouter();
   const t = useTranslations("login");
+  const returnUrl = searchParams.get("returnUrl");
 
   const [view, setView] = useState<View>("login");
   const [identifier, setIdentifier] = useState("");
@@ -64,6 +86,14 @@ export default function LoginPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status !== "ready" || !user) return;
+    void (async () => {
+      const to = await resolvePostLoginTarget(returnUrl);
+      router.replace(to);
+    })();
+  }, [status, user, router, returnUrl]);
 
   function looksLikeEmail(s: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
@@ -110,7 +140,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInEmail(id, password);
-      const to = await resolvePostLoginTarget();
+      const to = await resolvePostLoginTarget(returnUrl);
       router.push(to);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed");
@@ -129,26 +159,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signUpEmail(email.trim(), password);
-      const to = await resolvePostLoginTarget();
+      const to = await resolvePostLoginTarget(returnUrl);
       router.push(to);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function resolvePostLoginTarget(): Promise<"/admin" | "/account"> {
-    try {
-      const token = await getFirebaseAuth()?.currentUser?.getIdToken();
-      if (!token) return "/account";
-      const res = await fetch("/api/user/access-scope", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const body = (await res.json().catch(() => ({}))) as { accessScope?: string };
-      return body.accessScope === "owner" ? "/admin" : "/account";
-    } catch {
-      return "/account";
     }
   }
 
@@ -448,5 +464,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center text-sm font-medium text-slate-500">
+          Loading
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

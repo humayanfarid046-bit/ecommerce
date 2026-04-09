@@ -7,7 +7,7 @@ import {
   type Firestore,
   type QuerySnapshot,
 } from "firebase/firestore";
-import type { OrderShipmentStep } from "@/lib/demo-orders";
+import type { OrderShipmentStep } from "@/lib/account-order-view";
 
 export type UserOrderRecord = {
   id: string;
@@ -24,7 +24,7 @@ export type UserOrderRecord = {
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
-  /** 0–3 tracker (aligned with DemoOrder.step). */
+  /** 0–3 tracker (aligned with AccountOrder.step). */
   shipmentStep: OrderShipmentStep;
   itemTitle?: string;
   eta?: string;

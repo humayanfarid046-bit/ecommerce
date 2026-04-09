@@ -1,4 +1,4 @@
-import type { AdminUserRow, UserSegment } from "@/lib/admin-mock-data";
+import type { AdminUserRow, UserSegment } from "@/lib/admin-types";
 
 export function defaultUserSegment(): UserSegment {
   return "new";

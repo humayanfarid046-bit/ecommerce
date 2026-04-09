@@ -1,11 +1,10 @@
-/** Client-only support tickets, review moderation, chat (demo — replace with API). */
+/** Client-only support tickets, review moderation, chat (persisted in localStorage). */
 
-import { getProducts } from "@/lib/mock-data";
+import { getProducts } from "@/lib/storefront-catalog";
 import { appendActivityLog } from "@/lib/admin-security-storage";
 
 const KEY = "lc_support_review_v2";
 const LEGACY_KEY = "lc_support_review_v1";
-const EMPTY_TO_DEMO_FLAG = "lc_support_seeded_demo_v1";
 
 export type ReviewModeration = {
   id: string;
@@ -84,109 +83,23 @@ function uid(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** Rich demo data so the admin Support page is usable before Firestore is wired. */
-export function createDemoSupportState(): SupportState {
-  const iso = (daysAgo: number) =>
-    new Date(Date.now() - daysAgo * 86400000).toISOString();
-  const now = new Date().toISOString();
+/** Default admin Support & reviews state — empty until real tickets/reviews exist. */
+export function createEmptySupportState(): SupportState {
   return {
-    reviews: [
-      {
-        id: "demo_rev_photo",
-        productId: "demo-cat-1",
-        productTitle: "Embroidered kurta — demo",
-        user: "Ayesha K.",
-        rating: 5,
-        text: "Fabric quality is excellent. Stitching neat — will order again.",
-        published: true,
-        featured: false,
-        mediaUrls: ["https://picsum.photos/seed/reviewdemo1/400/400"],
-        adminReply: "",
-        moderationStatus: "ok",
-        profanityFlag: false,
-        rewardSent: false,
-      },
-      {
-        id: "demo_rev_flagged",
-        productId: "demo-cat-2",
-        productTitle: "Silk dupatta — demo",
-        user: "Guest buyer",
-        rating: 2,
-        text: "Colour not as shown. Disappointed with the material.",
-        published: false,
-        featured: false,
-        mediaUrls: [],
-        adminReply: "",
-        moderationStatus: "pending_review",
-        profanityFlag: false,
-        rewardSent: false,
-      },
-    ],
-    tickets: [
-      {
-        id: "demo_tk_open",
-        userEmail: "customer@example.com",
-        customerId: "demo-cust-1",
-        subject: "Order help — ORD-DEMO-1001",
-        body: "Package shows delivered but I did not receive it. Please check with courier.",
-        status: "open",
-        priority: "high",
-        orderId: "ORD-DEMO-1001",
-        internalNotes: "",
-        lastCustomerReplyAt: iso(2),
-        lastStaffReplyAt: null,
-        createdAt: iso(3),
-        staffReplies: [],
-      },
-      {
-        id: "demo_tk_progress",
-        userEmail: "riya@example.com",
-        customerId: "demo-cust-2",
-        subject: "Exchange size for ORD-DEMO-1002",
-        body: "Need M instead of L. Same colour is fine.",
-        status: "in_progress",
-        priority: "medium",
-        orderId: "ORD-DEMO-1002",
-        internalNotes: "Check warehouse stock for M.",
-        lastCustomerReplyAt: iso(0.2),
-        lastStaffReplyAt: iso(0.15),
-        createdAt: iso(1),
-        staffReplies: [
-          {
-            at: iso(0.15),
-            body: "Hi Riya — we’ve held an M in reserve. Please confirm your pickup address.",
-          },
-        ],
-      },
-    ],
+    reviews: [],
+    tickets: [],
     cannedReplies: [
-      "Thank you for reaching out. We’re looking into this and will update you within 24 hours.",
+      "Thank you for reaching out. We're looking into this and will update you within 24 hours.",
       "---",
       "Your refund has been initiated; it usually reflects in 5–7 business days.",
       "---",
-      "We’re sorry for the inconvenience. A replacement is being arranged at no extra cost.",
+      "We're sorry for the inconvenience. A replacement is being arranged at no extra cost.",
     ],
     chatConfig: {
-      whatsappE164: "919876543210",
-      whatsappLogs: [
-        { at: now, path: "/en/cart" },
-        { at: iso(0.01), path: "/bn/product/demo-cat-1" },
-      ],
+      whatsappE164: "",
+      whatsappLogs: [],
     },
-    activeChats: [
-      {
-        id: "ch_1",
-        customer: "Visitor · Kolkata",
-        lastMessage: "Do you have this in XL?",
-        handover: false,
-      },
-      {
-        id: "ch_2",
-        customer: "Logged-in user",
-        lastMessage: "Wrong item received — need return label.",
-        handover: true,
-      },
-    ],
+    activeChats: [],
     botScripts: [
       {
         id: "b1",
@@ -203,11 +116,11 @@ export function createDemoSupportState(): SupportState {
 }
 
 export function defaultSupportState(): SupportState {
-  return createDemoSupportState();
+  return createEmptySupportState();
 }
 
 function read(): SupportState {
-  if (typeof window === "undefined") return createDemoSupportState();
+  if (typeof window === "undefined") return createEmptySupportState();
   try {
     let raw = localStorage.getItem(KEY);
     if (!raw) {
@@ -219,12 +132,12 @@ function read(): SupportState {
       }
     }
     if (!raw) {
-      const demo = createDemoSupportState();
-      localStorage.setItem(KEY, JSON.stringify(demo));
-      return demo;
+      const initial = createEmptySupportState();
+      localStorage.setItem(KEY, JSON.stringify(initial));
+      return initial;
     }
     const p = JSON.parse(raw) as Partial<SupportState>;
-    const d = createDemoSupportState();
+    const d = createEmptySupportState();
     const merged: SupportState = {
       ...d,
       ...p,
@@ -239,21 +152,9 @@ function read(): SupportState {
       activeChats: Array.isArray(p.activeChats) ? p.activeChats : d.activeChats,
       botScripts: Array.isArray(p.botScripts) ? p.botScripts : d.botScripts,
     };
-    const legacyEmpty =
-      Array.isArray(p.reviews) &&
-      p.reviews.length === 0 &&
-      Array.isArray(p.tickets) &&
-      p.tickets.length === 0 &&
-      (!p.cannedReplies || p.cannedReplies.length === 0);
-    if (legacyEmpty && !localStorage.getItem(EMPTY_TO_DEMO_FLAG)) {
-      localStorage.setItem(EMPTY_TO_DEMO_FLAG, "1");
-      const demo = createDemoSupportState();
-      localStorage.setItem(KEY, JSON.stringify(demo));
-      return demo;
-    }
     return merged;
   } catch {
-    return createDemoSupportState();
+    return createEmptySupportState();
   }
 }
 
@@ -318,7 +219,7 @@ export function getLowRatingProducts(maxRating = 3): LowRatingProduct[] {
     .sort((a, b) => a.avgRating - b.avgRating);
 }
 
-/** When no catalogue item is &lt; maxRating, returns lowest-rated products for visibility (demo). */
+/** When no catalogue item is &lt; maxRating, returns lowest-rated products for visibility. */
 export function getLowestRatedProductsFallback(limit = 5): LowRatingProduct[] {
   return [...getProducts()]
     .filter((p) => p.reviewCount > 0)

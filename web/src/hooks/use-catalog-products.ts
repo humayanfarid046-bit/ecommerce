@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import {
-  getMergedProducts,
+  getStorefrontProducts,
   setRemoteCatalogSnapshot,
+  fetchRemoteCatalogSnapshot,
   CATALOG_EVENT,
   CATALOG_LOCALSTORAGE_KEY,
 } from "@/lib/catalog-products-storage";
@@ -11,10 +13,11 @@ import type { Product } from "@/lib/product-model";
 
 /** Live catalog: localStorage + GET /api/catalog (Firestore), merged. */
 export function useCatalogProducts(): Product[] {
+  const { user } = useAuth();
   const [rows, setRows] = useState<Product[]>([]);
 
   const sync = useCallback(() => {
-    setRows(getMergedProducts());
+    setRows(getStorefrontProducts());
   }, []);
 
   useEffect(() => {
@@ -23,15 +26,14 @@ export function useCatalogProducts(): Product[] {
     return () => window.removeEventListener(CATALOG_EVENT, sync);
   }, [sync]);
 
-  /** Hydrate from Firestore so other browsers / logged-in users see the same products. */
+  /** Hydrate from Firestore; re-run when auth changes so logged-in sessions get the same merged catalog. */
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch("/api/catalog", { cache: "no-store" });
-        const j = (await res.json()) as { products?: Product[] };
+        const remote = await fetchRemoteCatalogSnapshot();
         if (cancelled) return;
-        setRemoteCatalogSnapshot(Array.isArray(j.products) ? j.products : []);
+        setRemoteCatalogSnapshot(remote);
       } catch {
         if (!cancelled) setRemoteCatalogSnapshot([]);
       }
@@ -39,7 +41,7 @@ export function useCatalogProducts(): Product[] {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user?.uid]);
 
   /** Another tab saved the catalogue — refetch server copy. */
   useEffect(() => {
@@ -47,9 +49,8 @@ export function useCatalogProducts(): Product[] {
       if (e.key !== CATALOG_LOCALSTORAGE_KEY) return;
       void (async () => {
         try {
-          const res = await fetch("/api/catalog", { cache: "no-store" });
-          const j = (await res.json()) as { products?: Product[] };
-          setRemoteCatalogSnapshot(Array.isArray(j.products) ? j.products : []);
+          const remote = await fetchRemoteCatalogSnapshot();
+          setRemoteCatalogSnapshot(remote);
         } catch {
           /* ignore */
         }

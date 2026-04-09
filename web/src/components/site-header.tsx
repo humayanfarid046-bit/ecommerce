@@ -15,8 +15,10 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useWishlist } from "@/context/wishlist-context";
 import { useCartFlight } from "@/context/cart-flight-context";
+import { useAuth } from "@/context/auth-context";
 
 export function SiteHeader() {
+  const { user, status: authStatus } = useAuth();
   const { cartIconRef } = useCartFlight();
   const { items } = useCart();
   const { ids: wishIds } = useWishlist();
@@ -77,13 +79,25 @@ export function SiteHeader() {
               <CircleHelp className="h-5 w-5" strokeWidth={2} />
               {t("helpShort")}
             </Link>
-            <Link
-              href="/login"
-              className="hidden flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
-            >
-              <User className="h-5 w-5" strokeWidth={2} />
-              {t("login")}
-            </Link>
+            {authStatus === "ready" && user ? (
+              <Link
+                href="/account"
+                className="hidden max-w-[5.5rem] flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
+              >
+                <User className="h-5 w-5" strokeWidth={2} />
+                <span className="line-clamp-2 text-center leading-tight">
+                  {t("account")}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
+              >
+                <User className="h-5 w-5" strokeWidth={2} />
+                {t("login")}
+              </Link>
+            )}
             <Link
               href="/admin"
               className="hidden px-2 text-sm font-semibold text-white hover:underline lg:block"
@@ -157,26 +171,29 @@ export function SiteHeader() {
           </button>
         </div>
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-          <Link
-            href="/login"
-            className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-            onClick={() => setDrawerOpen(false)}
-          >
-            {t("login")}
-          </Link>
+          {authStatus === "ready" && user ? (
+            <Link
+              href="/account"
+              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              onClick={() => setDrawerOpen(false)}
+            >
+              {t("account")}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              onClick={() => setDrawerOpen(false)}
+            >
+              {t("login")}
+            </Link>
+          )}
           <Link
             href="/admin"
             className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             onClick={() => setDrawerOpen(false)}
           >
             {t("becomeSeller")}
-          </Link>
-          <Link
-            href="/account"
-            className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-            onClick={() => setDrawerOpen(false)}
-          >
-            {t("account")}
           </Link>
           <Link
             href="/help"

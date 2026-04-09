@@ -1,6 +1,6 @@
 /** Client-only SEO, redirects, analytics demo (replace with API). */
 
-import { categories, getProducts } from "@/lib/mock-data";
+import { categories, getProducts } from "@/lib/storefront-catalog";
 import { setProductMeta } from "@/lib/product-admin-meta";
 import { buildSitemapXml } from "./sitemap-build";
 

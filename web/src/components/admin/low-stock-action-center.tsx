@@ -8,7 +8,7 @@ import {
   getStockSeverity,
   predictDaysUntilStockout,
   type LowStockActionRow,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import {
   ExternalLink,
   Mail,

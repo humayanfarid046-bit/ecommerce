@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { notFound } from "next/navigation";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 import { absoluteUrl, getSiteUrl } from "@/lib/sitemap-build";

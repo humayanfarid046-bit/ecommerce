@@ -3,19 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { AccountOrderCard } from "@/components/account-order-card";
 import {
-  DEMO_ORDERS,
-  demoOrderFromFirestoreRecord,
-  type DemoOrder,
-} from "@/lib/demo-orders";
+  orderFromFirestoreRecord,
+  type AccountOrder,
+} from "@/lib/account-order-view";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/auth-context";
-import { getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase/client";
+import {
+  getFirebaseDb,
+  isFirebaseConfigured,
+} from "@/lib/firebase/client";
 import { subscribeUserOrdersFromFirestore } from "@/lib/user-order-firestore";
 export default function AccountOrdersPage() {
   const t = useTranslations("orders");
   const { user } = useAuth();
-  /** null = show demo sample; array = Firestore-backed list (may be empty). */
-  const [remote, setRemote] = useState<DemoOrder[] | null>(null);
+  /** null = Firestore not used (guest / not configured); array = subscribed list (may be empty). */
+  const [remote, setRemote] = useState<AccountOrder[] | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function AccountOrdersPage() {
       db,
       user.uid,
       (rows) => {
-        setRemote(rows.map(demoOrderFromFirestoreRecord));
+        setRemote(rows.map(orderFromFirestoreRecord));
         setHydrated(true);
       },
       () => {
@@ -47,17 +49,18 @@ export default function AccountOrdersPage() {
   }, [user?.uid]);
 
   const orders = useMemo(
-    () => (remote !== null ? remote : DEMO_ORDERS),
+    () => (remote !== null ? remote : []),
     [remote]
   );
 
-  const showDemoNote = remote === null;
+  const showSignInHint = remote === null && !user;
+  const showFirebaseHint = remote === null && Boolean(user) && !isFirebaseConfigured();
   const showLiveNote = remote !== null;
 
   if (!hydrated) {
     return (
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
+      <div className="min-w-0">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
           {t("title")}
         </h1>
         <p className="mt-6 text-sm text-slate-500">{t("loadingOrders")}</p>
@@ -66,12 +69,17 @@ export default function AccountOrdersPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
+    <div className="min-w-0">
+      <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
         {t("title")}
       </h1>
-      {showDemoNote ? (
-        <p className="mt-1 text-sm text-slate-500">{t("demoNote")}</p>
+      {showSignInHint ? (
+        <p className="mt-1 text-sm text-slate-500">{t("signInForOrders")}</p>
+      ) : null}
+      {showFirebaseHint ? (
+        <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+          {t("ordersNeedFirebase")}
+        </p>
       ) : null}
       {showLiveNote ? (
         <p className="mt-1 text-sm text-slate-500">{t("liveOrdersNote")}</p>

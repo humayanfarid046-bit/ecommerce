@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { categories, getProducts } from "@/lib/mock-data";
+import { getStorefrontProducts } from "@/lib/catalog-products-storage";
+import { categories } from "@/lib/storefront-catalog";
 import { routing } from "@/i18n/routing";
 
 const STATIC_PATHS = [
@@ -75,7 +76,7 @@ export function getAllPathnames(): string[] {
   const paths = new Set<string>();
   STATIC_PATHS.forEach((p) => paths.add(p));
   categories.forEach((c) => paths.add(`/category/${c.slug}`));
-  getProducts().forEach((p) => paths.add(`/product/${p.id}`));
+  getStorefrontProducts().forEach((p) => paths.add(`/product/${p.id}`));
   return [...paths];
 }
 

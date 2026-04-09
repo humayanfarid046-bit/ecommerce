@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Link } from "@/i18n/navigation";
 import { useWishlist } from "@/context/wishlist-context";
 import { useRecent } from "@/context/recent-context";
-import { getProductById, categories } from "@/lib/mock-data";
+import { getProductById, categories } from "@/lib/storefront-catalog";
 import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
 

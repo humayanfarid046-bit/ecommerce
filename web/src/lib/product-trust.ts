@@ -1,4 +1,4 @@
-import type { Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/storefront-catalog";
 
 export type StarCounts = Record<1 | 2 | 3 | 4 | 5, number>;
 

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { appendActivityLog } from "@/lib/admin-security-storage";
-import { ordersForCustomer, type AdminOrderRow } from "@/lib/admin-mock-data";
+import { ordersForCustomer, type AdminOrderRow } from "@/lib/admin-types";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import {
   applyReviewModeration,

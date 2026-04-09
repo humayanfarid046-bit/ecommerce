@@ -15,7 +15,7 @@ export default async function AccountSettingsPage({ params }: Props) {
   const t = await getTranslations("account");
 
   return (
-    <div className="space-y-10">
+    <div className="min-w-0 space-y-8 sm:space-y-10">
       <div>
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
           {t("settingsTitle")}

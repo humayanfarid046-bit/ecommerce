@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { categories } from "@/lib/mock-data";
+import { categories } from "@/lib/storefront-catalog";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
-import { wishlistBehaviorDemo } from "@/lib/admin-mock-data";
+import { wishlistBehaviorMetrics } from "@/lib/admin-types";
 import {
   applyBulkSeoTemplate,
   computeSeoScore,
@@ -711,7 +711,7 @@ export function AdminSeo() {
                   </tr>
                 </thead>
                 <tbody>
-                  {wishlistBehaviorDemo.map((row) => (
+                  {wishlistBehaviorMetrics.map((row) => (
                     <tr key={row.product} className="border-b border-slate-100 dark:border-slate-800">
                       <td className="p-3">{row.product}</td>
                       <td className="p-3">{row.views}</td>

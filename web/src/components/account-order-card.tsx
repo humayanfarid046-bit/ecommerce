@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import type { DemoOrder } from "@/lib/demo-orders";
+import type { AccountOrder } from "@/lib/account-order-view";
 import {
   getOrderTrackingOverride,
   type OrderTrackingPayload,
@@ -26,8 +26,8 @@ import {
 } from "@/lib/invoice-document";
 
 type Props = {
-  order: DemoOrder;
-  /** When true, use Firestore-backed step/notes (admin API), not localStorage demo overrides. */
+  order: AccountOrder;
+  /** When true, use Firestore-backed step/notes (admin API), not localStorage overrides. */
   preferFirestoreTracking?: boolean;
   /** Signed-in user id — enables return request to Firestore when live orders. */
   firebaseUid?: string | null;
@@ -48,7 +48,7 @@ export function AccountOrderCard({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [graceEnd, setGraceEnd] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [demoNote, setDemoNote] = useState<string | null>(null);
+  const [actionBanner, setActionBanner] = useState<string | null>(null);
   const [showCancelRefund, setShowCancelRefund] = useState(false);
   const [trackingOverride, setTrackingOverride] =
     useState<OrderTrackingPayload | null>(null);
@@ -92,7 +92,7 @@ export function AccountOrderCard({
       creditWalletPaise(
         wUid,
         order.total * 100,
-        `Refund ${order.id} → wallet (demo)`,
+        `Refund ${order.id} → wallet`,
         { kind: "refund", orderId: order.id }
       );
     }
@@ -159,7 +159,7 @@ export function AccountOrderCard({
       buyerName: buyer,
       itemTitle: order.itemTitle,
       totalRupees: order.total,
-      paymentLabel: to("demoPayment"),
+      paymentLabel: to("paymentPaidUpi"),
       shipCity: order.hubCity,
       gstPercent: getTaxPercent(),
     });
@@ -189,42 +189,44 @@ export function AccountOrderCard({
   return (
     <article className="glass overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
       {/* Summary */}
-      <div className="flex flex-wrap gap-4 border-b border-slate-100 bg-white/60 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/40 sm:px-5">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-100 dark:border-slate-600">
-          <Image
-            src={imgSrc}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="80px"
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-sm font-bold text-slate-900 dark:text-slate-100">
-            {order.itemTitle}
-          </p>
-          <p className="mt-1 font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-            {order.id}
-            {cancelled ? (
-              <span className="ml-2 font-sans text-rose-600 dark:text-rose-400">
-                · {t("orderCancelled")}
-              </span>
+      <div className="flex flex-col gap-4 border-b border-slate-100 bg-white/60 px-3 py-4 dark:border-slate-800 dark:bg-slate-900/40 sm:flex-row sm:flex-wrap sm:items-start sm:gap-4 sm:px-5">
+        <div className="flex min-w-0 flex-1 gap-3 sm:gap-4">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-100 dark:border-slate-600">
+            <Image
+              src={imgSrc}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-2 text-sm font-bold text-slate-900 dark:text-slate-100">
+              {order.itemTitle}
+            </p>
+            <p className="mt-1 break-all font-mono text-[11px] font-semibold text-slate-500 sm:text-xs dark:text-slate-400">
+              {order.id}
+              {cancelled ? (
+                <span className="ml-2 font-sans text-rose-600 dark:text-rose-400">
+                  · {t("orderCancelled")}
+                </span>
+              ) : null}
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t("placedOn")}: {order.date}
+            </p>
+            {effectiveStep < 3 && order.eta && order.eta !== "—" ? (
+              <p className="mt-2 inline-flex max-w-full rounded-lg bg-amber-50 px-2 py-1 text-xs font-bold text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                {to("expectedDelivery")}: {order.eta}
+              </p>
+            ) : isDelivered ? (
+              <p className="mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                {to("deliveredOn")}
+              </p>
             ) : null}
-          </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {t("placedOn")}: {order.date}
-          </p>
-          {effectiveStep < 3 && order.eta && order.eta !== "—" ? (
-            <p className="mt-2 inline-flex rounded-lg bg-amber-50 px-2 py-1 text-xs font-bold text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-              {to("expectedDelivery")}: {order.eta}
-            </p>
-          ) : isDelivered ? (
-            <p className="mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-              {to("deliveredOn")}
-            </p>
-          ) : null}
+          </div>
         </div>
-        <div className="ml-auto text-right">
+        <div className="flex w-full shrink-0 items-center justify-between gap-3 border-t border-slate-100 pt-3 sm:ml-auto sm:w-auto sm:flex-col sm:items-end sm:justify-start sm:border-0 sm:pt-0 sm:text-right">
           <p className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
             ₹{order.total.toLocaleString("en-IN")}
           </p>
@@ -247,7 +249,7 @@ export function AccountOrderCard({
             <button
               type="button"
               onClick={() =>
-                setDemoNote(to("graceDemoNote"))
+                setActionBanner(to("graceEditNote"))
               }
               className="rounded-xl border border-[#0066ff]/40 bg-white px-3 py-1.5 text-xs font-bold text-[#0066ff] shadow-sm transition hover:bg-[#0066ff]/5 dark:bg-slate-900"
             >
@@ -256,16 +258,16 @@ export function AccountOrderCard({
             <button
               type="button"
               onClick={() =>
-                setDemoNote(to("graceDemoNote"))
+                setActionBanner(to("graceEditNote"))
               }
               className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
             >
               {to("changeAddressQuick")}
             </button>
           </div>
-          {demoNote ? (
+          {actionBanner ? (
             <p className="mt-2 text-[11px] font-medium text-emerald-800 dark:text-emerald-200">
-              {demoNote}
+              {actionBanner}
             </p>
           ) : null}
         </div>
@@ -444,7 +446,7 @@ export function AccountOrderCard({
                   {to("billingAddress")}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                  {to("demoBilling", { city: order.hubCity ?? "Kolkata" })}
+                  {to("billingSummary", { city: order.hubCity ?? "Kolkata" })}
                 </p>
               </div>
 
@@ -454,7 +456,7 @@ export function AccountOrderCard({
                   {to("paymentMethod")}
                 </p>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                  {to("demoPayment")}
+                  {to("paymentPaidUpi")}
                 </p>
               </div>
 

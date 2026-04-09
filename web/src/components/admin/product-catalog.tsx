@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { getProducts } from "@/lib/mock-data";
+import { getProducts } from "@/lib/storefront-catalog";
 import { getProductMeta, setProductMeta } from "@/lib/product-admin-meta";
 import { Copy, Pencil, Search } from "lucide-react";
 import { Link } from "@/i18n/navigation";

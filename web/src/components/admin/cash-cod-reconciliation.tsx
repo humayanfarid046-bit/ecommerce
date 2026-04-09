@@ -7,7 +7,7 @@ import {
   mockCodRemittance,
   mockRiderCash,
   type RiderCashRow,
-} from "@/lib/admin-mock-data";
+} from "@/lib/admin-types";
 import { Banknote, Bike, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
