@@ -775,8 +775,8 @@ export function AdminOrders() {
   const createDeliveryPartner = useCallback(async () => {
     const email = newRider.email.trim().toLowerCase();
     const password = newRider.password.trim();
-    if (!email || password.length < 6) {
-      setToast("Email and password (min 6 characters) are required.");
+    if (!email || password.length < 8) {
+      setToast("Email and password (minimum 8 characters) are required — Firebase rejects shorter passwords.");
       return;
     }
     setRiderCreateBusy(true);
@@ -912,7 +912,7 @@ export function AdminOrders() {
           Invite delivery partner (orders or users access)
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          Requires email + password (min 6 chars). Phone optional (BD: 01… or 880…).
+          Email + password (min 8 characters). Phone is saved on profile only (not required for login).
         </p>
         <div className="mt-3 grid gap-2 md:grid-cols-4">
           <input
@@ -937,7 +937,7 @@ export function AdminOrders() {
             type="password"
             value={newRider.password}
             onChange={(e) => setNewRider((x) => ({ ...x, password: e.target.value }))}
-            placeholder="Temp Password"
+            placeholder="Password (min 8 chars)"
             className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-950"
           />
         </div>

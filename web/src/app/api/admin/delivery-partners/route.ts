@@ -44,14 +44,23 @@ export async function GET(req: Request) {
   return NextResponse.json({ partners: rows });
 }
 
-/** BD-style 01… / 880… / 10-digit mobile → E.164 for Firebase Auth; omit if invalid (profile still stores digits). */
-function phoneToE164(digits: string): string | undefined {
-  if (!digits) return undefined;
-  if (digits.startsWith("880") && digits.length >= 12) return `+${digits}`;
-  if (digits.startsWith("0") && digits.length >= 10) return `+880${digits.slice(1)}`;
-  if (digits.length === 10 && digits.startsWith("1")) return `+880${digits}`;
-  if (digits.length >= 11) return `+${digits}`;
-  return undefined;
+const MIN_PASSWORD_LEN = 8;
+
+function formatAuthCreateError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("too short") ||
+    lower.includes("weak-password") ||
+    (lower.includes("password") && lower.includes("least"))
+  ) {
+    return `Password must be at least ${MIN_PASSWORD_LEN} characters. If this persists, check Firebase Auth → password policy (may require numbers/symbols).`;
+  }
+  if (lower.includes("invalid-phone") || lower.includes("phone number")) {
+    return "Phone was skipped for sign-in; profile phone is saved separately. Retry or leave phone empty.";
+  }
+  if (msg.length > 220) return `${msg.slice(0, 217)}…`;
+  return msg;
 }
 
 export async function POST(req: Request) {
@@ -77,19 +86,20 @@ export async function POST(req: Request) {
   const name = String(body.name ?? "").trim() || "Delivery Partner";
   const phoneDigits = String(body.phone ?? "").replace(/\D/g, "");
   const password = String(body.password ?? "").trim();
-  if (!email || !password || password.length < 6) {
+  if (!email || !password || password.length < MIN_PASSWORD_LEN) {
     return NextResponse.json(
-      { error: "email and password(min 6 chars) required" },
+      {
+        error: `Email and password required. Password must be at least ${MIN_PASSWORD_LEN} characters (Firebase default).`,
+      },
       { status: 400 }
     );
   }
-  const phoneE164 = phoneToE164(phoneDigits);
   try {
+    /** Phone only in Firestore — avoids Auth E.164 / "too short" errors on create. */
     const created = await auth.createUser({
       email,
       password,
       displayName: name,
-      ...(phoneE164 ? { phoneNumber: phoneE164 } : {}),
       emailVerified: true,
     });
     await db.doc(`users/${created.uid}/profile/account`).set(
@@ -106,7 +116,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, uid: created.uid });
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Failed to create delivery partner" },
+      { error: formatAuthCreateError(e) },
       { status: 400 }
     );
   }
