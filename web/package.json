@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev -H 127.0.0.1 -p 3000",
     "dev:clean": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\" && next dev -H 127.0.0.1 -p 3000",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "firebase:deploy": "firebase deploy --only firestore",
