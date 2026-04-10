@@ -82,7 +82,16 @@
     "drawerLogoutConfirmBody": "Are you sure you want to sign out?",
     "drawerLogoutConfirm": "Log out",
     "drawerLogoutCancel": "Cancel",
-    "drawerMyAccountFull": "Open account dashboard"
+    "drawerMyAccountFull": "Open account dashboard",
+    "drawerAboutUs": "About us",
+    "drawerContactUs": "Contact us",
+    "drawerContactUsHint": "Phone & email on Help page",
+    "drawerMenuFooterAria": "Legal links and copyright"
+  },
+  "about": {
+    "title": "About us",
+    "body": "AJH Libas Collection brings curated fashion for every member of the family. We focus on quality fabrics, fair pricing, and a smooth shopping experience — online and at our registered location in West Bengal, India.\n\nFor orders, sizing, or partnerships, use Contact us in Help & Support.",
+    "contactCta": "Contact us →"
   },
   "share": {
     "share": "Share link",
@@ -122,6 +131,8 @@
   },
   "home": {
     "mobilePillStripAria": "Shop categories and outfit styles",
+    "loadMore": "Load more",
+    "featuredShowing": "Showing {visible} of {total} products",
     "shopByCategory": "Shop by category",
     "featuredProducts": "Featured products",
     "viewAll": "View all",
@@ -541,6 +552,8 @@
     "navManageStore": "Manage store",
     "memberPremium": "Premium member",
     "memberRegular": "Regular member",
+    "legalInformationTitle": "Legal & information",
+    "legalInformationBody": "Registered business address and policy links for your records.",
     "profileAvatarOpen": "View profile picture",
     "profileAvatarClose": "Close",
     "profilePhotoLabel": "Profile photo",

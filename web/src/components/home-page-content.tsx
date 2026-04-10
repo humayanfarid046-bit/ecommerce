@@ -17,9 +17,12 @@ import { PRODUCT_GRID, STORE_SHELL } from "@/lib/store-layout";
 import { useCatalogProducts } from "@/hooks/use-catalog-products";
 import { CATALOG_EVENT } from "@/lib/catalog-products-storage";
 
+const FEATURED_PAGE = 8;
+
 export function HomePageContent() {
   const t = useTranslations("home");
   const [tick, setTick] = useState(0);
+  const [featuredVisible, setFeaturedVisible] = useState(FEATURED_PAGE);
   const catalog = useCatalogProducts();
 
   useEffect(() => {
@@ -39,7 +42,8 @@ export function HomePageContent() {
       ? cms.sectionOrder
       : defaultCmsState().sectionOrder;
 
-  const featured = catalog.slice(0, 8);
+  const featuredSlice = catalog.slice(0, featuredVisible);
+  const canLoadMoreFeatured = catalog.length > featuredVisible;
 
   return (
     <div className={`${STORE_SHELL} py-5 md:py-7`}>
@@ -85,11 +89,34 @@ export function HomePageContent() {
                     {t("viewAll")}
                   </Link>
                 </div>
+                {catalog.length > 0 ? (
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {t("featuredShowing", {
+                      visible: featuredSlice.length,
+                      total: catalog.length,
+                    })}
+                  </p>
+                ) : null}
                 <div className={`mt-5 md:mt-6 ${PRODUCT_GRID}`}>
-                  {featured.map((p) => (
+                  {featuredSlice.map((p) => (
                     <ProductCard key={p.id} product={p} showTopOffer />
                   ))}
                 </div>
+                {canLoadMoreFeatured ? (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFeaturedVisible((v) =>
+                          Math.min(v + FEATURED_PAGE, catalog.length)
+                        )
+                      }
+                      className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-800 shadow-sm transition hover:border-[#0066ff]/40 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    >
+                      {t("loadMore")}
+                    </button>
+                  </div>
+                ) : null}
               </section>
             );
           case "continue":

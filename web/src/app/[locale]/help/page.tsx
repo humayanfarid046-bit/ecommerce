@@ -41,7 +41,10 @@ export default async function HelpPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="mt-12 rounded-2xl border border-[#0066ff]/20 bg-[#0066ff]/[0.06] p-6 dark:border-[#0066ff]/30 dark:bg-[#0066ff]/10">
+      <section
+        id="contact"
+        className="scroll-mt-24 mt-12 rounded-2xl border border-[#0066ff]/20 bg-[#0066ff]/[0.06] p-6 dark:border-[#0066ff]/30 dark:bg-[#0066ff]/10"
+      >
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">
           {t("contactHeading")}
         </h2>

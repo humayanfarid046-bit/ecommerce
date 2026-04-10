@@ -48,7 +48,7 @@ export function ConditionalChrome({
       </main>
       <MobileBottomNav />
       {trustBar}
-      {footer}
+      <div className="hidden lg:block">{footer}</div>
       <SitePromoPopup />
       <HelpSupportFab />
       <WhatsAppChatWidget />

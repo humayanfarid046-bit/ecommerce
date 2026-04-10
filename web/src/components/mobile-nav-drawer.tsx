@@ -15,13 +15,11 @@ import {
   Shield,
   CircleHelp,
   MessageCircle,
-  FileText,
-  Truck,
-  Cookie,
   LogOut,
   Sparkles,
   Crown,
   ChevronRight,
+  Phone,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -95,7 +93,7 @@ export function MobileNavDrawer() {
   const isCategoryOnly = drawerMode === "categories";
   const { user, status: authStatus, signOut } = useAuth();
   const t = useTranslations("nav");
-  const ta = useTranslations("account");
+  const tf = useTranslations("footer");
   const { ids: wishIds } = useWishlist();
   const [waHref, setWaHref] = useState(
     "https://wa.me/919876543210?text=Hi%20%E2%80%94%20I%20need%20help."
@@ -416,6 +414,13 @@ export function MobileNavDrawer() {
                 icon={<CircleHelp className="h-4 w-4" />}
                 label={t("drawerHelpCenter")}
               />
+              <DrawerRow
+                href="/help#contact"
+                onNavigate={close}
+                icon={<Phone className="h-4 w-4" />}
+                label={t("drawerContactUs")}
+                hint={t("drawerContactUsHint")}
+              />
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-xl border border-transparent px-2 py-2.5 text-left transition hover:border-slate-200 hover:bg-white dark:hover:border-slate-600 dark:hover:bg-slate-800/80"
@@ -458,43 +463,6 @@ export function MobileNavDrawer() {
                 </span>
                 <ChevronRight className="h-4 w-4 text-slate-400" />
               </a>
-              <p className="pt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                {t("drawerLegalHeading")}
-              </p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Link
-                  href="/privacy"
-                  onClick={close}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <FileText className="h-3 w-3" />
-                  {ta("privacyPolicy")}
-                </Link>
-                <Link
-                  href="/terms"
-                  onClick={close}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <FileText className="h-3 w-3" />
-                  {ta("termsOfService")}
-                </Link>
-                <Link
-                  href="/shipping"
-                  onClick={close}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <Truck className="h-3 w-3" />
-                  {t("drawerShippingShort")}
-                </Link>
-                <Link
-                  href="/cookies"
-                  onClick={close}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <Cookie className="h-3 w-3" />
-                  {t("drawerCookiesShort")}
-                </Link>
-              </div>
             </div>
 
             <Divider />
@@ -532,6 +500,44 @@ export function MobileNavDrawer() {
               <ShoppingBag className="h-4 w-4" />
               {t("drawerMyAccountFull")}
             </Link>
+
+            <div className="mt-6 border-t border-slate-200/90 pt-4 dark:border-slate-700/90">
+              <nav
+                className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-center text-[11px] font-medium text-slate-600 dark:text-slate-400"
+                aria-label={t("drawerMenuFooterAria")}
+              >
+                <Link href="/about" onClick={close} className="hover:text-[#2874f0]">
+                  {t("drawerAboutUs")}
+                </Link>
+                <span className="text-slate-300 dark:text-slate-600" aria-hidden>
+                  |
+                </span>
+                <Link
+                  href="/help#contact"
+                  onClick={close}
+                  className="hover:text-[#2874f0]"
+                >
+                  {t("drawerContactUs")}
+                </Link>
+                <span className="text-slate-300 dark:text-slate-600" aria-hidden>
+                  |
+                </span>
+                <Link href="/privacy" onClick={close} className="hover:text-[#2874f0]">
+                  {tf("footerPrivacy")}
+                </Link>
+                <span className="text-slate-300 dark:text-slate-600" aria-hidden>
+                  |
+                </span>
+                <Link href="/terms" onClick={close} className="hover:text-[#2874f0]">
+                  {tf("footerTerms")}
+                </Link>
+              </nav>
+              <p className="mt-3 text-center text-[10px] leading-snug text-slate-500 dark:text-slate-500">
+                {tf("footerCopyright", {
+                  year: new Date().getFullYear(),
+                })}
+              </p>
+            </div>
               </>
             )}
           </div>

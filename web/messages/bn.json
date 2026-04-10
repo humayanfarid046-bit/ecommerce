@@ -82,7 +82,16 @@
     "drawerLogoutConfirmBody": "আপনি কি নিশ্চিতভাবে সাইন আউট করতে চান?",
     "drawerLogoutConfirm": "লগ আউট",
     "drawerLogoutCancel": "বাতিল",
-    "drawerMyAccountFull": "অ্যাকাউন্ট ড্যাশবোর্ড খুলুন"
+    "drawerMyAccountFull": "অ্যাকাউন্ট ড্যাশবোর্ড খুলুন",
+    "drawerAboutUs": "আমাদের সম্পর্কে",
+    "drawerContactUs": "যোগাযোগ",
+    "drawerContactUsHint": "ফোন ও ইমেইল হেল্প পেজে",
+    "drawerMenuFooterAria": "নীতিমালা ও কপিরাইট"
+  },
+  "about": {
+    "title": "আমাদের সম্পর্কে",
+    "body": "AJH Libas Collection পরিবারের সবার জন্য বাছাই করা ফ্যাশন নিয়ে আসে। আমরা ভালো কাপড়, যুক্তিসঙ্গত দাম এবং সুবিধাজনক সপিং অভিজ্ঞতার দিকে মনোযোগ করি — অনলাইন ও পশ্চিমবঙ্গের নিবন্ধিত ঠিকানায়।\n\nঅর্ডার, সাইজ বা অংশীদারিত্বের জন্য হেল্প ও সাপোর্ট থেকে যোগাযোগ করুন।",
+    "contactCta": "যোগাযোগ →"
   },
   "share": {
     "share": "লিঙ্ক শেয়ার",
@@ -122,6 +131,8 @@
   },
   "home": {
     "mobilePillStripAria": "ক্যাটাগরি ও পোশাকের ধরন",
+    "loadMore": "আরো দেখুন",
+    "featuredShowing": "মোট {total} এর মধ্যে {visible} টি পণ্য",
     "shopByCategory": "ক্যাটাগরি অনুযায়ী কেনাকাটা",
     "featuredProducts": "নির্বাচিত পণ্য",
     "viewAll": "সব দেখুন",
@@ -541,6 +552,8 @@
     "navManageStore": "স্টোর ম্যানেজ করুন",
     "memberPremium": "প্রিমিয়াম মেম্বার",
     "memberRegular": "রেগুলার মেম্বার",
+    "legalInformationTitle": "আইনি তথ্য ও নীতিমালা",
+    "legalInformationBody": "নিবন্ধিত ঠিকানা ও নীতি লিঙ্ক — আপনার রেকর্ডের জন্য।",
     "profileAvatarOpen": "প্রোফাইল ছবি দেখুন",
     "profileAvatarClose": "বন্ধ করুন",
     "profilePhotoLabel": "প্রোফাইল ছবি",

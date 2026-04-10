@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ProfileAvatarPreview } from "@/components/profile-avatar-preview";
 import { CategoryAwarePrice } from "@/components/category-aware-price";
+import { AccountLegalInformation } from "@/components/account-legal-information";
 import { readProfile, type StoredProfile } from "@/lib/account-profile-storage";
 import { getWallet, walletUserId } from "@/lib/wallet-storage";
 
@@ -217,6 +218,8 @@ export default function AccountOverviewPage() {
           </ul>
         )}
       </section>
+
+      <AccountLegalInformation />
     </div>
   );
 }
