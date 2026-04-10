@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ProductCard } from "@/components/product-card";
@@ -35,8 +35,10 @@ export function HomePageContent() {
     };
   }, []);
 
-  void tick;
-  const cms = getCms();
+  const cms = useMemo(() => {
+    void tick;
+    return getCms();
+  }, [tick]);
   const order =
     cms.sectionOrder.length > 0
       ? cms.sectionOrder

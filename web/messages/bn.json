@@ -1,14 +1,14 @@
 {
   "metadata": {
     "title": "AJH Libas Collection — ফ্যাশন ও লাইফস্টাইল",
-    "description": "AJH Libas Collection — পুরুষ, মহিলা ও শিশুদের জন্য বাছাই করা পোশাক। পছন্দের স্টাইল খুঁজে নিন, আত্মবিশ্বাসে কিনুন।"
+    "description": "AJH Libas Collection — পুরুষ, মহিলা ও শিশুদের পোশাক। বাছাই করা স্টাইল, সরল কেনাকাটা।"
   },
   "brand": {
     "name": "AJH Libas Collection",
     "short": "AJH"
   },
   "nav": {
-    "account": "অ্যাকাউন্ট",
+    "account": "আমার অ্যাকাউন্ট",
     "cart": "কার্ট",
     "wishlist": "উইশলিস্ট",
     "notifications": "নোটিফিকেশন",
@@ -25,17 +25,17 @@
     "bottomRewards": "রিওয়ার্ড",
     "bottomNavAria": "নিচের নেভিগেশন",
     "helpShort": "হেল্প",
-    "helpSupport": "হেল্প ও সাপোর্ট",
+    "helpSupport": "সাহায্য ও যোগাযোগ",
     "drawerWelcome": "স্বাগতম",
     "drawerGuest": "অতিথি ক্রেতা",
-    "drawerShopBy": "ক্যাটাগরি অনুযায়ী কেনাকাটা",
+    "drawerShopBy": "স্টাইল অনুযায়ী",
     "drawerMyAccount": "আমার অ্যাকাউন্ট",
     "languageLabel": "ভাষা",
     "user": "মেম্বার",
     "drawerSupportChat": "সাপোর্ট চ্যাট",
     "drawerWhatsApp": "হোয়াটসঅ্যাপ",
     "drawerRewards": "রিওয়ার্ড ও স্পিন",
-    "drawerShopByStyle": "পোশাকের ধরন অনুযায়ী",
+    "drawerShopByStyle": "স্টাইল অনুযায়ী",
     "drawerOutfitSaree": "শাড়ি",
     "drawerOutfitChuridar": "চুরিদার",
     "drawerOutfitLehenga": "লেহেঙ্গা",
@@ -58,7 +58,7 @@
     "drawerBadgePremium": "প্রিমিয়াম",
     "drawerBadgeRegular": "রেগুলার",
     "drawerGuestProfileHint": "ওয়ালেট, অর্ডার ও রিওয়ার্ড দেখতে লগইন করুন।",
-    "drawerGroupShop": "কেনাকাটা ও রিওয়ার্ড",
+    "drawerGroupShop": "আপনার জন্য অফার",
     "drawerHomeShop": "হোম / সব পণ্য",
     "drawerRewardsSpin": "রিওয়ার্ড ও স্পিন",
     "drawerPointsShort": "{n} পয়েন্ট",
@@ -71,9 +71,9 @@
     "drawerSavedAddresses": "সেভ করা ঠিকানা",
     "drawerPaymentsRefunds": "পেমেন্ট ও রিফান্ড",
     "drawerSecurity": "নিরাপত্তা",
-    "drawerGroupSupport": "সাপোর্ট ও গোপনীয়তা",
-    "drawerHelpCenter": "হেল্প সেন্টার",
-    "drawerLegalHeading": "নীতিমালা",
+    "drawerGroupSupport": "সাহায্য দরকার?",
+    "drawerHelpCenter": "সাহায্য",
+    "drawerLegalHeading": "গোপনীয়তা ও আইন",
     "drawerShippingShort": "শিপিং",
     "drawerCookiesShort": "কুকিজ",
     "drawerGroupApp": "অ্যাপ",
@@ -90,7 +90,7 @@
   },
   "about": {
     "title": "আমাদের সম্পর্কে",
-    "body": "AJH Libas Collection পরিবারের সবার জন্য বাছাই করা ফ্যাশন নিয়ে আসে। আমরা ভালো কাপড়, যুক্তিসঙ্গত দাম এবং সুবিধাজনক সপিং অভিজ্ঞতার দিকে মনোযোগ করি — অনলাইন ও পশ্চিমবঙ্গের নিবন্ধিত ঠিকানায়।\n\nঅর্ডার, সাইজ বা অংশীদারিত্বের জন্য হেল্প ও সাপোর্ট থেকে যোগাযোগ করুন।",
+    "body": "AJH Libas Collection পুরো পরিবারের জন্য পোশাক — ভালো কাপড়, যুক্তিসঙ্গত দাম এবং সরল অভিজ্ঞতা অনলাইন ও পশ্চিমবঙ্গের নিবন্ধিত ঠিকানায়।\n\nঅর্ডার, সাইজ বা অংশীদারিত্বের জন্য সাহায্যের মাধ্যমে যোগাযোগ করুন।",
     "contactCta": "যোগাযোগ →"
   },
   "share": {
@@ -103,7 +103,7 @@
     "storeShareTitle": "দোকান শেয়ার করুন",
     "storeShareHint": "বন্ধুদের লিঙ্ক পাঠান বা ফোনে সেভ করুন।",
     "storeShareText": "{name} এ ফ্যাশন কেনাকাটা করুন",
-    "getHelp": "হেল্প সেন্টার"
+    "getHelp": "সাহায্য"
   },
   "hero": {
     "eyebrow": "নতুন মৌসুম",
@@ -120,7 +120,7 @@
     "slide2Badge": "নতুন কালেকশন",
     "slide2Title": "আপনার সঙ্গে চলার স্টাইল",
     "slide2Subtitle": "ডেনিম, কুর্তি ও স্নিকার — এখনই দেখুন।",
-    "slide3Badge": "হট ডিল",
+    "slide3Badge": "অতিরিক্ত ১০%",
     "slide3Title": "চেকআউটে অতিরিক্ত ১০%",
     "slide3Subtitle": "কার্ট ₹৫০০+ এ SAVE10 কোড ব্যবহার করুন।",
     "buyNow": "এখনই কিনুন",
@@ -194,13 +194,13 @@
     "resultsFor": "“{q}” এর জন্য ফলাফল",
     "allProducts": "সব পণ্য",
     "productCount": "{count, plural, one {# টি পণ্য} other {# টি পণ্য}}",
-    "noMatch": "আপনার ফিল্টারের সাথে কোনো পণ্য মিলছে না।",
+    "noMatch": "এই ফিল্টারে কিছু মিলছে না। একটু বদলিয়ে দেখুন।",
     "visualBanner": "ইমেজ সার্চ: ভালো মিলের জন্য অ্যাডমিনে কালার সোয়াচ যোগ করুন।",
     "visualBannerLive": "ফটো সার্চ: আপনার ছবির রঙের কাছাকাছি পণ্য ক্রমে দেখানো হচ্ছে।"
   },
   "categoryPage": {
     "productCount": "{count, plural, one {# টি পণ্য} other {# টি পণ্য}}",
-    "empty": "এই ক্যাটাগরিতে কোনো পণ্য নেই।",
+    "empty": "এখানে এখন কিছু নেই। অন্য ক্যাটাগরি দেখুন।",
     "metaDescription": "AJH Libas Collection এ {name} অনলাইনে কিনুন — নির্বাচিত স্টাইল, নিরাপদ চেকআউট।"
   },
   "categories": {
@@ -284,7 +284,7 @@
     "flashSaleEndsIn": "শেষ {h}:{m}:{s} পরে",
     "flashSalePrice": "সেল দাম",
     "addToCart": "কার্টে যোগ করুন",
-    "goToCart": "কার্টে যান",
+    "goToCart": "কার্ট দেখুন",
     "compare": "তুলনা",
     "compareAdded": "তুলনায় আছে",
     "trust": {
@@ -334,7 +334,7 @@
   "productCard": {
     "addToCart": "কার্টে যোগ করুন",
     "buyNow": "এখনই কিনুন",
-    "topOffer": "টপ অফার",
+    "topOffer": "অফারে",
     "off": "ছাড়",
     "outOfStock": "স্টকে নেই",
     "wishlist": "উইশলিস্ট",
@@ -342,12 +342,12 @@
     "compareAdded": "তুলনায় আছে"
   },
   "cart": {
-    "title": "শপিং কার্ট",
-    "empty": "আপনার কার্ট খালি।",
+    "title": "কার্ট",
+    "empty": "কার্ট খালি। পছন্দের কিছু যোগ করুন।",
     "continueShopping": "কেনাকাটা চালিয়ে যান",
     "moveToWishlist": "উইশলিস্টে পাঠান",
     "saveForLaterTitle": "পরে কেনার জন্য সেভ",
-    "saveForLaterSubtitle": "এখন কিনতে চান না? এক ক্লিকে উইশলিস্টে সরিয়ে রাখুন — ফ্লিপকার্ট ও অ্যামাজনের মতো।",
+    "saveForLaterSubtitle": "পরে কেনার জন্য এক ক্লিকে উইশলিস্টে রাখুন।",
     "wishlistLink": "উইশলিস্ট খুলুন",
     "qty": "পরিমাণ",
     "remove": "মুছুন",
@@ -355,7 +355,7 @@
     "couponPlaceholder": "SAVE10 বা FLAT100",
     "apply": "প্রয়োগ",
     "couponHint": "SAVE10 (১০% ছাড়) বা ₹৫০০+ অর্ডারে FLAT100।",
-    "proceedCheckout": "চেকআউটে যান",
+    "proceedCheckout": "চেকআউট",
     "priceDetails": "মূল্য বিবরণ",
     "itemTotal": "পণ্য মোট",
     "delivery": "ডেলিভারি",
@@ -372,7 +372,7 @@
     "title": "চেকআউট",
     "signInHint": "সাইন ইন",
     "signInToSync": "ঠিকানা ও অর্ডার অ্যাকাউন্টে সেভ করতে।",
-    "cartEmpty": "কার্ট খালি।",
+    "cartEmpty": "আপনার কার্ট খালি।",
     "browseProducts": "কাপড় দেখুন",
     "deliveryAddress": "ডেলিভারি ঠিকানা",
     "savedAddressesHint": "কোথায় পণ্য পৌঁছে দেব তার জন্য বেছে নিন",
@@ -524,10 +524,10 @@
     "dismiss": "বন্ধ"
   },
   "account": {
-    "title": "আপনার অ্যাকাউন্ট",
+    "title": "আমার অ্যাকাউন্ট",
     "dashboard": "ড্যাশবোর্ড",
     "sessionLoading": "সেশন যাচাই করা হচ্ছে…",
-    "signInPrompt": "অর্ডার, উইশলিস্ট ও ঠিকানা এক জায়গায় রাখতে সাইন ইন করুন — পরের বার আরও দ্রুত কেনাকাটা।",
+    "signInPrompt": "অর্ডার, উইশলিস্ট ও ঠিকানা সিঙ্ক করতে সাইন ইন করুন।",
     "loginSignup": "লগইন / সাইন আপ",
     "signedInAs": "লগইন:",
     "signOut": "সাইন আউট",
@@ -553,7 +553,7 @@
     "memberPremium": "প্রিমিয়াম মেম্বার",
     "memberRegular": "রেগুলার মেম্বার",
     "legalInformationTitle": "আইনি তথ্য ও নীতিমালা",
-    "legalInformationBody": "নিবন্ধিত ঠিকানা ও নীতি লিঙ্ক — আপনার রেকর্ডের জন্য।",
+    "legalInformationBody": "নিবন্ধিত ঠিকানা ও নীতি লিঙ্ক।",
     "profileAvatarOpen": "প্রোফাইল ছবি দেখুন",
     "profileAvatarClose": "বন্ধ করুন",
     "profilePhotoLabel": "প্রোফাইল ছবি",
@@ -760,9 +760,9 @@
   },
   "wishlist": {
     "title": "উইশলিস্ট",
-    "subtitle": "আপনার পছন্দের পণ্য — কেনার জন্য সেভ করে রাখুন।",
-    "empty": "কোনো আইটেম নেই।",
-    "emptyTitle": "আপনার উইশলিস্ট অপেক্ষা করছে",
+    "subtitle": "কেনার জন্য সেভ করে রাখুন।",
+    "empty": "এখনো কিছু সেভ নেই।",
+    "emptyTitle": "উইশলিস্ট শুরু করুন",
     "browse": "পণ্য দেখুন",
     "startExploring": "এক্সপ্লোর শুরু করুন",
     "shopNow": "এখনই কিনুন",
@@ -836,8 +836,8 @@
   },
   "login": {
     "panelEyebrow": "মেম্বার অ্যাক্সেস",
-    "panelTitle": "AJH Libas Collection-তে স্বাগতম",
-    "panelSubtitle": "অ্যাকাউন্ট খুলুন বা লগইন করুন — আপনার স্টাইল, আপনার নিয়ম। পছন্দের তালিকা, দ্রুত চেকআউট, আর যা ভালো লাগে হারিয়ে যাবে না।",
+    "panelTitle": "AJH Libas Collection-তে সাইন ইন",
+    "panelSubtitle": "পছন্দ, ঠিকানা সেভ করুন এবং পরের বার দ্রুত চেকআউট করুন।",
     "perk1": "উইশলিস্ট ও কার্ট পরের ভিজিটে সেভ",
     "perk2": "সেভ করা ঠিকানায় দ্রুত চেকআউট",
     "perk3": "নতুন কালেকশন ও অফার — আপডেট থাকুন",
@@ -941,7 +941,7 @@
     "inboxAria": "নোটিফিকেশন খুলুন",
     "inboxTitle": "নোটিফিকেশন",
     "markAllRead": "সব পড়া হয়েছে চিহ্নিত করুন",
-    "empty": "সব আপডেট দেখে ফেলেছেন।",
+    "empty": "নতুন কোনো নোটিফিকেশন নেই।",
     "viewOrders": "অর্ডার দেখুন",
     "viewProduct": "পণ্য দেখুন",
     "dismissRead": "পড়া হয়েছে",
@@ -953,13 +953,13 @@
     "orderPlacedBody": "{orderId} · ₹{amount} · {method}। শিপ হলে জানানো হবে।",
     "priceDropTitle": "দাম কমেছে",
     "priceDropBody": "উইশলিস্টে “{productName}” এখন ₹{amount} কম।",
-    "hurryUpTitle": "তাড়াতাড়ি!",
-    "hurryUpBody": "“{productName}” — মাত্র {stockLeft} টি স্টকে আছে, দ্রুত নিন।"
+    "hurryUpTitle": "স্টক কম",
+    "hurryUpBody": "“{productName}” — মাত্র {stockLeft} টি বাকি।"
   },
   "personalized": {
     "eyebrow": "আপনার জন্য",
     "title": "{category} — আমরা যে অফারগুলো ভাবি পছন্দ হবে",
-    "subtitle": "ব্রাউজ ও সেভের ভিত্তিতে — কম র্যান্ডম, বেশি প্রাসঙ্গিক।",
+    "subtitle": "আপনি যা ব্রাউজ ও সেভ করেন তার ভিত্তিতে।",
     "cta": "{category} দেখুন"
   },
   "gamification": {
@@ -983,8 +983,8 @@
     "barLabel": "তুলনায় {count} টি আইটেম",
     "openCompare": "তুলনা",
     "title": "পণ্য তুলনা",
-    "emptyTitle": "এখনও কিছু যোগ হয়নি",
-    "emptyBody": "লিস্টিং বা পণ্য পেজ থেকে সর্বোচ্চ ৩টি যোগ করুন।",
+    "emptyTitle": "তুলনার জন্য কিছু নেই",
+    "emptyBody": "লিস্ট বা পণ্য পেজ থেকে সর্বোচ্চ তিনটি পণ্য যোগ করুন।",
     "browse": "পণ্য ব্রাউজ করুন",
     "clearAll": "সব সরান",
     "feature": "বৈশিষ্ট্য",
@@ -1012,13 +1012,13 @@
     "admin": "অ্যাডমিন (ডেমো)",
     "categoriesTitle": "ক্যাটাগরি",
     "help": "সাহায্য",
-    "helpCenter": "হেল্প সেন্টার ও FAQ",
+    "helpCenter": "সাহায্য ও FAQ",
     "payments": "পেমেন্ট: UPI, নেট ব্যাঙ্কিং, COD",
     "returns": "নীতি অনুযায়ী রিটার্ন",
-    "supportTitle": "কাস্টমার কেয়ার",
+    "supportTitle": "সাহায্য দরকার?",
     "supportPhone": "support@ajhlibascollection.com",
     "supportHours": "১০:০০–১৯:০০ IST · সোম–শনি",
-    "followUs": "আমাদের অনুসরণ করুন",
+    "followUs": "যুক্ত থাকুন",
     "socialWhatsApp": "হোয়াটসঅ্যাপ",
     "socialEmail": "ইমেইল",
     "trustSsl": "যাচাইকৃত SSL এনক্রিপশন",
@@ -1036,8 +1036,8 @@
     "footerRegisteredAddress": "ন্যাশনাল বাজার, রাণীনগর,\nমুর্শিদাবাদ, পশ্চিমবঙ্গ ৭৪২৩০৮,\nভারত",
     "footerCopyright": "© {year} AJH Libas Collection। সর্বস্বত্ব সংরক্ষিত।",
     "footerCompany": "কোম্পানি তথ্য",
-    "footerCustomerCare": "কাস্টমার কেয়ার",
-    "footerPolicies": "নীতিমালা",
+    "footerCustomerCare": "যোগাযোগ",
+    "footerPolicies": "গোপনীয়তা ও আইন",
     "footerAbout": "সম্পর্কে",
     "footerHelp": "সাহায্য",
     "footerPolicy": "নীতি",
@@ -1049,8 +1049,8 @@
     "footerCookies": "কুকি পলিসি"
   },
   "help": {
-    "title": "হেল্প সেন্টার",
-    "intro": "অর্ডার, রিটার্ন, ওয়ালেট রিফান্ড ও অ্যাকাউন্ট নিয়ে দ্রুত উত্তর। আরও লাগলে নিচে যোগাযোগ করুন।",
+    "title": "সাহায্য",
+    "intro": "অর্ডার, রিটার্ন, ওয়ালেট রিফান্ড ও অ্যাকাউন্ট — নিচে উত্তর। আরও দরকার হলে যোগাযোগ করুন।",
     "faqHeading": "প্রায়শই জিজ্ঞাসা",
     "faq": {
       "cancel": {

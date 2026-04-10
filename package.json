@@ -20,7 +20,7 @@
     "lint": "npm run lint --prefix web",
     "install:all": "npm install --prefix web && npm install --prefix server",
     "verify:server": "node --check server/src/index.js && node --check server/src/middleware/auth.js",
-    "verify:stack": "npm run verify:server && npm run lint --prefix web && npx --prefix web tsc --noEmit && npm run build --prefix web"
+    "verify:stack": "npm run verify:server && npm run lint --prefix web && npm run typecheck --prefix web && npm run build --prefix web"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

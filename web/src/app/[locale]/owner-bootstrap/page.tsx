@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/context/auth-context";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 
 export default function OwnerBootstrapPage() {
+  const tLogin = useTranslations("login");
   const { user } = useAuth();
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState(false);
@@ -125,7 +127,7 @@ export default function OwnerBootstrapPage() {
         ) : null}
       </div>
       <Link href="/login" className="mt-2 inline-block text-sm font-bold text-[#0066ff] hover:underline">
-        Go to login
+        {tLogin("signIn")}
       </Link>
     </div>
   );
