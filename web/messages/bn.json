@@ -22,6 +22,7 @@
     "bottomCategories": "ক্যাটাগরি",
     "bottomSearch": "সার্চ",
     "bottomAccount": "অ্যাকাউন্ট",
+    "bottomRewards": "রিওয়ার্ড",
     "bottomNavAria": "নিচের নেভিগেশন",
     "helpShort": "হেল্প",
     "helpSupport": "হেল্প ও সাপোর্ট",
@@ -915,6 +916,8 @@
   "gamification": {
     "openFab": "রিওয়ার্ড ও ডেইলি চেক-ইন",
     "title": "রিওয়ার্ড",
+    "pageTitle": "রিওয়ার্ড ও লয়্যালটি",
+    "pageSubtitle": "কয়েন, দৈনিক চেক-ইন ও স্পিন অফার (এই ডিভাইসে সেভ)।",
     "close": "বন্ধ",
     "points": "{n} কয়েন",
     "dailyTitle": "দৈনিক চেক-ইন",

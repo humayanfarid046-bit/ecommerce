@@ -22,6 +22,7 @@
     "bottomCategories": "Categories",
     "bottomSearch": "Search",
     "bottomAccount": "Account",
+    "bottomRewards": "Rewards",
     "bottomNavAria": "Bottom navigation",
     "helpShort": "Help",
     "helpSupport": "Help & support",
@@ -915,6 +916,8 @@
   "gamification": {
     "openFab": "Rewards & daily check-in",
     "title": "Rewards",
+    "pageTitle": "Rewards & loyalty",
+    "pageSubtitle": "Your coins, daily check-in, and spin offers (saved on this device).",
     "close": "Close",
     "points": "{n} coins",
     "dailyTitle": "Daily check-in",
