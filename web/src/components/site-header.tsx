@@ -7,10 +7,7 @@ import {
   User,
   Menu,
   Heart,
-  X,
   CircleHelp,
-  Gift,
-  MessageCircle,
 } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { SearchBar } from "@/components/search-bar";
@@ -19,102 +16,12 @@ import { NotificationInbox } from "@/components/notification-inbox";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { STORE_SHELL } from "@/lib/store-layout";
-import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useWishlist } from "@/context/wishlist-context";
 import { useCartFlight } from "@/context/cart-flight-context";
 import { useAuth } from "@/context/auth-context";
-import { categories } from "@/lib/storefront-catalog";
 import { useMobileDrawer } from "@/context/mobile-drawer-context";
-import { getSupportState, logWhatsAppClick } from "@/lib/support-review-storage";
-import { DrawerOutfitChips } from "@/components/drawer-outfit-chips";
-
-function CategoryDrawerAccordion({
-  onPick,
-}: {
-  onPick: () => void;
-}) {
-  const [openId, setOpenId] = useState<string | null>(null);
-  const tc = useTranslations("categories");
-  const ts = useTranslations("categorySub");
-
-  return (
-    <div className="space-y-2">
-      {categories.map((c) => {
-        const hasChildren = Boolean(c.children?.length);
-        const expanded = openId === c.id;
-        const title = tc(c.slug);
-        if (!hasChildren) {
-          return (
-            <Link
-              key={c.id}
-              href={`/category/${c.slug}`}
-              onClick={onPick}
-              className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 shadow-sm transition hover:border-[#2874f0]/40 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
-            >
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl dark:border-slate-600 dark:bg-slate-800"
-                aria-hidden
-              >
-                {c.icon}
-              </span>
-              <span className="min-w-0 flex-1 truncate">{title}</span>
-            </Link>
-          );
-        }
-        return (
-          <div
-            key={c.id}
-            className={cn(
-              "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-900",
-              expanded && "ring-2 ring-[#2874f0]/35"
-            )}
-          >
-            <button
-              type="button"
-              onClick={() => setOpenId(expanded ? null : c.id)}
-              aria-expanded={expanded}
-              className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm font-bold text-slate-900 dark:text-slate-50"
-            >
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl dark:border-slate-600 dark:bg-slate-800"
-                aria-hidden
-              >
-                {c.icon}
-              </span>
-              <span className="min-w-0 flex-1 truncate">{title}</span>
-              <span className="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                {expanded ? "−" : "+"}
-              </span>
-            </button>
-            {expanded ? (
-              <div className="border-t border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-600 dark:bg-slate-950/60">
-                <Link
-                  href={`/category/${c.slug}`}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-bold text-[#2874f0] dark:text-[#7cb4ff]"
-                  onClick={onPick}
-                >
-                  {tc("viewAllInCategory", { name: title })}
-                </Link>
-                {c.children!.map((ch) => (
-                  <Link
-                    key={ch.slug}
-                    href={`/category/${c.slug}?sub=${ch.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-800"
-                    onClick={onPick}
-                  >
-                    {ts(ch.slug)}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+import { MobileNavDrawer } from "@/components/mobile-nav-drawer";
 
 export function SiteHeader() {
   const { user, status: authStatus } = useAuth();
@@ -126,44 +33,13 @@ export function SiteHeader() {
   const t = useTranslations("nav");
   const tb = useTranslations("brand");
 
-  const displayName =
-    user?.displayName?.trim() ||
-    (user?.email ? user.email.split("@")[0] : "") ||
-    "";
-
-  const [waHref, setWaHref] = useState(
-    "https://wa.me/919876543210?text=Hi%20%E2%80%94%20I%20need%20help%20with%20my%20order."
-  );
-  useEffect(() => {
-    const sync = () => {
-      const num = getSupportState().chatConfig.whatsappE164.replace(/\D/g, "");
-      setWaHref(
-        `https://wa.me/${num}?text=${encodeURIComponent("Hi — I need help with my order.")}`
-      );
-    };
-    sync();
-    window.addEventListener("lc-support", sync);
-    return () => window.removeEventListener("lc-support", sync);
-  }, []);
-
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [drawerOpen]);
-
   return (
     <header className="sticky top-0 z-50 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
       <div className="bg-[#2874f0] text-white">
         <div
           className={`${STORE_SHELL} flex flex-col gap-2.5 py-2 md:flex-row md:flex-wrap md:items-center md:gap-4 md:py-2.5`}
         >
-          {/* Mobile: row1 logo + menu + wishlist + cart; row2 full-width search; desktop: logo | search | nav */}
           <div className="flex w-full min-w-0 items-center justify-between gap-2 md:contents">
-            {/* Mobile: hamburger left (first tap target), then brand — avoids “middle” feel */}
             <div className="flex min-h-[44px] min-w-0 shrink-0 items-center gap-1.5 md:order-1 md:gap-2">
               <button
                 type="button"
@@ -257,139 +133,11 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Desktop category strip (mobile: categories live in drawer + search) */}
       <div className="hidden border-b border-slate-200 bg-white shadow-sm md:block">
         <CategoryNav flipkartStyle />
       </div>
 
-      <div
-        role="presentation"
-        className={cn(
-          "fixed inset-0 z-[60] bg-black/40 transition-opacity md:hidden",
-          drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        )}
-        onClick={() => closeDrawer()}
-      />
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-2.5rem,320px)] flex-col bg-white shadow-xl transition-transform duration-300 ease-out md:hidden",
-          drawerOpen
-            ? "translate-x-0 pointer-events-auto"
-            : "-translate-x-full pointer-events-none"
-        )}
-        aria-hidden={!drawerOpen}
-      >
-        <div className="flex items-center justify-between border-b border-slate-200 bg-[#2874f0] px-4 py-3 text-white">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/90">
-              {t("drawerWelcome")}
-            </p>
-            <p className="truncate text-sm font-bold">
-              {authStatus === "ready" && user
-                ? displayName || user.email || t("user")
-                : t("drawerGuest")}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="rounded-md p-1.5 hover:bg-white/15"
-            aria-label={t("closeMenu")}
-            onClick={() => closeDrawer()}
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-lg bg-slate-100 px-3 pb-2 pt-3 dark:bg-slate-950">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
-            {t("drawerShopBy")}
-          </p>
-          <div className="mt-2 flex-1 overflow-y-auto overscroll-contain pb-2">
-            <CategoryDrawerAccordion onPick={() => closeDrawer()} />
-          </div>
-        </div>
-
-        <DrawerOutfitChips onPick={() => closeDrawer()} />
-
-        <div className="mt-auto border-t border-slate-800 bg-slate-950 p-3 text-slate-100">
-          {authStatus === "ready" && user ? (
-            <Link
-              href="/account"
-              className="mb-2 flex items-center gap-2 rounded-lg bg-[#2874f0] px-3 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#2463d1]"
-              onClick={() => closeDrawer()}
-            >
-              <User className="h-4 w-4 shrink-0 text-white" />
-              {t("drawerMyAccount")}
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="mb-2 flex items-center gap-2 rounded-lg bg-[#2874f0] px-3 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#2463d1]"
-              onClick={() => closeDrawer()}
-            >
-              <User className="h-4 w-4 shrink-0 text-white" />
-              {t("login")}
-            </Link>
-          )}
-          <div className="flex items-center justify-between rounded-lg px-2 py-2 text-slate-200">
-            <span className="text-xs font-semibold">{t("languageLabel")}</span>
-            <LanguageSwitcher variant="onPrimary" />
-          </div>
-          <div className="flex items-center justify-between rounded-lg px-2 py-2 text-slate-200">
-            <span className="text-xs font-semibold">{t("themeToggle")}</span>
-            <ThemeToggle variant="onPrimary" />
-          </div>
-          <button
-            type="button"
-            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-100 hover:bg-white/10"
-            onClick={() => {
-              closeDrawer();
-              window.dispatchEvent(new CustomEvent("lc-open-support-chat"));
-            }}
-          >
-            <MessageCircle className="h-4 w-4 shrink-0 text-[#7cb4ff]" />
-            {t("drawerSupportChat")}
-          </button>
-          <a
-            href={waHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-emerald-300 hover:bg-white/10"
-            onClick={() => {
-              try {
-                logWhatsAppClick(
-                  typeof window !== "undefined" ? window.location.pathname : ""
-                );
-              } catch {
-                /* ignore */
-              }
-              closeDrawer();
-            }}
-          >
-            <MessageCircle className="h-4 w-4 shrink-0 text-[#25D366]" />
-            {t("drawerWhatsApp")}
-          </a>
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-100 hover:bg-white/10"
-            onClick={() => {
-              closeDrawer();
-              window.dispatchEvent(new CustomEvent("lc-open-engagement-hub"));
-            }}
-          >
-            <Gift className="h-4 w-4 shrink-0 text-violet-300" />
-            {t("drawerRewards")}
-          </button>
-          <Link
-            href="/help"
-            className="mt-0.5 flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-slate-100 hover:bg-white/10"
-            onClick={() => closeDrawer()}
-          >
-            <CircleHelp className="h-4 w-4 text-[#7cb4ff]" />
-            {t("helpSupport")}
-          </Link>
-        </div>
-      </aside>
+      <MobileNavDrawer open={drawerOpen} onClose={closeDrawer} />
     </header>
   );
 }

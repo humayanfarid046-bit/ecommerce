@@ -184,7 +184,7 @@ export function AccountAddressSection() {
   }
 
   return (
-    <section>
+    <section id="settings-addresses" className="scroll-mt-24">
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
         <MapPin className="h-5 w-5 text-[#0066ff]" />
         {t("addressBook")}
