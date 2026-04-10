@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { LoginShoppingBagHero } from "@/components/login-shopping-bag-hero";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { safeReturnPath } from "@/lib/safe-return-path";
+import { normalizeAppRole } from "@/lib/rbac";
 
 type View = "login" | "register";
 
@@ -52,21 +53,34 @@ const btnSecondary =
 const linkAccent =
   "text-xs font-bold text-[#0066ff] transition hover:text-[#0052cc] hover:underline";
 
+/** Match auth-context cookie so middleware sees role before React hydrates Firestore role. */
+function setLcRoleCookieClient(role: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `lc_role=${encodeURIComponent(role)}; path=/; max-age=2592000; samesite=lax`;
+}
+
 async function resolvePostLoginTarget(returnUrl: string | null): Promise<string> {
   const safe = safeReturnPath(returnUrl);
-  if (safe) return safe;
   try {
     const token = await getFirebaseAuth()?.currentUser?.getIdToken();
-    if (!token) return "/account";
+    if (!token) return safe ?? "/account";
     const res = await fetch("/api/user/access-scope", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const body = (await res.json().catch(() => ({}))) as {
       accessScope?: string;
+      role?: unknown;
     };
+    const role = normalizeAppRole(body.role);
+    if (role === "DELIVERY_PARTNER") {
+      setLcRoleCookieClient("DELIVERY_PARTNER");
+      if (safe) return safe;
+      return "/delivery/dashboard";
+    }
+    if (safe) return safe;
     return body.accessScope === "owner" ? "/admin" : "/account";
   } catch {
-    return "/account";
+    return safe ?? "/account";
   }
 }
 
