@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { DeliveryPartnerAppBar } from "@/components/delivery-partner-app-bar";
 import { SignaturePad } from "@/components/signature-pad";
+import {
+  buildDeliveryMapsDirectionsUrl,
+  buildDeliveryWhatsAppUrl,
+} from "@/lib/delivery-maps-url";
 
 type DeliveryOrder = {
   userId: string;
@@ -11,6 +15,9 @@ type DeliveryOrder = {
   customerName: string;
   customerPhone: string;
   address: string;
+  landmark: string;
+  deliveryLat: number | null;
+  deliveryLng: number | null;
   amount: number;
   paymentStatus: "PENDING" | "PAID";
   lineItems: Array<{
@@ -328,23 +335,78 @@ export default function DeliveryDashboardPage() {
           </p>
         </div>
         {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-        {rows.map((o) => (
+        {rows.map((o) => {
+          const mapsHref = buildDeliveryMapsDirectionsUrl({
+            destinationAddress: o.address,
+            destinationLat: o.deliveryLat,
+            destinationLng: o.deliveryLng,
+          });
+          const hasPin =
+            o.deliveryLat != null &&
+            o.deliveryLng != null &&
+            Number.isFinite(o.deliveryLat) &&
+            Number.isFinite(o.deliveryLng);
+          const canNavigate = Boolean(o.address?.trim()) || hasPin;
+          const waCustomer = buildDeliveryWhatsAppUrl(o.customerPhone, o.orderId);
+          return (
           <div key={o.orderId} className="rounded-xl border border-slate-700 bg-slate-900 p-3">
-            <p className="font-bold">{o.customerName}</p>
-            <div className="mt-2 flex gap-2">
-              <a href={`tel:${o.customerPhone}`} className="rounded-lg border border-slate-600 px-3 py-1 text-xs">
-                Call
-              </a>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Customer name</p>
+            <p className="text-lg font-bold text-white">{o.customerName}</p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-slate-500">Phone</p>
+            {o.customerPhone ? (
               <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(o.address || o.customerName)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-slate-600 px-3 py-1 text-xs"
+                href={`tel:${o.customerPhone}`}
+                className="inline-block text-sm font-semibold text-sky-300 underline-offset-2 hover:underline"
               >
-                Navigate
+                {o.customerPhone}
               </a>
+            ) : (
+              <p className="text-sm text-slate-500">Not provided</p>
+            )}
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-slate-500">Customer address</p>
+            <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-slate-200">
+              {o.address?.trim() || "Address not available"}
+            </p>
+            {o.landmark?.trim() ? (
+              <>
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">Landmark</p>
+                <p className="mt-1 text-sm text-amber-200/95">{o.landmark.trim()}</p>
+              </>
+            ) : null}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {canNavigate ? (
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg border border-emerald-600/80 bg-emerald-950/40 px-3 py-1.5 text-xs font-bold text-emerald-200"
+                >
+                  Navigate
+                </a>
+              ) : (
+                <span className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-500">
+                  Add address or pin to navigate
+                </span>
+              )}
+              {o.customerPhone ? (
+                <a
+                  href={`tel:${o.customerPhone}`}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-bold"
+                >
+                  Call customer
+                </a>
+              ) : null}
+              {waCustomer ? (
+                <a
+                  href={waCustomer}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg border border-emerald-700/60 bg-emerald-950/30 px-3 py-1.5 text-xs font-bold text-emerald-100"
+                >
+                  WhatsApp (live location)
+                </a>
+              ) : null}
             </div>
-            <p className="mt-2 text-xs text-slate-300">{o.address || "Address not available"}</p>
             <p className="mt-2 font-semibold">Collect: Rs {o.amount.toLocaleString("en-IN")}</p>
             {o.itemTitle ? <p className="mt-1 text-xs text-slate-400">Items: {o.itemTitle}</p> : null}
             {o.lineItems.length ? (
@@ -402,7 +464,8 @@ export default function DeliveryDashboardPage() {
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
         <div className="rounded-xl border border-slate-700 bg-slate-900 p-3">
           <p className="text-sm font-bold">Delivery History</p>
           <ul className="mt-2 space-y-1 text-xs text-slate-300">

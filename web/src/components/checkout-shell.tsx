@@ -88,6 +88,12 @@ export function CheckoutShell() {
   const [guestCity, setGuestCity] = useState("");
   const [guestState, setGuestState] = useState("");
 
+  /** Landmark + optional GPS pin for riders (Firestore). */
+  const [deliveryLandmark, setDeliveryLandmark] = useState("");
+  const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
+  const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
+  const [deliveryGeoLoading, setDeliveryGeoLoading] = useState(false);
+
   const [addressDone, setAddressDone] = useState(false);
   const [summaryDone, setSummaryDone] = useState(false);
   const [openStep, setOpenStep] = useState<1 | 2 | 3>(1);
@@ -174,6 +180,23 @@ export function CheckoutShell() {
     setGuestPin("");
     setGuestCity("");
     setGuestState("");
+    setDeliveryLandmark("");
+    setDeliveryLat(null);
+    setDeliveryLng(null);
+  }, []);
+
+  const requestDeliveryPin = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    setDeliveryGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setDeliveryLat(pos.coords.latitude);
+        setDeliveryLng(pos.coords.longitude);
+        setDeliveryGeoLoading(false);
+      },
+      () => setDeliveryGeoLoading(false),
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
+    );
   }, []);
 
   function magicCheckoutFill() {
@@ -321,15 +344,37 @@ export function CheckoutShell() {
 
   const pinComplete = guestPin.replace(/\D/g, "").length === 6;
 
+  /** Full line saved on the order for riders (Firestore `deliveryAddress`, max 500 chars). */
   const addressSummaryLine = useMemo(() => {
     if (useGuestForm && guestName.trim()) {
-      return `${guestName.trim()} · ${guestCity} · ${guestPin}`;
+      const pin6 = guestPin.replace(/\D/g, "").slice(0, 6);
+      const street = guestLine1.trim();
+      const cityState = [guestCity.trim(), guestState.trim()].filter(Boolean).join(", ");
+      const core = [street, cityState, pin6].filter(Boolean).join(", ");
+      const contact = `${guestName.trim()} · ${guestPhone.replace(/\D/g, "").slice(0, 10)}`;
+      const line = core ? `${core} · ${contact}` : `${guestName.trim()} · ${guestCity} · ${pin6}`;
+      return line.slice(0, 500);
     }
     if (selectedAddr) {
-      return `${selectedAddr.line1} · ${selectedAddr.city} — ${selectedAddr.pin}`;
+      const l2 = selectedAddr.line2?.trim();
+      const parts = [
+        selectedAddr.line1.trim(),
+        l2,
+        `${selectedAddr.city.trim()}${selectedAddr.state ? `, ${selectedAddr.state}` : ""} — ${selectedAddr.pin}`,
+      ].filter(Boolean);
+      return parts.join(", ").slice(0, 500);
     }
     return "";
-  }, [useGuestForm, guestName, guestCity, guestPin, selectedAddr]);
+  }, [
+    useGuestForm,
+    guestName,
+    guestCity,
+    guestState,
+    guestPin,
+    guestLine1,
+    guestPhone,
+    selectedAddr,
+  ]);
 
   const payLabel = useMemo(() => {
     if (payKey === "cod") return t("paymentCod");
@@ -485,6 +530,10 @@ export function CheckoutShell() {
             deliveryPin: deliveryPinDigits || undefined,
             hubCity: deliveryCity.trim() || undefined,
             deliveryAddress: addressSummaryLine || undefined,
+            deliveryLandmark: deliveryLandmark.trim() || undefined,
+            ...(deliveryLat != null && deliveryLng != null
+              ? { deliveryLat, deliveryLng }
+              : {}),
             paymentStatus:
               methodLabel.toUpperCase().includes("COD") ? "PENDING" : "PAID",
             lineItems: lines
@@ -777,6 +826,12 @@ export function CheckoutShell() {
                   showMagicCheckout={Boolean(user && addresses.length > 0 && useGuestForm)}
                   onMagicCheckout={magicCheckoutFill}
                   accountEmail={user?.email ?? null}
+                  deliveryLandmark={deliveryLandmark}
+                  setDeliveryLandmark={setDeliveryLandmark}
+                  deliveryLat={deliveryLat}
+                  deliveryLng={deliveryLng}
+                  deliveryGeoLoading={deliveryGeoLoading}
+                  onRequestDeliveryPin={requestDeliveryPin}
                 />
               ) : null}
             </section>

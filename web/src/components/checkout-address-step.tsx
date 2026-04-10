@@ -46,6 +46,12 @@ type Props = {
   onMagicCheckout?: () => void;
   /** When set, email field is hidden — order updates use the signed-in account email. */
   accountEmail?: string | null;
+  deliveryLandmark: string;
+  setDeliveryLandmark: (v: string) => void;
+  deliveryLat: number | null;
+  deliveryLng: number | null;
+  deliveryGeoLoading: boolean;
+  onRequestDeliveryPin: () => void;
 };
 
 const inputClass =
@@ -94,6 +100,12 @@ export function CheckoutAddressStep({
   showMagicCheckout,
   onMagicCheckout,
   accountEmail = null,
+  deliveryLandmark,
+  setDeliveryLandmark,
+  deliveryLat,
+  deliveryLng,
+  deliveryGeoLoading,
+  onRequestDeliveryPin,
 }: Props) {
   const t = useTranslations("checkout");
   const ta = useTranslations("account");
@@ -436,6 +448,43 @@ export function CheckoutAddressStep({
           </div>
         </div>
       )}
+
+      <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/50 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/25">
+        <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-200/90">
+          <MapPinned className="h-3.5 w-3.5" />
+          {t("landmarkSectionTitle")}
+        </p>
+        <label className={labelClass}>
+          {t("landmarkLabel")}
+          <input
+            type="text"
+            value={deliveryLandmark}
+            onChange={(e) => setDeliveryLandmark(e.target.value)}
+            className={inputClass}
+            placeholder={t("landmarkPlaceholder")}
+            maxLength={200}
+            autoComplete="off"
+          />
+        </label>
+        <p className="mt-2 text-xs leading-relaxed text-emerald-900/80 dark:text-emerald-200/75">
+          {t("landmarkHint")}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={deliveryGeoLoading}
+            onClick={onRequestDeliveryPin}
+            className="rounded-xl border border-emerald-600/40 bg-white px-3 py-2 text-xs font-bold text-emerald-900 shadow-sm transition hover:bg-emerald-50 disabled:opacity-60 dark:border-emerald-700 dark:bg-slate-900 dark:text-emerald-100 dark:hover:bg-slate-800"
+          >
+            {deliveryGeoLoading ? t("landmarkPinLoading") : t("landmarkPinCta")}
+          </button>
+          {deliveryLat != null && deliveryLng != null ? (
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+              {t("landmarkPinOk")}
+            </span>
+          ) : null}
+        </div>
+      </div>
 
       <RippleButton
         type="button"

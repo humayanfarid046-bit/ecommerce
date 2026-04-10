@@ -60,6 +60,17 @@ export async function GET(req: Request) {
       orderId,
       customerName: parsed.customerName ?? "Customer",
       customerPhone: parsed.customerPhone ?? "",
+      /** Same field as checkout / logged-in rider dashboard — full delivery line. */
+      deliveryAddress: parsed.deliveryAddress?.trim() ?? "",
+      landmark: parsed.deliveryLandmark?.trim() ?? "",
+      deliveryLat:
+        typeof parsed.deliveryLat === "number" && Number.isFinite(parsed.deliveryLat)
+          ? parsed.deliveryLat
+          : null,
+      deliveryLng:
+        typeof parsed.deliveryLng === "number" && Number.isFinite(parsed.deliveryLng)
+          ? parsed.deliveryLng
+          : null,
       amount: parsed.totalRupees,
       status: parsed.status,
       riderName: parsed.riderName ?? "",

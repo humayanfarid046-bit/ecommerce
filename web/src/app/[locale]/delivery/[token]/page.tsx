@@ -3,12 +3,21 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { use, useEffect, useMemo, useState } from "react";
+import {
+  buildDeliveryMapsDirectionsUrl,
+  buildDeliveryWhatsAppUrl,
+} from "@/lib/delivery-maps-url";
 
 type RiderOrder = {
   userId: string;
   orderId: string;
   customerName: string;
   customerPhone: string;
+  /** From checkout Firestore `deliveryAddress`. */
+  deliveryAddress?: string;
+  landmark?: string;
+  deliveryLat?: number | null;
+  deliveryLng?: number | null;
   amount: number;
   status: string;
   riderName: string;
@@ -46,6 +55,31 @@ export default function DeliveryAgentPage({
     if (!upiIntent) return "";
     return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiIntent)}`;
   }, [upiIntent]);
+
+  const mapsHref = useMemo(() => {
+    if (!order) return "";
+    return buildDeliveryMapsDirectionsUrl({
+      destinationAddress: order.deliveryAddress,
+      destinationLat: order.deliveryLat ?? null,
+      destinationLng: order.deliveryLng ?? null,
+    });
+  }, [order]);
+
+  const canNavigate = useMemo(() => {
+    if (!order) return false;
+    const addr = order.deliveryAddress?.trim();
+    const hasPin =
+      order.deliveryLat != null &&
+      order.deliveryLng != null &&
+      Number.isFinite(order.deliveryLat) &&
+      Number.isFinite(order.deliveryLng);
+    return Boolean(addr) || hasPin;
+  }, [order]);
+
+  const waCustomer = useMemo(() => {
+    if (!order) return null;
+    return buildDeliveryWhatsAppUrl(order.customerPhone, order.orderId);
+  }, [order]);
 
   useEffect(() => {
     void (async () => {
@@ -111,16 +145,65 @@ export default function DeliveryAgentPage({
         <p className="font-mono text-sm">{order.orderId}</p>
         <p className="mt-2 text-sm">{order.customerName}</p>
         <p className="text-sm">{order.customerPhone}</p>
+        <p className="mt-3 text-xs font-bold uppercase text-slate-500">Customer address</p>
+        {order.deliveryAddress?.trim() ? (
+          <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap">{order.deliveryAddress}</p>
+        ) : (
+          <p className="mt-1 text-sm text-slate-500">No full address on file</p>
+        )}
+        {order.landmark?.trim() ? (
+          <>
+            <p className="mt-2 text-xs font-bold uppercase text-slate-500">Landmark</p>
+            <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">{order.landmark.trim()}</p>
+          </>
+        ) : null}
+        {order.deliveryLat != null &&
+        order.deliveryLng != null &&
+        Number.isFinite(order.deliveryLat) &&
+        Number.isFinite(order.deliveryLng) ? (
+          <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+            GPS pin saved — Navigate uses exact coordinates.
+          </p>
+        ) : null}
+        {!order.deliveryAddress?.trim() && !canNavigate ? (
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+            Full address not on file — call the customer to confirm location.
+          </p>
+        ) : null}
         <p className="mt-2 text-sm">Status: {order.status}</p>
         <p className="text-sm font-semibold">COD: Rs {order.amount.toLocaleString("en-IN")}</p>
         {order.eta ? <p className="mt-1 text-sm">ETA Slot: {order.eta}</p> : null}
         <div className="mt-3 flex flex-wrap gap-2">
+          {canNavigate ? (
+            <a
+              href={mapsHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex rounded-lg border border-[#0066ff] bg-[#0066ff]/10 px-3 py-1.5 text-sm font-semibold text-[#0066ff]"
+            >
+              Navigate
+            </a>
+          ) : (
+            <span className="inline-flex rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-500 dark:border-slate-600">
+              Add address or pin to navigate
+            </span>
+          )}
           {order.customerPhone ? (
             <a
               href={`tel:${order.customerPhone}`}
-              className="rounded-lg border px-3 py-1.5 text-sm font-medium"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold dark:border-slate-600 dark:bg-slate-900"
             >
-              Call Customer
+              Call customer
+            </a>
+          ) : null}
+          {waCustomer ? (
+            <a
+              href={waCustomer}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex rounded-lg border border-emerald-600 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-100"
+            >
+              WhatsApp (live location)
             </a>
           ) : null}
           {order.supportPhone ? (

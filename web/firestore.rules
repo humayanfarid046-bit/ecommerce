@@ -42,7 +42,7 @@ service cloud.firestore {
         'id', 'placedAt', 'totalRupees', 'methodLabel', 'paymentTxnId',
         'itemCount', 'status', 'shipmentStep', 'itemTitle', 'updatedAt',
         'customerName', 'customerPhone', 'deliveryPin', 'hubCity', 'lineItems',
-        'paymentStatus', 'deliveryAddress'
+        'paymentStatus', 'deliveryAddress', 'deliveryLandmark', 'deliveryLat', 'deliveryLng'
       ])
         && d.id == orderId
         && d.id is string && d.id.size() > 0 && d.id.size() <= 120
@@ -61,6 +61,9 @@ service cloud.firestore {
         && (!d.keys().hasAny(['lineItems']) || (d.lineItems is list && d.lineItems.size() <= 200))
         && (!d.keys().hasAny(['paymentStatus']) || d.paymentStatus in ['PENDING', 'PAID'])
         && (!d.keys().hasAny(['deliveryAddress']) || (d.deliveryAddress is string && d.deliveryAddress.size() <= 500))
+        && (!d.keys().hasAny(['deliveryLandmark']) || (d.deliveryLandmark is string && d.deliveryLandmark.size() <= 200))
+        && (!d.keys().hasAny(['deliveryLat']) || (d.deliveryLat is float && d.deliveryLat >= -90.0 && d.deliveryLat <= 90.0))
+        && (!d.keys().hasAny(['deliveryLng']) || (d.deliveryLng is float && d.deliveryLng >= -180.0 && d.deliveryLng <= 180.0))
         && (!d.keys().hasAny(['hubCity']) || (d.hubCity is string && d.hubCity.size() <= 120));
     }
 

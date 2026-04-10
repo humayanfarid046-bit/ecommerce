@@ -441,6 +441,13 @@
     "abandonBody": "You left checkout recently — your cart still has items. Continue where you left off (demo reminder after ~10 min).",
     "abandonCta": "Back to checkout",
     "abandonWaText": "Hi Libas — I'd like help with my cart (demo).",
+    "landmarkSectionTitle": "Landmark & map pin",
+    "landmarkLabel": "Nearby landmark (optional but helpful)",
+    "landmarkPlaceholder": "e.g. Near XYZ School, main market gate",
+    "landmarkHint": "A big shop, mosque, or school helps the rider find you faster. You can also drop your GPS pin below for one-tap directions.",
+    "landmarkPinCta": "Use my location (GPS pin)",
+    "landmarkPinLoading": "Getting location…",
+    "landmarkPinOk": "Location saved for the rider",
     "dismiss": "Dismiss"
   },
   "account": {

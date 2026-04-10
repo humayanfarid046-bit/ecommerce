@@ -75,6 +75,15 @@ export async function GET(req: Request) {
       customerName: r.customerName ?? "Customer",
       customerPhone: r.customerPhone ?? "",
       address: r.deliveryAddress ?? "",
+      landmark: r.deliveryLandmark ?? "",
+      deliveryLat:
+        typeof r.deliveryLat === "number" && Number.isFinite(r.deliveryLat)
+          ? r.deliveryLat
+          : null,
+      deliveryLng:
+        typeof r.deliveryLng === "number" && Number.isFinite(r.deliveryLng)
+          ? r.deliveryLng
+          : null,
       amount: r.totalRupees,
       paymentStatus: r.paymentStatus ?? "PENDING",
       deliveryPartnerId: r.deliveryPartnerId ?? "",

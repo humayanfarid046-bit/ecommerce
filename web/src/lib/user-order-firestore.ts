@@ -55,6 +55,11 @@ export type UserOrderRecord = {
   deliveryPartnerId?: string;
   deliveryPartnerName?: string;
   deliveryAddress?: string;
+  /** Nearby landmark (school, shop, mosque) — helps riders find the door. */
+  deliveryLandmark?: string;
+  /** Optional GPS from customer at checkout (browser geolocation). */
+  deliveryLat?: number;
+  deliveryLng?: number;
   deliveredById?: string;
   deliveredByName?: string;
   paidAt?: string;
@@ -154,6 +159,16 @@ export function parseUserOrderDocument(
       typeof x.deliveryPartnerName === "string" ? x.deliveryPartnerName : undefined,
     deliveryAddress:
       typeof x.deliveryAddress === "string" ? x.deliveryAddress : undefined,
+    deliveryLandmark:
+      typeof x.deliveryLandmark === "string" ? x.deliveryLandmark : undefined,
+    deliveryLat:
+      typeof x.deliveryLat === "number" && Number.isFinite(x.deliveryLat)
+        ? x.deliveryLat
+        : undefined,
+    deliveryLng:
+      typeof x.deliveryLng === "number" && Number.isFinite(x.deliveryLng)
+        ? x.deliveryLng
+        : undefined,
     deliveredById:
       typeof x.deliveredById === "string" ? x.deliveredById : undefined,
     deliveredByName:
