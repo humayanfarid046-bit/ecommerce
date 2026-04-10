@@ -11,8 +11,9 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "firebase:deploy": "firebase deploy --only firestore",
+    "firebase:deploy": "firebase deploy --only firestore,storage",
     "firebase:deploy:firestore": "node scripts/deploy-firestore-from-env.cjs",
+    "firebase:deploy:storage": "firebase deploy --only storage",
     "firebase:rules": "firebase deploy --only firestore:rules",
     "firebase:indexes": "firebase deploy --only firestore:indexes"
   },

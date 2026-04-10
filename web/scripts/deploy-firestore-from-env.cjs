@@ -6,6 +6,8 @@
  *   $env:FIREBASE_SERVICE_ACCOUNT_JSON = Get-Content C:\path\service-account.json -Raw
  *   $env:FIREBASE_PROJECT_ID = "your-project-id"   # optional if .firebaserc has default
  *   npm run firebase:deploy:firestore
+ *
+ * Deploys Firestore rules/indexes and Storage rules (see firebase.json).
  */
 
 const { writeFileSync, mkdtempSync, readFileSync, existsSync } = require("node:fs");
@@ -48,7 +50,16 @@ const env = { ...process.env, GOOGLE_APPLICATION_CREDENTIALS: credPath };
 const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const r = spawnSync(
   npx,
-  ["--yes", "firebase-tools@latest", "deploy", "--only", "firestore", "--project", project, "--non-interactive"],
+  [
+    "--yes",
+    "firebase-tools@13.35.1",
+    "deploy",
+    "--only",
+    "firestore,storage",
+    "--project",
+    project,
+    "--non-interactive",
+  ],
   { stdio: "inherit", env }
 );
 process.exit(r.status ?? 1);

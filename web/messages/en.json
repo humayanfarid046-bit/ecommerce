@@ -1134,6 +1134,7 @@
     "catalogLiveBannerSyncBody": "You have {localCount} product(s) locally; Firestore has none. After Save, check for “Cloud sync failed” or missing admin access. Other devices and logged-in customers will not see products until sync succeeds.",
     "catalogLiveBannerEmptyTitle": "No products on the live catalog yet",
     "catalogLiveBannerEmptyBody": "Add a product in the wizard and save. Large data-URL images are stripped before upload; use https image URLs or enable Storage if uploads fail.",
+    "catalogStorageHint": "Product photos: on cloud save, cropped images upload to Firebase Storage (catalog/images/…), then HTTPS links are stored in Firestore. Enable the default bucket in Firebase Console, set NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, deploy Storage rules (npm run firebase:deploy:firestore from web/).",
     "tabWizard": "Add / edit (wizard)",
     "tabCatalog": "Catalog & filters",
     "tabAddProduct": "Add / edit",

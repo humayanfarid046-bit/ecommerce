@@ -1,0 +1,19 @@
+rules_version = '2';
+
+/**
+ * Firebase Storage — catalog & CMS assets.
+ * Writes go only through the Admin SDK (Next.js /api/admin/storage-upload).
+ * Clients read public URLs (download token URLs generated on upload).
+ */
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /catalog/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /cms/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

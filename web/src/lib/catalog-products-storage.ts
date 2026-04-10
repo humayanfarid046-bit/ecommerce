@@ -94,6 +94,43 @@ export function getStorefrontProducts(): Product[] {
   return getMergedProducts();
 }
 
+async function uploadDataUrlImagesForCatalog(
+  products: Product[],
+  token: string
+): Promise<Product[]> {
+  const out: Product[] = [];
+  for (const p of products) {
+    const images: string[] = [];
+    for (const u of p.images ?? []) {
+      if (typeof u === "string" && u.startsWith("data:")) {
+        const res = await fetch("/api/admin/storage-upload", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ dataUrl: u, scope: "catalog" }),
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          url?: string;
+          error?: string;
+        };
+        if (!res.ok || !j.url) {
+          throw new Error(j.error ?? `Image upload failed (HTTP ${res.status})`);
+        }
+        images.push(j.url);
+      } else if (typeof u === "string" && u.trim()) {
+        images.push(u);
+      }
+    }
+    out.push({
+      ...p,
+      images: images.length ? images : (p.images ?? []),
+    });
+  }
+  return out;
+}
+
 async function tryPushCatalogToCloud(): Promise<void> {
   if (typeof window === "undefined") return;
   try {
@@ -104,7 +141,20 @@ async function tryPushCatalogToCloud(): Promise<void> {
       dispatchSaveStatus("cloud_skipped_auth");
       return;
     }
-    const products = readCatalogProducts().map(sanitizeProductForCloud);
+    let source = readCatalogProducts();
+    const hasDataUrls = source.some((p) =>
+      (p.images ?? []).some((u) => typeof u === "string" && u.startsWith("data:"))
+    );
+    if (hasDataUrls) {
+      try {
+        source = await uploadDataUrlImagesForCatalog(source, token);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Image upload failed";
+        dispatchSaveStatus("cloud_sync_failed", msg);
+        return;
+      }
+    }
+    const products = source.map(sanitizeProductForCloud);
     const res = await fetch("/api/admin/catalog", {
       method: "POST",
       headers: {
@@ -114,6 +164,9 @@ async function tryPushCatalogToCloud(): Promise<void> {
       body: JSON.stringify({ products }),
     });
     if (res.ok) {
+      if (hasDataUrls) {
+        writeCatalogProducts(source, { skipCloudPush: true, silent: true });
+      }
       const next = await fetchRemoteCatalogSnapshot();
       setRemoteCatalogSnapshot(next);
       dispatchSaveStatus("cloud_synced");
@@ -267,24 +320,27 @@ export function readCatalogProducts(): Product[] {
   }
 }
 
-export function writeCatalogProducts(next: Product[]): void {
+export function writeCatalogProducts(
+  next: Product[],
+  opts?: { skipCloudPush?: boolean; silent?: boolean }
+): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(KEY, JSON.stringify(next));
-    dispatchSaveStatus("local_saved");
+    if (!opts?.silent) dispatchSaveStatus("local_saved");
   } catch {
     // Quota-safe fallback: strip data URLs and large fields so product rows still persist.
     const compact = next.map(sanitizeProductForCloud);
     try {
       localStorage.setItem(KEY, JSON.stringify(compact));
-      dispatchSaveStatus("local_saved_compact");
+      if (!opts?.silent) dispatchSaveStatus("local_saved_compact");
     } catch {
-      dispatchSaveStatus("local_failed");
+      if (!opts?.silent) dispatchSaveStatus("local_failed");
       return;
     }
   }
   window.dispatchEvent(new CustomEvent(CATALOG_EVENT));
-  void tryPushCatalogToCloud();
+  if (!opts?.skipCloudPush) void tryPushCatalogToCloud();
 }
 
 export function upsertCatalogProduct(product: Product): void {

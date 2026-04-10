@@ -100,6 +100,7 @@ export function AdminProducts() {
       </div>
 
       <CatalogLiveBanner />
+      <p className="text-xs leading-relaxed text-slate-500">{t("catalogStorageHint")}</p>
 
       <div className="flex flex-wrap gap-2">
         {tabs.map((x) => (

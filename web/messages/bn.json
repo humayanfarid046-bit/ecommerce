@@ -1134,6 +1134,7 @@
     "catalogLiveBannerSyncBody": "লোকালি {localCount} টি পণ্য আছে; Firestore-এ কিছু নেই। সেভের পর “Cloud sync failed” বা অ্যাডমিন অ্যাক্সেস দেখুন। সিঙ্ক না হলে অন্য ফোন/লগইন ইউজার পণ্য দেখবে না।",
     "catalogLiveBannerEmptyTitle": "লাইভ ক্যাটালগে এখনো কোনো পণ্য নেই",
     "catalogLiveBannerEmptyBody": "উইজার্ডে পণ্য যোগ করে সেভ করুন। বড় data-URL ছবি আপলোডের আগে কেটে যায়; https ছবির লিংক ব্যবহার করুন বা Storage চালু করুন।",
+    "catalogStorageHint": "পণ্যের ছবি: ক্লাউড সেভে ক্রপ করা ছবি Firebase Storage-এ (catalog/images/…) যায়, তারপর Firestore-এ HTTPS লিংক। কনসোলে বাকেট চালু করুন, NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET সেট করুন, Storage রুল ডিপ্লয় করুন (web/ থেকে npm run firebase:deploy:firestore)।",
     "tabWizard": "যোগ / সম্পাদনা (উইজার্ড)",
     "tabCatalog": "ক্যাটালগ ও ফিল্টার",
     "tabAddProduct": "যোগ / সম্পাদনা",
