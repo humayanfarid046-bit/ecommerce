@@ -2,7 +2,15 @@
 
 import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
-import { ShoppingCart, User, Menu, Heart, X, CircleHelp } from "lucide-react";
+import {
+  ShoppingCart,
+  User,
+  Menu,
+  Heart,
+  X,
+  CircleHelp,
+  ChevronRight,
+} from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { SearchBar } from "@/components/search-bar";
 import { CategoryNav } from "@/components/category-nav";
@@ -16,6 +24,91 @@ import { useTranslations } from "next-intl";
 import { useWishlist } from "@/context/wishlist-context";
 import { useCartFlight } from "@/context/cart-flight-context";
 import { useAuth } from "@/context/auth-context";
+import { categories } from "@/lib/storefront-catalog";
+import { useMobileDrawer } from "@/context/mobile-drawer-context";
+
+function CategoryDrawerAccordion({
+  onPick,
+}: {
+  onPick: () => void;
+}) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const tc = useTranslations("categories");
+  const ts = useTranslations("categorySub");
+
+  return (
+    <div className="space-y-0.5">
+      {categories.map((c) => {
+        const hasChildren = Boolean(c.children?.length);
+        const expanded = openId === c.id;
+        const title = tc(c.slug);
+        if (!hasChildren) {
+          return (
+            <Link
+              key={c.id}
+              href={`/category/${c.slug}`}
+              onClick={onPick}
+              className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-3 text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
+            >
+              <span className="text-lg" aria-hidden>
+                {c.icon}
+              </span>
+              <span className="min-w-0 truncate">{title}</span>
+              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+            </Link>
+          );
+        }
+        return (
+          <div
+            key={c.id}
+            className="rounded-lg border border-slate-100 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-800/50"
+          >
+            <button
+              type="button"
+              onClick={() => setOpenId(expanded ? null : c.id)}
+              className="flex w-full items-center justify-between gap-2 px-3 py-3 text-left text-sm font-semibold text-slate-800 dark:text-slate-100"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="text-lg" aria-hidden>
+                  {c.icon}
+                </span>
+                <span className="truncate">{title}</span>
+              </span>
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 shrink-0 text-slate-400 transition-transform",
+                  expanded && "rotate-90"
+                )}
+                aria-hidden
+              />
+            </button>
+            {expanded ? (
+              <div className="border-t border-slate-100 px-2 py-2 dark:border-slate-600">
+                <Link
+                  href={`/category/${c.slug}`}
+                  className="block rounded-md px-3 py-2 text-sm font-medium text-[#2874f0]"
+                  onClick={onPick}
+                >
+                  {tc("viewAllInCategory", { name: title })}
+                </Link>
+                {c.children!.map((ch) => (
+                  <Link
+                    key={ch.slug}
+                    href={`/category/${c.slug}?sub=${ch.slug}`}
+                    className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-700/80"
+                    onClick={onPick}
+                  >
+                    {ts(ch.slug)}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const { user, status: authStatus } = useAuth();
@@ -23,9 +116,14 @@ export function SiteHeader() {
   const { items } = useCart();
   const { ids: wishIds } = useWishlist();
   const count = items.reduce((s, i) => s + i.qty, 0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { drawerOpen, openDrawer, closeDrawer } = useMobileDrawer();
   const t = useTranslations("nav");
   const tb = useTranslations("brand");
+
+  const displayName =
+    user?.displayName?.trim() ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    "";
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -38,7 +136,6 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-      {/* Flipkart-style primary bar */}
       <div className="bg-[#2874f0] text-white">
         <div
           className={`${STORE_SHELL} flex flex-wrap items-center gap-2 py-2 md:gap-4 md:py-2.5`}
@@ -55,7 +152,7 @@ export function SiteHeader() {
               type="button"
               className="rounded-md p-2 text-white hover:bg-white/10 md:hidden"
               aria-label={t("menu")}
-              onClick={() => setDrawerOpen(true)}
+              onClick={() => openDrawer()}
             >
               <Menu className="h-6 w-6" strokeWidth={2} />
             </button>
@@ -99,12 +196,6 @@ export function SiteHeader() {
               </Link>
             )}
             <Link
-              href="/admin"
-              className="hidden px-2 text-sm font-semibold text-white hover:underline lg:block"
-            >
-              Admin
-            </Link>
-            <Link
               href="/wishlist"
               className="relative rounded-md p-2 text-white hover:bg-white/10 md:p-2.5"
               aria-label={t("wishlist")}
@@ -136,23 +227,27 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Category strip — white bar like Flipkart */}
+      {/* Mobile: horizontal category icons */}
+      <div className="border-b border-slate-200 bg-white md:hidden">
+        <CategoryNav variant="mobileScroll" />
+      </div>
+
+      {/* Desktop category strip */}
       <div className="hidden border-b border-slate-200 bg-white shadow-sm md:block">
         <CategoryNav flipkartStyle />
       </div>
 
-      {/* Mobile slide-out menu */}
       <div
         role="presentation"
         className={cn(
           "fixed inset-0 z-[60] bg-black/40 transition-opacity md:hidden",
           drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
-        onClick={() => setDrawerOpen(false)}
+        onClick={() => closeDrawer()}
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-3rem,300px)] flex-col bg-white shadow-xl transition-transform duration-300 ease-out md:hidden",
+          "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-2.5rem,320px)] flex-col bg-white shadow-xl transition-transform duration-300 ease-out md:hidden",
           drawerOpen
             ? "translate-x-0 pointer-events-auto"
             : "-translate-x-full pointer-events-none"
@@ -160,60 +255,75 @@ export function SiteHeader() {
         aria-hidden={!drawerOpen}
       >
         <div className="flex items-center justify-between border-b border-slate-200 bg-[#2874f0] px-4 py-3 text-white">
-          <span className="font-bold">{t("menu")}</span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/90">
+              {t("drawerWelcome")}
+            </p>
+            <p className="truncate text-sm font-bold">
+              {authStatus === "ready" && user
+                ? displayName || user.email || t("user")
+                : t("drawerGuest")}
+            </p>
+          </div>
           <button
             type="button"
             className="rounded-md p-1.5 hover:bg-white/15"
             aria-label={t("closeMenu")}
-            onClick={() => setDrawerOpen(false)}
+            onClick={() => closeDrawer()}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+
+        <div className="mt-3 flex flex-1 flex-col overflow-hidden px-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+            {t("drawerShopBy")}
+          </p>
+          <div className="mt-2 flex-1 overflow-y-auto overscroll-contain pb-4">
+            <CategoryDrawerAccordion onPick={() => closeDrawer()} />
+          </div>
+        </div>
+
+        <div className="mt-auto border-t border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-900/90">
           {authStatus === "ready" && user ? (
             <Link
               href="/account"
-              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-              onClick={() => setDrawerOpen(false)}
+              className="mb-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+              onClick={() => closeDrawer()}
             >
-              {t("account")}
+              <User className="h-4 w-4 text-[#2874f0]" />
+              {t("drawerMyAccount")}
             </Link>
           ) : (
             <Link
               href="/login"
-              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-              onClick={() => setDrawerOpen(false)}
+              className="mb-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+              onClick={() => closeDrawer()}
             >
+              <User className="h-4 w-4 text-[#2874f0]" />
               {t("login")}
             </Link>
           )}
-          <Link
-            href="/admin"
-            className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-            onClick={() => setDrawerOpen(false)}
-          >
-            Admin
-          </Link>
-          <Link
-            href="/help"
-            className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-            onClick={() => setDrawerOpen(false)}
-          >
-            <CircleHelp className="h-4 w-4 text-[#2874f0]" />
-            {t("helpSupport")}
-          </Link>
-          <div className="my-2 border-t border-slate-100" />
-          <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="flex items-center justify-between rounded-lg px-2 py-2">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              {t("languageLabel")}
+            </span>
+            <LanguageSwitcher />
+          </div>
+          <div className="flex items-center justify-between rounded-lg px-2 py-2">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
               {t("themeToggle")}
             </span>
             <ThemeToggle />
           </div>
-          <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-xs font-semibold text-slate-500">Language</span>
-            <LanguageSwitcher />
-          </div>
+          <Link
+            href="/help"
+            className="mt-1 flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            onClick={() => closeDrawer()}
+          >
+            <CircleHelp className="h-4 w-4 text-[#2874f0]" />
+            {t("helpSupport")}
+          </Link>
         </div>
       </aside>
     </header>

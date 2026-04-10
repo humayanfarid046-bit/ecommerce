@@ -15,31 +15,34 @@ import { CompareBar } from "@/components/compare-bar";
 import { EngagementHub } from "@/components/engagement-hub";
 import { AnalyticsPixels } from "@/components/analytics-pixels";
 import { ClientRedirectHandler } from "@/components/client-redirect-handler";
+import { MobileDrawerProvider } from "@/context/mobile-drawer-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <CartFlightProvider>
         <AuthProvider>
-          <AddressesProvider>
-            <WishlistProvider>
-              <NotificationsProvider>
-                <RecentProvider>
-                  <CompareProvider>
-                    <CartProvider>
-                      <ClientRedirectHandler />
-                      <AnalyticsPixels />
-                      {children}
-                      <AbandonedCheckoutReminder />
-                      <SupportChat />
-                      <CompareBar />
-                      <EngagementHub />
-                    </CartProvider>
-                  </CompareProvider>
-                </RecentProvider>
-              </NotificationsProvider>
-            </WishlistProvider>
-          </AddressesProvider>
+          <MobileDrawerProvider>
+            <AddressesProvider>
+              <WishlistProvider>
+                <NotificationsProvider>
+                  <RecentProvider>
+                    <CompareProvider>
+                      <CartProvider>
+                        <ClientRedirectHandler />
+                        <AnalyticsPixels />
+                        {children}
+                        <AbandonedCheckoutReminder />
+                        <SupportChat />
+                        <CompareBar />
+                        <EngagementHub />
+                      </CartProvider>
+                    </CompareProvider>
+                  </RecentProvider>
+                </NotificationsProvider>
+              </WishlistProvider>
+            </AddressesProvider>
+          </MobileDrawerProvider>
         </AuthProvider>
       </CartFlightProvider>
     </ThemeProvider>

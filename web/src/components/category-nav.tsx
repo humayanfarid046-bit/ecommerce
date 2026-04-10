@@ -11,12 +11,47 @@ import { STORE_SHELL } from "@/lib/store-layout";
 
 type NavProps = {
   flipkartStyle?: boolean;
+  /** Horizontal circular icons — mobile storefront strip below header. */
+  variant?: "default" | "mobileScroll";
 };
 
-export function CategoryNav({ flipkartStyle = false }: NavProps) {
+export function CategoryNav({
+  flipkartStyle = false,
+  variant = "default",
+}: NavProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const tc = useTranslations("categories");
   const ts = useTranslations("categorySub");
+
+  if (variant === "mobileScroll") {
+    return (
+      <nav
+        className="flex w-full gap-3 overflow-x-auto px-3 pb-2 pt-2 [scrollbar-width:none] sm:gap-4 sm:px-4 [&::-webkit-scrollbar]:hidden"
+        aria-label={tc("ariaCategories")}
+      >
+        {categories.map((c) => (
+          <Link
+            key={c.id}
+            href={`/category/${c.slug}`}
+            className="flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-1.5 sm:w-[4.75rem]"
+          >
+            <span
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-xl shadow-sm",
+                "ring-1 ring-slate-100/80 dark:border-slate-700 dark:bg-slate-800 dark:ring-slate-700"
+              )}
+              aria-hidden
+            >
+              {c.icon}
+            </span>
+            <span className="line-clamp-2 w-full text-center text-[10px] font-semibold leading-tight text-slate-700 dark:text-slate-200">
+              {tc(c.slug)}
+            </span>
+          </Link>
+        ))}
+      </nav>
+    );
+  }
 
   return (
     <nav

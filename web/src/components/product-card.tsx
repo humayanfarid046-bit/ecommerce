@@ -53,7 +53,7 @@ export function ProductCard({
           className="absolute inset-0 block"
           aria-label={product.title}
         >
-          <div className="absolute inset-0 p-2">
+          <div className="absolute inset-0 p-1.5 sm:p-2">
             <div className="relative h-full w-full">
               <Image
                 src={product.images[0] ?? "/vercel.svg"}

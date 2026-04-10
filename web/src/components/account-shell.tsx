@@ -4,6 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/context/auth-context";
 import { AccountSidebar } from "@/components/account-sidebar";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
+import { permissionsForScope } from "@/lib/panel-access";
 
 const NAV_ICONS = [
   "LayoutDashboard",
@@ -16,6 +18,12 @@ const NAV_ICONS = [
 export function AccountShell({ children }: { children: React.ReactNode }) {
   const { user, signOut, status } = useAuth();
   const t = useTranslations("account");
+
+  const showManageStore = useMemo(() => {
+    if (!user?.accessScopeReady) return false;
+    const p = permissionsForScope(user.accessScope ?? "none");
+    return Object.values(p).some(Boolean);
+  }, [user?.accessScope, user?.accessScopeReady]);
 
   if (status === "loading") {
     return (
@@ -47,6 +55,15 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
     { href: "/account/wishlist", label: t("navWishlist"), icon: NAV_ICONS[2] },
     { href: "/account/settings", label: t("navSettings"), icon: NAV_ICONS[3] },
     { href: "/account/payments", label: t("navPayments"), icon: NAV_ICONS[4] },
+    ...(showManageStore
+      ? [
+          {
+            href: "/admin",
+            label: t("navManageStore"),
+            icon: "Store" as const,
+          },
+        ]
+      : []),
   ];
 
   return (

@@ -8,6 +8,7 @@ import {
   Heart,
   Settings,
   CreditCard,
+  Store,
 } from "lucide-react";
 
 type Item = {
@@ -28,6 +29,7 @@ export function AccountSidebar({
     Heart,
     Settings,
     CreditCard,
+    Store,
   } as const;
 
   const resolved: Item[] = items.map((i) => ({

@@ -137,11 +137,6 @@ export async function SiteFooter() {
                   {t("wishlist")}
                 </Link>
               </li>
-              <li>
-                <Link href="/admin" className={linkClass}>
-                  {t("admin")}
-                </Link>
-              </li>
             </ul>
           </div>
 

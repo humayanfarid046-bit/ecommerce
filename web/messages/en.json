@@ -19,11 +19,18 @@
     "becomeSeller": "Admin panel",
     "closeMenu": "Close menu",
     "bottomHome": "Home",
-    "bottomCategories": "Browse",
+    "bottomCategories": "Categories",
+    "bottomSearch": "Search",
     "bottomAccount": "Account",
     "bottomNavAria": "Bottom navigation",
     "helpShort": "Help",
-    "helpSupport": "Help & support"
+    "helpSupport": "Help & support",
+    "drawerWelcome": "Welcome",
+    "drawerGuest": "Guest shopper",
+    "drawerShopBy": "Shop by category",
+    "drawerMyAccount": "My account",
+    "languageLabel": "Language",
+    "user": "Member"
   },
   "share": {
     "share": "Share link",
@@ -133,6 +140,8 @@
     "metaDescription": "Shop {name} online at AJH Libas Collection — curated styles, secure checkout."
   },
   "categories": {
+    "ariaCategories": "Browse categories",
+    "viewAllInCategory": "All in {name}",
     "mens-wear": "Men's wear",
     "womens-wear": "Women's wear",
     "kids-wear": "Kids' wear",
@@ -476,6 +485,7 @@
     "navWishlist": "Wishlist",
     "navSettings": "Settings",
     "navPayments": "Payments",
+    "navManageStore": "Manage store",
     "memberPremium": "Premium member",
     "memberRegular": "Regular member",
     "profileAvatarOpen": "View profile picture",

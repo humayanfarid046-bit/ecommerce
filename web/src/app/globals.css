@@ -212,7 +212,7 @@ html.dark .glass-card-product {
 @media (min-width: 640px) {
   .product-grid-fluid {
     gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
   }
 }
 

@@ -19,11 +19,18 @@
     "becomeSeller": "অ্যাডমিন প্যানেল",
     "closeMenu": "মেনু বন্ধ",
     "bottomHome": "হোম",
-    "bottomCategories": "ব্রাউজ",
+    "bottomCategories": "ক্যাটাগরি",
+    "bottomSearch": "সার্চ",
     "bottomAccount": "অ্যাকাউন্ট",
     "bottomNavAria": "নিচের নেভিগেশন",
     "helpShort": "হেল্প",
-    "helpSupport": "হেল্প ও সাপোর্ট"
+    "helpSupport": "হেল্প ও সাপোর্ট",
+    "drawerWelcome": "স্বাগতম",
+    "drawerGuest": "অতিথি ক্রেতা",
+    "drawerShopBy": "ক্যাটাগরি অনুযায়ী কেনাকাটা",
+    "drawerMyAccount": "আমার অ্যাকাউন্ট",
+    "languageLabel": "ভাষা",
+    "user": "মেম্বার"
   },
   "share": {
     "share": "লিঙ্ক শেয়ার",
@@ -133,6 +140,8 @@
     "metaDescription": "AJH Libas Collection এ {name} অনলাইনে কিনুন — নির্বাচিত স্টাইল, নিরাপদ চেকআউট।"
   },
   "categories": {
+    "ariaCategories": "ক্যাটাগরি ব্রাউজ করুন",
+    "viewAllInCategory": "{name} — সব দেখুন",
     "mens-wear": "পুরুষের পোশাক",
     "womens-wear": "মহিলাদের পোশাক",
     "kids-wear": "শিশু ও কিশোরদের পোশাক",
@@ -476,6 +485,7 @@
     "navWishlist": "উইশলিস্ট",
     "navSettings": "সেটিংস",
     "navPayments": "পেমেন্ট",
+    "navManageStore": "স্টোর ম্যানেজ করুন",
     "memberPremium": "প্রিমিয়াম মেম্বার",
     "memberRegular": "রেগুলার মেম্বার",
     "profileAvatarOpen": "প্রোফাইল ছবি দেখুন",
