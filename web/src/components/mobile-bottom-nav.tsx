@@ -75,7 +75,7 @@ export function MobileBottomNav() {
             <button
               key="categories-drawer"
               type="button"
-              onClick={() => openDrawer()}
+              onClick={() => openDrawer("categories")}
               className={cn(
                 "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1 text-[9px] font-semibold leading-tight sm:text-[10px]",
                 active ? "text-[#5ab0ff]" : "text-slate-400"

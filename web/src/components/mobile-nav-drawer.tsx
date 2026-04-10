@@ -38,6 +38,7 @@ import { ProfileAvatarPreview } from "@/components/profile-avatar-preview";
 import { DrawerCategoryAccordion } from "@/components/drawer-category-accordion";
 import { DrawerOutfitChips } from "@/components/drawer-outfit-chips";
 import { getSupportState, logWhatsAppClick } from "@/lib/support-review-storage";
+import { useMobileDrawer } from "@/context/mobile-drawer-context";
 
 function Divider() {
   return (
@@ -89,12 +90,9 @@ function DrawerRow({ href, icon, label, onNavigate, hint }: RowProps) {
   );
 }
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
-};
-
-export function MobileNavDrawer({ open, onClose }: Props) {
+export function MobileNavDrawer() {
+  const { drawerOpen, closeDrawer, drawerMode } = useMobileDrawer();
+  const isCategoryOnly = drawerMode === "categories";
   const { user, status: authStatus, signOut } = useAuth();
   const t = useTranslations("nav");
   const ta = useTranslations("account");
@@ -165,21 +163,21 @@ export function MobileNavDrawer({ open, onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!open) setLogoutAsk(false);
-  }, [open]);
+    if (!drawerOpen) setLogoutAsk(false);
+  }, [drawerOpen]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!drawerOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [open]);
+  }, [drawerOpen]);
 
   useEffect(() => {
-    if (open) setGamifyTick((x) => x + 1);
-  }, [open]);
+    if (drawerOpen) setGamifyTick((x) => x + 1);
+  }, [drawerOpen]);
 
   const displayName = useMemo(() => {
     const saved = profile.displayName?.trim();
@@ -203,7 +201,7 @@ export function MobileNavDrawer({ open, onClose }: Props) {
     return loadGamification().points;
   }, [gamifyTick]);
 
-  const close = () => onClose();
+  const close = () => closeDrawer();
 
   const signedIn = authStatus === "ready" && Boolean(user);
 
@@ -213,19 +211,23 @@ export function MobileNavDrawer({ open, onClose }: Props) {
         role="presentation"
         className={cn(
           "fixed inset-0 z-[60] bg-black/40 transition-opacity md:hidden",
-          open ? "opacity-100" : "pointer-events-none opacity-0"
+          drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
         onClick={close}
       />
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-2rem,340px)] flex-col bg-slate-100 shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
-          open ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none"
+          drawerOpen
+            ? "translate-x-0 pointer-events-auto"
+            : "-translate-x-full pointer-events-none"
         )}
-        aria-hidden={!open}
+        aria-hidden={!drawerOpen}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-[#2874f0] px-3 py-3 text-white dark:border-slate-700">
-          <p className="text-sm font-bold">{t("drawerMenuTitle")}</p>
+          <p className="text-sm font-bold">
+            {isCategoryOnly ? t("drawerGroupCategories") : t("drawerMenuTitle")}
+          </p>
           <button
             type="button"
             className="rounded-lg p-2 hover:bg-white/15"
@@ -238,6 +240,16 @@ export function MobileNavDrawer({ open, onClose }: Props) {
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-4 pt-3">
+            {isCategoryOnly ? (
+              <div className="space-y-3">
+                <p className="text-xs leading-snug text-slate-600 dark:text-slate-400">
+                  {t("drawerCategoriesHint")}
+                </p>
+                <DrawerCategoryAccordion onPick={close} />
+                <DrawerOutfitChips onPick={close} />
+              </div>
+            ) : (
+              <>
             <GroupLabel>{t("drawerGroupProfile")}</GroupLabel>
             <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               {signedIn ? (
@@ -364,13 +376,6 @@ export function MobileNavDrawer({ open, onClose }: Props) {
                 icon={<Heart className="h-4 w-4" />}
                 label={t("drawerMyWishlist")}
               />
-            </div>
-
-            <Divider />
-            <GroupLabel>{t("drawerGroupCategories")}</GroupLabel>
-            <DrawerCategoryAccordion onPick={close} />
-            <div className="mt-3">
-              <DrawerOutfitChips onPick={close} />
             </div>
 
             <Divider />
@@ -527,6 +532,8 @@ export function MobileNavDrawer({ open, onClose }: Props) {
               <ShoppingBag className="h-4 w-4" />
               {t("drawerMyAccountFull")}
             </Link>
+              </>
+            )}
           </div>
         </div>
       </aside>

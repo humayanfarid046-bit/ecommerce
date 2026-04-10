@@ -29,7 +29,7 @@ export function SiteHeader() {
   const { items } = useCart();
   const { ids: wishIds } = useWishlist();
   const count = items.reduce((s, i) => s + i.qty, 0);
-  const { drawerOpen, openDrawer, closeDrawer } = useMobileDrawer();
+  const { openDrawer } = useMobileDrawer();
   const t = useTranslations("nav");
   const tb = useTranslations("brand");
 
@@ -45,7 +45,7 @@ export function SiteHeader() {
                 type="button"
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10 md:hidden"
                 aria-label={t("menu")}
-                onClick={() => openDrawer()}
+                onClick={() => openDrawer("menu")}
               >
                 <Menu className="h-6 w-6" strokeWidth={2} />
               </button>
@@ -137,7 +137,7 @@ export function SiteHeader() {
         <CategoryNav flipkartStyle />
       </div>
 
-      <MobileNavDrawer open={drawerOpen} onClose={closeDrawer} />
+      <MobileNavDrawer />
     </header>
   );
 }

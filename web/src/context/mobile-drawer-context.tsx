@@ -8,9 +8,13 @@ import {
   useState,
 } from "react";
 
+export type MobileDrawerMode = "menu" | "categories";
+
 type MobileDrawerContextValue = {
   drawerOpen: boolean;
-  openDrawer: () => void;
+  /** `menu` = full site overview (hamburger). `categories` = browse categories only (bottom nav). */
+  drawerMode: MobileDrawerMode;
+  openDrawer: (mode?: MobileDrawerMode) => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
 };
@@ -25,12 +29,25 @@ export function MobileDrawerProvider({
   children: React.ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const [drawerMode, setDrawerMode] = useState<MobileDrawerMode>("menu");
+  const openDrawer = useCallback((mode: MobileDrawerMode = "menu") => {
+    setDrawerMode(mode);
+    setDrawerOpen(true);
+  }, []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
-  const toggleDrawer = useCallback(() => setDrawerOpen((o) => !o), []);
+  const toggleDrawer = useCallback(() => {
+    setDrawerMode("menu");
+    setDrawerOpen((o) => !o);
+  }, []);
   const value = useMemo(
-    () => ({ drawerOpen, openDrawer, closeDrawer, toggleDrawer }),
-    [drawerOpen, openDrawer, closeDrawer, toggleDrawer]
+    () => ({
+      drawerOpen,
+      drawerMode,
+      openDrawer,
+      closeDrawer,
+      toggleDrawer,
+    }),
+    [drawerOpen, drawerMode, openDrawer, closeDrawer, toggleDrawer]
   );
   return (
     <MobileDrawerContext.Provider value={value}>
