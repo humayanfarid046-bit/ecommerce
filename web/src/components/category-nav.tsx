@@ -37,14 +37,14 @@ export function CategoryNav({
           >
             <span
               className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-slate-50 text-xl shadow-sm",
-                "ring-1 ring-slate-100/80 dark:border-slate-700 dark:bg-slate-800 dark:ring-slate-700"
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl shadow-sm",
+                "dark:border-slate-600 dark:bg-white"
               )}
               aria-hidden
             >
               {c.icon}
             </span>
-            <span className="line-clamp-2 w-full text-center text-[10px] font-semibold leading-tight text-slate-700 dark:text-slate-200">
+            <span className="line-clamp-2 min-h-[2.25rem] w-full max-w-[4.75rem] text-center text-[10px] font-semibold leading-tight text-slate-800 dark:text-slate-100">
               {tc(c.slug)}
             </span>
           </Link>

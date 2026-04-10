@@ -30,7 +30,7 @@ export function WhatsAppChatWidget() {
           /* ignore */
         }
       }}
-      className="fixed bottom-[4.75rem] right-4 z-[53] flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:shadow-xl md:bottom-8 md:right-8 md:h-14 md:w-14"
+      className="fixed bottom-[4.75rem] right-4 z-[53] hidden h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:shadow-xl md:bottom-8 md:right-8 md:flex md:h-14 md:w-14"
       aria-label={t("whatsappChat")}
       title={t("whatsappChat")}
     >

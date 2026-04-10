@@ -69,7 +69,7 @@ export function SocialProofToast({ productTitle }: Props) {
           animate={{ opacity: 1, x: 0, y: 0 }}
           exit={{ opacity: 0, x: 24 }}
           transition={{ type: "spring", stiffness: 380, damping: 28 }}
-          className="pointer-events-none fixed bottom-6 right-4 z-[55] max-w-[min(100vw-2rem,320px)] rounded-2xl border border-slate-200/90 bg-white/95 p-3 shadow-[0_12px_40px_rgba(0,102,255,0.15)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 md:bottom-8 md:right-8"
+          className="pointer-events-none fixed bottom-6 right-4 z-[55] hidden max-w-[min(100vw-2rem,320px)] rounded-2xl border border-slate-200/90 bg-white/95 p-3 shadow-[0_12px_40px_rgba(0,102,255,0.15)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 md:bottom-8 md:right-8 md:block"
           role="status"
         >
           <div className="flex gap-3">

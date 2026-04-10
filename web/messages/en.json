@@ -30,7 +30,10 @@
     "drawerShopBy": "Shop by category",
     "drawerMyAccount": "My account",
     "languageLabel": "Language",
-    "user": "Member"
+    "user": "Member",
+    "drawerSupportChat": "Support chat",
+    "drawerWhatsApp": "WhatsApp us",
+    "drawerRewards": "Rewards & spin"
   },
   "share": {
     "share": "Share link",

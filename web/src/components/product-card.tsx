@@ -47,7 +47,7 @@ export function ProductCard({
         className
       )}
     >
-      <div className="product-card-image-well relative aspect-square min-h-0 overflow-hidden">
+      <div className="product-card-image-well relative aspect-[3/4] w-full max-h-[min(46vw,210px)] min-h-0 overflow-hidden sm:max-h-none">
         <Link
           href={`/product/${product.id}`}
           className="absolute inset-0 block"
@@ -109,12 +109,12 @@ export function ProductCard({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 border-t border-[#E5E7EB] p-3 text-left">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+      <div className="flex flex-1 flex-col gap-1 border-t border-[#E5E7EB] p-2 text-left sm:gap-1.5 sm:p-3">
+        <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[10px]">
           {product.brand}
         </p>
         <Link href={`/product/${product.id}`}>
-          <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-[#1F2937] transition hover:text-[#2874f0] md:text-sm">
+          <h3 className="line-clamp-2 text-[11px] font-medium leading-snug text-[#1F2937] transition hover:text-[#2874f0] sm:text-[13px] md:text-sm">
             {product.title}
           </h3>
         </Link>
@@ -136,7 +136,7 @@ export function ProductCard({
             addCompare(product.id);
           }}
           className={cn(
-            "mt-1 flex w-full items-center justify-center gap-1.5 rounded-sm border py-2 text-xs font-semibold transition",
+            "mt-1 hidden w-full items-center justify-center gap-1.5 rounded-sm border py-2 text-xs font-semibold transition sm:flex",
             inCompare(product.id)
               ? "border-emerald-500/50 bg-emerald-50 text-emerald-800"
               : "border-slate-200 bg-white text-slate-700 hover:border-[#2874f0]/40"
@@ -155,7 +155,7 @@ export function ProductCard({
           }}
           rippleClassName="bg-white/30"
           className={cn(
-            "w-full rounded-md py-2.5 text-sm font-bold tracking-wide shadow-sm transition",
+            "w-full rounded-md py-2 text-xs font-bold tracking-wide shadow-sm transition sm:py-2.5 sm:text-sm",
             product.inStock
               ? "bg-[#2874f0] text-white hover:bg-[#1a65d8]"
               : "cursor-not-allowed bg-slate-200 text-slate-500"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, X, ExternalLink } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
@@ -12,12 +12,18 @@ export function SupportChat() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("chat");
 
+  useEffect(() => {
+    const fn = () => setOpen(true);
+    window.addEventListener("lc-open-support-chat", fn);
+    return () => window.removeEventListener("lc-open-support-chat", fn);
+  }, []);
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-[#0066ff] text-white shadow-[0_8px_32px_rgba(0,102,255,0.45)] transition hover:bg-[#0052cc] md:bottom-8 md:right-8"
+        className="fixed bottom-5 right-5 z-[60] hidden h-14 w-14 items-center justify-center rounded-full bg-[#0066ff] text-white shadow-[0_8px_32px_rgba(0,102,255,0.45)] transition hover:bg-[#0052cc] md:bottom-8 md:right-8 md:flex"
         aria-label={t("openChat")}
       >
         <MessageCircle className="h-7 w-7" />

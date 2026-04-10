@@ -22,6 +22,12 @@ export function EngagementHub() {
     setState(loadGamification());
   }, [open]);
 
+  useEffect(() => {
+    const openFromMenu = () => setOpen(true);
+    window.addEventListener("lc-open-engagement-hub", openFromMenu);
+    return () => window.removeEventListener("lc-open-engagement-hub", openFromMenu);
+  }, []);
+
   const today = todayKey();
   const canCheckIn = state.lastCheckIn !== today;
   const canSpin = !state.spinWheelUsed;
@@ -54,7 +60,7 @@ export function EngagementHub() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-28 right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#0066ff] to-[#7c3aed] text-white shadow-[0_8px_32px_rgba(0,102,255,0.45)] transition hover:scale-105 md:bottom-32"
+        className="fixed bottom-28 right-4 z-[60] hidden h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#0066ff] to-[#7c3aed] text-white shadow-[0_8px_32px_rgba(0,102,255,0.45)] transition hover:scale-105 md:bottom-32 md:flex"
         aria-label={t("openFab")}
       >
         <Gift className="h-6 w-6" />

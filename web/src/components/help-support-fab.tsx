@@ -11,7 +11,7 @@ export function HelpSupportFab() {
   return (
     <Link
       href="/help"
-      className="fixed bottom-[4.75rem] left-4 z-[53] flex h-12 w-12 items-center justify-center rounded-full bg-[#2874f0] text-white shadow-lg transition hover:scale-105 hover:shadow-xl md:bottom-8 md:left-8 md:h-14 md:w-14"
+      className="fixed bottom-[4.75rem] left-4 z-[53] hidden h-12 w-12 items-center justify-center rounded-full bg-[#2874f0] text-white shadow-lg transition hover:scale-105 hover:shadow-xl md:bottom-8 md:left-8 md:flex md:h-14 md:w-14"
       aria-label={t("helpSupport")}
       title={t("helpSupport")}
     >

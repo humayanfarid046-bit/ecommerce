@@ -30,7 +30,10 @@
     "drawerShopBy": "ক্যাটাগরি অনুযায়ী কেনাকাটা",
     "drawerMyAccount": "আমার অ্যাকাউন্ট",
     "languageLabel": "ভাষা",
-    "user": "মেম্বার"
+    "user": "মেম্বার",
+    "drawerSupportChat": "সাপোর্ট চ্যাট",
+    "drawerWhatsApp": "হোয়াটসঅ্যাপ",
+    "drawerRewards": "রিওয়ার্ড ও স্পিন"
   },
   "share": {
     "share": "লিঙ্ক শেয়ার",

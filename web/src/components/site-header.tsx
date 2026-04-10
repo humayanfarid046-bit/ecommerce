@@ -10,6 +10,8 @@ import {
   X,
   CircleHelp,
   ChevronRight,
+  Gift,
+  MessageCircle,
 } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { SearchBar } from "@/components/search-bar";
@@ -26,6 +28,7 @@ import { useCartFlight } from "@/context/cart-flight-context";
 import { useAuth } from "@/context/auth-context";
 import { categories } from "@/lib/storefront-catalog";
 import { useMobileDrawer } from "@/context/mobile-drawer-context";
+import { getSupportState, logWhatsAppClick } from "@/lib/support-review-storage";
 
 function CategoryDrawerAccordion({
   onPick,
@@ -124,6 +127,21 @@ export function SiteHeader() {
     user?.displayName?.trim() ||
     (user?.email ? user.email.split("@")[0] : "") ||
     "";
+
+  const [waHref, setWaHref] = useState(
+    "https://wa.me/919876543210?text=Hi%20%E2%80%94%20I%20need%20help%20with%20my%20order."
+  );
+  useEffect(() => {
+    const sync = () => {
+      const num = getSupportState().chatConfig.whatsappE164.replace(/\D/g, "");
+      setWaHref(
+        `https://wa.me/${num}?text=${encodeURIComponent("Hi — I need help with my order.")}`
+      );
+    };
+    sync();
+    window.addEventListener("lc-support", sync);
+    return () => window.removeEventListener("lc-support", sync);
+  }, []);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -316,9 +334,50 @@ export function SiteHeader() {
             </span>
             <ThemeToggle />
           </div>
+          <button
+            type="button"
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            onClick={() => {
+              closeDrawer();
+              window.dispatchEvent(new CustomEvent("lc-open-support-chat"));
+            }}
+          >
+            <MessageCircle className="h-4 w-4 shrink-0 text-[#2874f0]" />
+            {t("drawerSupportChat")}
+          </button>
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
+            onClick={() => {
+              try {
+                logWhatsAppClick(
+                  typeof window !== "undefined" ? window.location.pathname : ""
+                );
+              } catch {
+                /* ignore */
+              }
+              closeDrawer();
+            }}
+          >
+            <MessageCircle className="h-4 w-4 shrink-0 text-[#25D366]" />
+            {t("drawerWhatsApp")}
+          </a>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            onClick={() => {
+              closeDrawer();
+              window.dispatchEvent(new CustomEvent("lc-open-engagement-hub"));
+            }}
+          >
+            <Gift className="h-4 w-4 shrink-0 text-violet-600" />
+            {t("drawerRewards")}
+          </button>
           <Link
             href="/help"
-            className="mt-1 flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            className="mt-0.5 flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
             onClick={() => closeDrawer()}
           >
             <CircleHelp className="h-4 w-4 text-[#2874f0]" />
