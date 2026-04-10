@@ -86,6 +86,7 @@
     "goToSlide": "Go to slide {n}"
   },
   "home": {
+    "mobilePillStripAria": "Shop categories and outfit styles",
     "shopByCategory": "Shop by category",
     "featuredProducts": "Featured products",
     "viewAll": "View all",

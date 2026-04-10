@@ -86,6 +86,7 @@
     "goToSlide": "{n} নম্বর স্লাইডে যান"
   },
   "home": {
+    "mobilePillStripAria": "ক্যাটাগরি ও পোশাকের ধরন",
     "shopByCategory": "ক্যাটাগরি অনুযায়ী কেনাকাটা",
     "featuredProducts": "নির্বাচিত পণ্য",
     "viewAll": "সব দেখুন",

@@ -2,14 +2,17 @@
 
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
-import { Home, LayoutGrid, Gift, User } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, User } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useCart } from "@/context/cart-context";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useMobileDrawer } from "@/context/mobile-drawer-context";
 
 export function MobileBottomNav() {
   const pathname = usePathname() ?? "";
+  const { items } = useCart();
+  const count = items.reduce((s, i) => s + i.qty, 0);
   const t = useTranslations("nav");
   const { openDrawer } = useMobileDrawer();
 
@@ -28,7 +31,7 @@ export function MobileBottomNav() {
         match: (p: string) => boolean;
       };
 
-  /** Home → Categories (drawer) → Rewards (loyalty / spin) → Account. Cart stays in header. */
+  /** Home → Categories (drawer) → Cart → Account */
   const nav: Entry[] = [
     {
       kind: "link",
@@ -45,10 +48,10 @@ export function MobileBottomNav() {
     },
     {
       kind: "link",
-      href: "/rewards",
-      label: t("bottomRewards"),
-      Icon: Gift,
-      match: (p) => p.startsWith("/rewards"),
+      href: "/cart",
+      label: t("cart"),
+      Icon: ShoppingCart,
+      match: (p) => p.startsWith("/cart"),
     },
     {
       kind: "link",
@@ -96,6 +99,11 @@ export function MobileBottomNav() {
           >
             <span className="relative inline-flex items-center justify-center">
               <Icon className="h-5 w-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
+              {item.href === "/cart" && count > 0 ? (
+                <span className="absolute -right-1.5 -top-1 z-[1] flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[9px] font-bold text-white ring-2 ring-slate-950">
+                  {count > 99 ? "99+" : count}
+                </span>
+              ) : null}
             </span>
             <span className="line-clamp-2 max-w-full px-0.5 text-center">
               {item.label}
