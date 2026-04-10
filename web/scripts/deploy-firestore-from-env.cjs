@@ -8,6 +8,10 @@
  * Fallback: GOOGLE_APPLICATION_CREDENTIALS → read JSON from that file path.
  *
  * Usage (from web/): npm run firebase:deploy:firestore
+ *
+ * Deploys Firestore only (rules + indexes). Storage is skipped until Firebase Storage
+ * is enabled in the project — avoids Service Usage / API 403 on CI. When ready:
+ *   npm run firebase:deploy:firestore-storage
  */
 
 const { writeFileSync, mkdtempSync, readFileSync, existsSync } = require("node:fs");
@@ -99,7 +103,7 @@ const r = spawnSync(
     "firebase-tools@13.35.1",
     "deploy",
     "--only",
-    "firestore,storage",
+    "firestore",
     "--project",
     project,
     "--non-interactive",

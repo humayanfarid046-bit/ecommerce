@@ -12,8 +12,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "firebase:deploy": "firebase deploy --only firestore,storage",
+    "firebase:deploy": "firebase deploy --only firestore",
     "firebase:deploy:firestore": "node scripts/deploy-firestore-from-env.cjs",
+    "firebase:deploy:firestore-storage": "firebase deploy --only firestore,storage",
     "firebase:deploy:storage": "firebase deploy --only storage",
     "firebase:rules": "firebase deploy --only firestore:rules",
     "firebase:indexes": "firebase deploy --only firestore:indexes"

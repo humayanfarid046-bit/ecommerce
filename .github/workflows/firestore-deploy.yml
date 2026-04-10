@@ -1,4 +1,4 @@
-# Deploy Firestore rules/indexes + Storage rules when those files change.
+# Deploy Firestore rules + indexes when those files change (Storage skipped until you enable Storage in Firebase).
 # Setup (one-time): GitHub repo → Settings → Secrets and variables → Actions:
 #   FIREBASE_PROJECT_ID   = your Firebase project id (same as NEXT_PUBLIC_FIREBASE_PROJECT_ID)
 #   FIREBASE_SERVICE_ACCOUNT_JSON = full JSON of a Firebase service account (entire downloaded .json file).
@@ -34,7 +34,7 @@ jobs:
           node-version: "24"
 
       # Pin CLI major: @latest jumped to v15; behavior can differ from the run that first passed.
-      - name: Deploy Firestore + Storage rules
+      - name: Deploy Firestore (rules + indexes)
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -49,4 +49,4 @@ jobs:
           export FIREBASE_PROJECT_ID
           export GOOGLE_APPLICATION_CREDENTIALS="${RUNNER_TEMP}/firebase-ci.json"
           node scripts/gh-firebase-ci-credentials.cjs
-          npx --yes firebase-tools@13.35.1 deploy --only firestore,storage --project "${FIREBASE_PROJECT_ID}" --non-interactive
+          npx --yes firebase-tools@13.35.1 deploy --only firestore --project "${FIREBASE_PROJECT_ID}" --non-interactive
