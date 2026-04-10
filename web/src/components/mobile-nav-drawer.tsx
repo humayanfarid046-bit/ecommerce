@@ -215,7 +215,7 @@ export function MobileNavDrawer() {
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-2rem,340px)] flex-col bg-slate-100 shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
+          "fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-[min(100vw-2rem,340px)] flex-col bg-slate-100 shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
           drawerOpen
             ? "translate-x-0 pointer-events-auto"
             : "-translate-x-full pointer-events-none"
@@ -236,8 +236,11 @@ export function MobileNavDrawer() {
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-4 pt-3">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div
+            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-y-contain px-3 pt-3 pb-[max(2.25rem,env(safe-area-inset-bottom,0px)+1.25rem)] [scrollbar-gutter:stable]"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {isCategoryOnly ? (
               <div className="space-y-3">
                 <p className="text-xs leading-snug text-slate-600 dark:text-slate-400">

@@ -78,7 +78,7 @@ export function ProductCard({
           </div>
 
           {showTopOffer && (
-            <div className="pointer-events-none absolute left-2 top-2 rounded border border-[#E5E7EB] bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700 shadow-sm">
+            <div className="pointer-events-none absolute left-2 top-2 rounded border border-[#E5E7EB] bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-800/95 dark:text-slate-200">
               {t("topOffer")}
             </div>
           )}
@@ -109,21 +109,21 @@ export function ProductCard({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 border-t border-[#E5E7EB] p-2 text-left sm:gap-1.5 sm:p-3">
-        <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[10px]">
+      <div className="flex flex-1 flex-col gap-1 border-t border-[#E5E7EB] p-2 text-left dark:border-slate-600/70 sm:gap-1.5 sm:p-3">
+        <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:text-[10px]">
           {product.brand}
         </p>
         <Link href={`/product/${product.id}`}>
-          <h3 className="line-clamp-2 text-[11px] font-medium leading-snug text-[#1F2937] transition hover:text-[#2874f0] sm:text-[13px] md:text-sm">
+          <h3 className="line-clamp-2 text-[11px] font-medium leading-snug text-[#1F2937] transition hover:text-[#2874f0] dark:text-slate-100 dark:hover:text-[#7eb3ff] sm:text-[13px] md:text-sm">
             {product.title}
           </h3>
         </Link>
-        <div className="flex items-center gap-1 text-xs text-slate-600">
-          <span className="inline-flex items-center gap-0.5 rounded-sm bg-green-700 px-1.5 py-0.5 text-[11px] font-bold text-white">
+        <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+          <span className="inline-flex items-center gap-0.5 rounded-sm bg-green-700 px-1.5 py-0.5 text-[11px] font-bold text-white dark:bg-emerald-800">
             <Star className="h-3 w-3 fill-white text-white" />
             {product.rating}
           </span>
-          <span className="text-slate-500">
+          <span className="text-slate-500 dark:text-slate-400">
             ({product.reviewCount.toLocaleString()})
           </span>
         </div>
@@ -138,8 +138,8 @@ export function ProductCard({
           className={cn(
             "mt-1 hidden w-full items-center justify-center gap-1.5 rounded-sm border py-2 text-xs font-semibold transition sm:flex",
             inCompare(product.id)
-              ? "border-emerald-500/50 bg-emerald-50 text-emerald-800"
-              : "border-slate-200 bg-white text-slate-700 hover:border-[#2874f0]/40"
+              ? "border-emerald-500/50 bg-emerald-50 text-emerald-800 dark:border-emerald-600/50 dark:bg-emerald-950/60 dark:text-emerald-200"
+              : "border-slate-200 bg-white text-slate-700 hover:border-[#2874f0]/40 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:border-[#5b9dff]/45"
           )}
           aria-pressed={inCompare(product.id)}
         >
@@ -157,8 +157,8 @@ export function ProductCard({
           className={cn(
             "w-full rounded-md py-2 text-xs font-bold tracking-wide shadow-sm transition sm:py-2.5 sm:text-sm",
             product.inStock
-              ? "bg-[#2874f0] text-white hover:bg-[#1a65d8]"
-              : "cursor-not-allowed bg-slate-200 text-slate-500"
+              ? "bg-[#2874f0] text-white hover:bg-[#1a65d8] dark:bg-[#3b82f6] dark:hover:bg-[#2563eb]"
+              : "cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
           )}
         >
           {product.inStock ? t("buyNow") : t("outOfStock")}

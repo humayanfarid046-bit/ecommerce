@@ -61,7 +61,7 @@ export function HomePageContent() {
           if (!list.length) return null;
           return (
             <section key={raw} className={blockGap}>
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
                 {sec.title}
               </h2>
               <div className={`mt-5 md:mt-6 ${PRODUCT_GRID}`}>
@@ -81,12 +81,12 @@ export function HomePageContent() {
             return (
               <section key={raw} className={blockGap}>
                 <div className="flex items-end justify-between gap-4">
-                  <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+                  <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
                     {t("featuredProducts")}
                   </h2>
                   <Link
                     href="/search"
-                    className="text-sm font-bold text-[#0066ff] transition hover:text-[#0052cc]"
+                    className="text-sm font-bold text-[#0066ff] transition hover:text-[#0052cc] dark:text-[#60a5fa] dark:hover:text-[#93c5fd]"
                   >
                     {t("viewAll")}
                   </Link>

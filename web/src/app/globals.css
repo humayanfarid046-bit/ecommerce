@@ -28,10 +28,18 @@ html {
 
 html.dark {
   color-scheme: dark;
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-  --glass-fill: rgba(15, 23, 42, 0.75);
-  --glass-border: rgba(148, 163, 184, 0.12);
+  /* Blue-tinted slate — matches header #2874f0, avoids harsh white cards */
+  --background: #0c1019;
+  --foreground: #e8edf5;
+  --electric: #5b9dff;
+  --electric-hover: #7eb3ff;
+  --store-canvas: #0f1419;
+  --store-secondary: #151f2e;
+  --store-card-border: rgba(56, 99, 180, 0.28);
+  --product-title: #f1f5f9;
+  --muted: #94a3b8;
+  --glass-fill: rgba(17, 26, 42, 0.82);
+  --glass-border: rgba(56, 99, 180, 0.2);
 }
 
 body {
@@ -60,9 +68,38 @@ body {
   border-color: #e5e7eb;
 }
 
+html.dark .product-card-store {
+  background: linear-gradient(165deg, #1a2334 0%, #121b2a 55%, #0f1724 100%);
+  border-color: rgba(56, 99, 180, 0.28);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.45),
+    0 6px 20px -4px rgb(0 0 0 / 0.35);
+}
+
+html.dark .product-card-store:hover {
+  border-color: rgba(56, 99, 180, 0.42);
+  box-shadow:
+    0 4px 8px -2px rgb(0 0 0 / 0.45),
+    0 14px 28px -6px rgb(0 40 120 / 0.18);
+}
+
 /* Neutral image well — same tone for all product thumbnails (grid consistency) */
 .product-card-image-well {
   background-color: #fafafa;
+}
+
+html.dark .product-card-image-well {
+  background-color: #111b2a;
+}
+
+/* Subtle blue wash behind storefront main (pairs with header) */
+html.dark body {
+  background: radial-gradient(
+      ellipse 120% 80% at 50% -30%,
+      rgba(40, 116, 240, 0.12),
+      transparent 55%
+    ),
+    var(--background);
 }
 
 @keyframes ripple-ring {
@@ -89,6 +126,13 @@ body {
   box-shadow:
     0 4px 24px rgba(0, 102, 255, 0.06),
     0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .glass {
+  border-color: rgba(56, 99, 180, 0.22);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 40, 120, 0.12);
 }
 
 /* Product cards — stronger glass + soft colored shadow */

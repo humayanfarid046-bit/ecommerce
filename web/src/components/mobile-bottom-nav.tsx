@@ -14,7 +14,7 @@ export function MobileBottomNav() {
   const { items } = useCart();
   const count = items.reduce((s, i) => s + i.qty, 0);
   const t = useTranslations("nav");
-  const { openDrawer } = useMobileDrawer();
+  const { openDrawer, closeDrawer, drawerOpen, drawerMode } = useMobileDrawer();
 
   type Entry =
     | {
@@ -75,7 +75,13 @@ export function MobileBottomNav() {
             <button
               key="categories-drawer"
               type="button"
-              onClick={() => openDrawer("categories")}
+              onClick={() => {
+                if (drawerOpen && drawerMode === "categories") {
+                  closeDrawer();
+                } else {
+                  openDrawer("categories");
+                }
+              }}
               className={cn(
                 "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1 text-[9px] font-semibold leading-tight sm:text-[10px]",
                 active ? "text-[#5ab0ff]" : "text-slate-400"
@@ -92,6 +98,7 @@ export function MobileBottomNav() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => closeDrawer()}
             className={cn(
               "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1 text-[9px] font-semibold leading-tight sm:text-[10px]",
               active ? "text-[#5ab0ff]" : "text-slate-400"

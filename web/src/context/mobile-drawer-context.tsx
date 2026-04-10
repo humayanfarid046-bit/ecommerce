@@ -4,9 +4,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import { usePathname } from "@/i18n/navigation";
 
 export type MobileDrawerMode = "menu" | "categories";
 
@@ -34,11 +36,20 @@ export function MobileDrawerProvider({
     setDrawerMode(mode);
     setDrawerOpen(true);
   }, []);
-  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setDrawerMode("menu");
+  }, []);
   const toggleDrawer = useCallback(() => {
     setDrawerMode("menu");
     setDrawerOpen((o) => !o);
   }, []);
+
+  const pathname = usePathname() ?? "";
+  useEffect(() => {
+    closeDrawer();
+  }, [pathname, closeDrawer]);
+
   const value = useMemo(
     () => ({
       drawerOpen,

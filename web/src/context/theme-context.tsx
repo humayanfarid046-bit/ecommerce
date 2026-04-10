@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -29,7 +29,7 @@ function applyTheme(mode: ThemeMode) {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
       const m = stored === "dark" ? "dark" : "light";
