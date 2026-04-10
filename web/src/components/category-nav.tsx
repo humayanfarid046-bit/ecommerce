@@ -26,14 +26,14 @@ export function CategoryNav({
   if (variant === "mobileScroll") {
     return (
       <nav
-        className="flex w-full gap-3 overflow-x-auto px-3 pb-2 pt-2 [scrollbar-width:none] sm:gap-4 sm:px-4 [&::-webkit-scrollbar]:hidden"
+        className="flex w-full gap-3 overflow-x-auto px-3 pb-2.5 pt-2 [scrollbar-width:none] sm:gap-4 sm:px-4 [&::-webkit-scrollbar]:hidden"
         aria-label={tc("ariaCategories")}
       >
         {categories.map((c) => (
           <Link
             key={c.id}
             href={`/category/${c.slug}`}
-            className="flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-1.5 sm:w-[4.75rem]"
+            className="flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-1.5 py-0.5 sm:w-[4.75rem]"
           >
             <span
               className={cn(

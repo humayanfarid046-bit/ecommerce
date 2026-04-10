@@ -9,7 +9,6 @@ import {
   Heart,
   X,
   CircleHelp,
-  ChevronRight,
   Gift,
   MessageCircle,
 } from "lucide-react";
@@ -57,7 +56,6 @@ function CategoryDrawerAccordion({
                 {c.icon}
               </span>
               <span className="min-w-0 truncate">{title}</span>
-              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-slate-400" aria-hidden />
             </Link>
           );
         }
@@ -69,21 +67,16 @@ function CategoryDrawerAccordion({
             <button
               type="button"
               onClick={() => setOpenId(expanded ? null : c.id)}
-              className="flex w-full items-center justify-between gap-2 px-3 py-3 text-left text-sm font-semibold text-slate-800 dark:text-slate-100"
+              aria-expanded={expanded}
+              className="flex w-full items-center gap-2 px-3 py-3 text-left text-sm font-semibold text-slate-800 dark:text-slate-100"
             >
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="text-lg" aria-hidden>
-                  {c.icon}
-                </span>
-                <span className="truncate">{title}</span>
+              <span className="text-lg" aria-hidden>
+                {c.icon}
               </span>
-              <ChevronRight
-                className={cn(
-                  "h-4 w-4 shrink-0 text-slate-400 transition-transform",
-                  expanded && "rotate-90"
-                )}
-                aria-hidden
-              />
+              <span className="min-w-0 flex-1 truncate">{title}</span>
+              <span className="shrink-0 text-[10px] font-bold text-slate-400">
+                {expanded ? "−" : "+"}
+              </span>
             </button>
             {expanded ? (
               <div className="border-t border-slate-100 px-2 py-2 dark:border-slate-600">
@@ -156,92 +149,101 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
       <div className="bg-[#2874f0] text-white">
         <div
-          className={`${STORE_SHELL} flex flex-wrap items-center gap-2 py-2 md:gap-4 md:py-2.5`}
+          className={`${STORE_SHELL} flex flex-col gap-2.5 py-2 md:flex-row md:flex-wrap md:items-center md:gap-4 md:py-2.5`}
         >
-          <div className="flex min-w-0 flex-1 items-center gap-2 md:contents">
-            <Link
-              href="/"
-              className="shrink-0 text-lg font-extrabold tracking-tight text-white md:text-xl"
-            >
-              <span className="italic">{tb("name")}</span>
-            </Link>
+          {/* Mobile: row1 logo + menu + wishlist + cart; row2 full-width search; desktop: logo | search | nav */}
+          <div className="flex w-full min-w-0 items-center justify-between gap-2 md:contents">
+            <div className="flex min-h-[44px] min-w-0 shrink-0 items-center gap-2 md:order-1">
+              <Link
+                href="/"
+                className="flex min-h-[44px] shrink-0 items-center text-base font-extrabold tracking-tight text-white min-[400px]:text-lg md:text-xl"
+              >
+                <span className="italic">{tb("name")}</span>
+              </Link>
 
-            <button
-              type="button"
-              className="rounded-md p-2 text-white hover:bg-white/10 md:hidden"
-              aria-label={t("menu")}
-              onClick={() => openDrawer()}
-            >
-              <Menu className="h-6 w-6" strokeWidth={2} />
-            </button>
-
-            <div className="order-3 min-w-0 flex-1 md:order-none md:mx-2 md:max-w-2xl md:flex-1 lg:max-w-3xl">
-              <SearchBar variant="flipkart" />
+              <button
+                type="button"
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10 md:hidden"
+                aria-label={t("menu")}
+                onClick={() => openDrawer()}
+              >
+                <Menu className="h-6 w-6" strokeWidth={2} />
+              </button>
             </div>
+
+            <nav className="ml-auto flex min-h-[44px] shrink-0 items-center gap-2.5 sm:gap-3 md:order-3 md:ml-auto md:gap-4 lg:gap-6">
+              <div className="hidden items-center gap-2 md:flex">
+                <ThemeToggle variant="onPrimary" />
+                <LanguageSwitcher variant="onPrimary" />
+              </div>
+              <div className="hidden md:block">
+                <NotificationInbox variant="onPrimary" />
+              </div>
+              <Link
+                href="/help"
+                className="hidden flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
+                title={t("helpSupport")}
+              >
+                <CircleHelp className="h-5 w-5" strokeWidth={2} />
+                {t("helpShort")}
+              </Link>
+              {authStatus === "ready" && user ? (
+                <Link
+                  href="/account"
+                  className="hidden max-w-[5.5rem] flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
+                >
+                  <User className="h-5 w-5" strokeWidth={2} />
+                  <span className="line-clamp-2 text-center leading-tight">
+                    {t("account")}
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="hidden flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
+                >
+                  <User className="h-5 w-5" strokeWidth={2} />
+                  {t("login")}
+                </Link>
+              )}
+              <Link
+                href="/wishlist"
+                className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10 md:size-auto md:min-h-0 md:min-w-0 md:p-2.5"
+                aria-label={t("wishlist")}
+              >
+                <span className="relative inline-flex items-center justify-center">
+                  <Heart className="h-5 w-5" strokeWidth={2} />
+                  {wishIds.length > 0 && (
+                    <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[10px] font-bold text-white ring-2 ring-[#2874f0]">
+                      {wishIds.length > 9 ? "9+" : wishIds.length}
+                    </span>
+                  )}
+                </span>
+              </Link>
+              <motion.div whileTap={{ scale: 0.96 }} className="shrink-0">
+                <Link
+                  ref={cartIconRef}
+                  href="/cart"
+                  className="relative inline-flex size-11 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-white md:size-auto md:min-h-0 md:min-w-0 md:px-1"
+                  aria-label={t("cart")}
+                >
+                  <span className="relative inline-flex items-center justify-center">
+                    <ShoppingCart className="h-6 w-6 md:h-5 md:w-5" strokeWidth={2} />
+                    {count > 0 && (
+                      <span className="absolute -right-2 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff9f00] px-1 text-[11px] font-extrabold text-white ring-2 ring-[#2874f0]">
+                        {count > 99 ? "99+" : count}
+                      </span>
+                    )}
+                  </span>
+                  <span className="hidden md:inline">{t("cart")}</span>
+                </Link>
+              </motion.div>
+            </nav>
           </div>
 
-          <nav className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 md:gap-4 lg:gap-6">
-            <div className="hidden items-center gap-2 md:flex">
-              <ThemeToggle variant="onPrimary" />
-              <LanguageSwitcher variant="onPrimary" />
-            </div>
-            <NotificationInbox variant="onPrimary" />
-            <Link
-              href="/help"
-              className="hidden flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
-              title={t("helpSupport")}
-            >
-              <CircleHelp className="h-5 w-5" strokeWidth={2} />
-              {t("helpShort")}
-            </Link>
-            {authStatus === "ready" && user ? (
-              <Link
-                href="/account"
-                className="hidden max-w-[5.5rem] flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
-              >
-                <User className="h-5 w-5" strokeWidth={2} />
-                <span className="line-clamp-2 text-center leading-tight">
-                  {t("account")}
-                </span>
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="hidden flex-col items-center gap-0.5 px-1 text-[11px] font-medium leading-tight text-white hover:underline md:flex"
-              >
-                <User className="h-5 w-5" strokeWidth={2} />
-                {t("login")}
-              </Link>
-            )}
-            <Link
-              href="/wishlist"
-              className="relative rounded-md p-2 text-white hover:bg-white/10 md:p-2.5"
-              aria-label={t("wishlist")}
-            >
-              <Heart className="h-5 w-5" strokeWidth={2} />
-              {wishIds.length > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[10px] font-bold text-white">
-                  {wishIds.length > 9 ? "9+" : wishIds.length}
-                </span>
-              )}
-            </Link>
-            <motion.div whileTap={{ scale: 0.96 }}>
-              <Link
-                ref={cartIconRef}
-                href="/cart"
-                className="relative flex flex-col items-center gap-0.5 px-1 text-[11px] font-medium text-white md:gap-0.5"
-                aria-label={t("cart")}
-              >
-                <ShoppingCart className="h-6 w-6 md:h-5 md:w-5" strokeWidth={2} />
-                <span className="hidden sm:inline">{t("cart")}</span>
-                {count > 0 && (
-                  <span className="absolute -right-0.5 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff9f00] px-1 text-[11px] font-extrabold text-white">
-                    {count > 99 ? "99+" : count}
-                  </span>
-                )}
-              </Link>
-            </motion.div>
-          </nav>
+          <div className="w-full min-w-0 md:order-2 md:mx-2 md:max-w-2xl md:flex-1 lg:max-w-3xl">
+            <SearchBar variant="flipkart" />
+          </div>
         </div>
       </div>
 
