@@ -108,8 +108,9 @@ export function ProductWizard({
 
   useEffect(() => {
     const onSaveStatus = (evt: Event) => {
-      const ce = evt as CustomEvent<{ status?: string }>;
+      const ce = evt as CustomEvent<{ status?: string; message?: string }>;
       const status = ce.detail?.status;
+      const detailMsg = ce.detail?.message?.trim();
       if (status === "local_saved") {
         setToast("Saved locally. Syncing cloud...");
         return;
@@ -127,7 +128,11 @@ export function ProductWizard({
         return;
       }
       if (status === "cloud_sync_failed") {
-        setToast("Cloud sync failed. Local save kept.");
+        setToast(
+          detailMsg
+            ? `Cloud sync failed: ${detailMsg}`
+            : "Cloud sync failed. Local save kept."
+        );
         return;
       }
       if (status === "cloud_skipped_auth") {

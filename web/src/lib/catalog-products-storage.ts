@@ -19,21 +19,36 @@ export type CatalogSaveStatus =
   | "cloud_sync_failed"
   | "cloud_skipped_auth";
 
-function dispatchSaveStatus(status: CatalogSaveStatus): void {
+function dispatchSaveStatus(status: CatalogSaveStatus, message?: string): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
-    new CustomEvent(CATALOG_SAVE_STATUS_EVENT, { detail: { status } })
+    new CustomEvent(CATALOG_SAVE_STATUS_EVENT, { detail: { status, message } })
   );
 }
 
 /** In-memory snapshot from GET /api/catalog (Firestore). Browser-only. */
 let remoteCatalogSnapshot: Product[] = [];
 
+export type CatalogServerBackend = "firestore" | "server_unconfigured" | null;
+
+let remoteCatalogBackend: CatalogServerBackend = null;
+
+export function getCatalogServerBackend(): CatalogServerBackend {
+  return remoteCatalogBackend;
+}
+
 export function setRemoteCatalogSnapshot(next: Product[]): void {
   remoteCatalogSnapshot = next;
+  remoteCatalogProductCount = next.length;
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(CATALOG_EVENT));
   }
+}
+
+let remoteCatalogProductCount: number | null = null;
+
+export function getRemoteCatalogProductCount(): number | null {
+  return remoteCatalogProductCount;
 }
 
 /** Single-flight GET /api/catalog so every surface (home, PDP, auth) shares one request. */
@@ -44,9 +59,20 @@ export async function fetchRemoteCatalogSnapshot(): Promise<Product[]> {
     inflightRemoteFetch = (async () => {
       try {
         const res = await fetch("/api/catalog", { cache: "no-store" });
-        const j = (await res.json()) as { products?: Product[] };
-        return Array.isArray(j.products) ? j.products : [];
+        const j = (await res.json()) as {
+          products?: Product[];
+          catalogBackedBy?: string;
+        };
+        if (j.catalogBackedBy === "firestore") {
+          remoteCatalogBackend = "firestore";
+        } else if (j.catalogBackedBy === "server_unconfigured") {
+          remoteCatalogBackend = "server_unconfigured";
+        }
+        const products = Array.isArray(j.products) ? j.products : [];
+        remoteCatalogProductCount = products.length;
+        return products;
       } catch {
+        remoteCatalogProductCount = null;
         return [];
       }
     })();
@@ -93,9 +119,11 @@ async function tryPushCatalogToCloud(): Promise<void> {
       dispatchSaveStatus("cloud_synced");
       return;
     }
-    dispatchSaveStatus("cloud_sync_failed");
+    const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+    const hint = errBody.error?.trim() || `HTTP ${res.status}`;
+    dispatchSaveStatus("cloud_sync_failed", hint);
   } catch {
-    dispatchSaveStatus("cloud_sync_failed");
+    dispatchSaveStatus("cloud_sync_failed", "Network error");
   }
 }
 

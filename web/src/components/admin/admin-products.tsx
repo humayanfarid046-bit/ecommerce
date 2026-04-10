@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { categories } from "@/lib/storefront-catalog";
 import { cn } from "@/lib/utils";
+import { CatalogLiveBanner } from "@/components/admin/catalog-live-banner";
 import { ProductWizard } from "@/components/admin/product-wizard";
 import { ProductCatalog } from "@/components/admin/product-catalog";
 import { BulkUploadValidated } from "@/components/admin/bulk-upload-validated";
@@ -97,6 +98,8 @@ export function AdminProducts() {
         </h2>
         <p className="text-sm text-slate-500">{t("productsSubtitle")}</p>
       </div>
+
+      <CatalogLiveBanner />
 
       <div className="flex flex-wrap gap-2">
         {tabs.map((x) => (
