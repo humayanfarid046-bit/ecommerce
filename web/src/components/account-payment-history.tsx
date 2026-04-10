@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   getUserPaymentHistory,
-  seedRefundTrackerIfEmpty,
   type UserPaymentRecord,
 } from "@/lib/user-payment-history";
 import { Receipt, RefreshCw } from "lucide-react";
@@ -20,7 +19,6 @@ export function AccountPaymentHistory() {
   const [rows, setRows] = useState<UserPaymentRecord[]>([]);
 
   useEffect(() => {
-    seedRefundTrackerIfEmpty();
     setRows(getUserPaymentHistory());
     function sync() {
       setRows(getUserPaymentHistory());
@@ -98,24 +96,32 @@ export function AccountPaymentHistory() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-b border-slate-100 dark:border-slate-800"
-                >
-                  <td className="p-3 text-xs text-slate-600 dark:text-slate-400">
-                    {new Date(r.at).toLocaleString()}
-                  </td>
-                  <td className="p-3 font-mono text-xs">{r.orderId}</td>
-                  <td className="p-3 font-mono text-[11px] text-slate-600">
-                    {r.paymentTxnId}
-                  </td>
-                  <td className="p-3 text-xs">{r.method}</td>
-                  <td className="p-3 font-semibold">
-                    ₹{r.amountRupees.toLocaleString("en-IN")}
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-sm text-slate-500">
+                    {t("txnHistoryEmpty")}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="border-b border-slate-100 dark:border-slate-800"
+                  >
+                    <td className="p-3 text-xs text-slate-600 dark:text-slate-400">
+                      {new Date(r.at).toLocaleString()}
+                    </td>
+                    <td className="p-3 font-mono text-xs">{r.orderId}</td>
+                    <td className="p-3 font-mono text-[11px] text-slate-600">
+                      {r.paymentTxnId}
+                    </td>
+                    <td className="p-3 text-xs">{r.method}</td>
+                    <td className="p-3 font-semibold">
+                      ₹{r.amountRupees.toLocaleString("en-IN")}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

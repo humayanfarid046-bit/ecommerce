@@ -1,4 +1,4 @@
-/** Demo: user address pins → admin map (localStorage). */
+/** User address pins synced for admin delivery map (localStorage). */
 
 import type { SavedAddress } from "@/lib/saved-address";
 
@@ -17,7 +17,7 @@ export type AddressPinRow = {
 
 export function syncAddressPinsForAdmin(
   addresses: SavedAddress[],
-  userLabel = "demo@user"
+  userLabel = "user"
 ): void {
   if (typeof window === "undefined") return;
   const rows: AddressPinRow[] = addresses

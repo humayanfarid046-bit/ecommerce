@@ -54,7 +54,7 @@ export function WalletRechargePanel() {
 
   const maxRupees = Math.max(1, Math.floor(gw.maxRechargePaise / 100));
   const useRazorpay = Boolean(keyId);
-  /** Demo (no Razorpay key) must stay available even if admin toggled top-up off. */
+  /** Local top-up when Razorpay is not configured — must stay available even if admin toggled top-up off. */
   const topUpEnabled = !useRazorpay || gw.walletTopUpEnabled;
 
   const pay = useCallback(async () => {
@@ -68,7 +68,7 @@ export function WalletRechargePanel() {
       if (!useRazorpay) {
         creditWalletPaise(uid, paise, t("rechargeCreditLabel"), {
           kind: "recharge",
-          externalRef: "demo_local",
+          externalRef: `local_wallet_${Date.now().toString(36)}`,
         });
         setBusy(false);
         return;

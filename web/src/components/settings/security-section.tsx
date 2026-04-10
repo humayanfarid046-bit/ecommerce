@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useTranslations } from "next-intl";
-import { Monitor, Shield, Smartphone } from "lucide-react";
+import { Shield } from "lucide-react";
 
 const TWO_FA_KEY = "libas_2fa_enabled";
 
@@ -16,11 +16,6 @@ function write2fa(on: boolean) {
   if (typeof window === "undefined") return;
   localStorage.setItem(TWO_FA_KEY, on ? "1" : "0");
 }
-
-const MOCK_DEVICES = [
-  { id: "d1", name: "Chrome on Windows", type: "desktop" as const, last: "2026-04-06" },
-  { id: "d2", name: "Safari on iPhone", type: "mobile" as const, last: "2026-04-05" },
-];
 
 export function SecuritySection() {
   const { logoutAllDevices } = useAuth();
@@ -152,28 +147,9 @@ export function SecuritySection() {
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
           {t("loggedInDevices")}
         </h3>
-        <ul className="mt-3 space-y-2">
-          {MOCK_DEVICES.map((d) => (
-            <li
-              key={d.id}
-              className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50"
-            >
-              {d.type === "mobile" ? (
-                <Smartphone className="h-5 w-5 text-slate-500" />
-              ) : (
-                <Monitor className="h-5 w-5 text-slate-500" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  {d.name}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {t("lastActive")}: {d.last}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+          {t("devicesListEmpty")}
+        </p>
         <button
           type="button"
           onClick={() => void logoutAllDevices()}

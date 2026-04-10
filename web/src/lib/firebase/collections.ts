@@ -1,21 +1,26 @@
 /**
  * Firestore layout — keep in sync with `web/firestore.rules` + `web/firestore.indexes.json`.
- * Documented in repo: `docs/PROJECT_STRUCTURE.md`
  *
- * users/{uid}/orders/{orderId}     — user-order-firestore
- * users/{uid}/profile/account       — profile-firestore (PROFILE_SEGMENT)
- * users/{uid}/profile/addresses     — addresses-firestore
- * users/{uid}/profile/cart          — cart-firestore
- * users/{uid}/profile/compare       — compare-firestore
- * users/{uid}/profile/paymentHistory — payment-history-firestore
- * users/{uid}/profile/recentlyViewed — recent-firestore
- * users/{uid}/profile/wishlist      — wishlist-firestore
- * users/{uid}/wallet/snapshot       — wallet-firestore
- * users/{uid}/returns/{returnId}    — return / refund requests
- * users/{uid}/productReviews/{id}   — product reviews (written via POST /api/reviews)
- * users/{uid}/supportThreads/{id}   — order-scoped support chat (user + admin replies)
+ * ### Customers (signed-in app users)
+ * - `users/{uid}/profile/account` — role, accessScope, displayName, phone (see profile-firestore)
+ * - `users/{uid}/orders/{orderId}` — checkout orders; client may create; status updates via Admin SDK / APIs
+ * - `users/{uid}/profile/addresses|cart|compare|paymentHistory|recentlyViewed|wishlist|delivery` — client sync where rules allow
+ * - `users/{uid}/wallet/snapshot` — wallet balance (wallet-firestore)
  *
- * publicCatalog/manifest            — storefront product list (Admin API POST; client GET /api/catalog)
+ * ### Delivery partners
+ * - Same `users/{uid}/profile/account` with `role: DELIVERY_PARTNER`
+ * - `users/{uid}/profile/delivery` — duty online, lastLat, lastLng (written via PATCH /api/delivery/dashboard)
+ * - Assigned orders: `collectionGroup("orders")` queries with `deliveryPartnerId == uid` (see firestore.indexes.json)
+ * - `riderWallets/{uid}` — COD / online aggregates (Admin SDK only; rules deny client)
+ *
+ * ### Admin / catalog
+ * - `publicCatalog/manifest` — storefront catalog (Admin API POST; GET /api/catalog for shoppers)
+ * - `publicStorefront/{docId}` — e.g. `contact`; public read; Admin API write
+ * - `systemConfig/deliveryOps` — rider token TTL etc. (Admin SDK only; no client access)
+ *
+ * ### Inventory (Admin SDK / APIs only — rules deny client)
+ * - `inventoryVariants`, `inventoryMovements`, `inventoryReservations`, `purchaseOrders`, `goodsReceipts`,
+ *   `stockTransfers`, `inventoryAlerts`, `inventorySnapshots`
  */
 
 export const PROFILE_SEGMENT = "account";

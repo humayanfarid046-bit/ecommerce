@@ -102,6 +102,18 @@ html.dark body {
     var(--background);
 }
 
+/* Form controls — consistent dark surfaces when components omit dark: */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+html.dark select,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+html.dark select option {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
 @keyframes ripple-ring {
   from {
     transform: translate(-50%, -50%) scale(0);

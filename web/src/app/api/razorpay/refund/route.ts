@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: "Razorpay not configured",
-        demo: true,
+        unconfigured: true,
       },
       { status: 503 }
     );

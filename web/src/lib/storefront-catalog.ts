@@ -12,7 +12,9 @@ import type { Product } from "@/lib/product-model";
 export type { Category, Product, Review } from "@/lib/product-model";
 export { categories } from "@/lib/product-model";
 
-/** Admin / SEO bulk tools — merged local + remote catalog only. */
+export { getStorefrontProducts };
+
+/** Admin catalog — merged local + remote, including soft-deleted rows (`deletedAt`). */
 export function getProducts(): Product[] {
   return getMergedProducts();
 }

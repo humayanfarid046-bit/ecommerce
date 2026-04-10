@@ -10,7 +10,7 @@ import {
   writeUpiLinks,
   type UpiLinks,
 } from "@/lib/payment-methods-storage";
-import { readSavedCards } from "@/lib/saved-cards-demo";
+import { readSavedCards, removeSavedCard } from "@/lib/saved-cards-storage";
 import { AccountPaymentHistory } from "@/components/account-payment-history";
 import { WalletRechargePanel } from "@/components/wallet-recharge-panel";
 
@@ -157,12 +157,16 @@ export default function AccountPaymentsPage() {
                     •••• •••• •••• {c.last4}
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    {t("cardTokenRef")}: {c.token}
+                    {t("cardRefLabel")}: {c.cardRef}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="text-xs font-bold text-rose-600 hover:underline dark:text-rose-400"
+                  onClick={() => {
+                    removeSavedCard(c.id);
+                    setSavedCards(readSavedCards());
+                  }}
                 >
                   {t("removeCard")}
                 </button>

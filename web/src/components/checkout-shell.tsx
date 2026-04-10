@@ -20,7 +20,7 @@ import {
   markCheckoutLeftWithoutOrder,
   clearCheckoutRecovery,
 } from "@/lib/checkout-recovery";
-import { addSavedCardDemo, readSavedCards } from "@/lib/saved-cards-demo";
+import { addSavedCard, readSavedCards } from "@/lib/saved-cards-storage";
 import { addCalendarDays } from "@/lib/product-trust";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
@@ -482,7 +482,7 @@ export function CheckoutShell() {
         const last4 = digits.slice(-4);
         const brand =
           digits.startsWith("4") ? "visa" : digits.startsWith("5") ? "mastercard" : "rupay";
-        addSavedCardDemo({ brand, last4 });
+        addSavedCard({ brand, last4 });
         setSavedCards(readSavedCards());
       }
       completedRef.current = true;
@@ -534,8 +534,8 @@ export function CheckoutShell() {
             ...(deliveryLat != null && deliveryLng != null
               ? { deliveryLat, deliveryLng }
               : {}),
-            paymentStatus:
-              methodLabel.toUpperCase().includes("COD") ? "PENDING" : "PAID",
+            /** Must use payKey — translated labels (e.g. BN) do not contain "COD". */
+            paymentStatus: payKey === "cod" ? "PENDING" : "PAID",
             lineItems: lines
               .map((l) => ({
                 variantId: String(l.product.id || "").trim(),

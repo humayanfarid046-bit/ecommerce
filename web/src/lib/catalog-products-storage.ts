@@ -51,36 +51,48 @@ export function getRemoteCatalogProductCount(): number | null {
   return remoteCatalogProductCount;
 }
 
-/** Single-flight GET /api/catalog so every surface (home, PDP, auth) shares one request. */
-let inflightRemoteFetch: Promise<Product[]> | null = null;
+/** Single-flight GET /api/catalog — public vs admin (Bearer) use separate inflight. */
+let inflightRemotePublic: Promise<Product[]> | null = null;
+let inflightRemoteAdmin: Promise<Product[]> | null = null;
 
-export async function fetchRemoteCatalogSnapshot(): Promise<Product[]> {
-  if (!inflightRemoteFetch) {
-    inflightRemoteFetch = (async () => {
-      try {
-        const res = await fetch("/api/catalog", { cache: "no-store" });
-        const j = (await res.json()) as {
-          products?: Product[];
-          catalogBackedBy?: string;
-        };
-        if (j.catalogBackedBy === "firestore") {
-          remoteCatalogBackend = "firestore";
-        } else if (j.catalogBackedBy === "server_unconfigured") {
-          remoteCatalogBackend = "server_unconfigured";
-        }
-        const products = Array.isArray(j.products) ? j.products : [];
-        remoteCatalogProductCount = products.length;
-        return products;
-      } catch {
-        remoteCatalogProductCount = null;
-        return [];
+export async function fetchRemoteCatalogSnapshot(opts?: {
+  idToken?: string | null;
+}): Promise<Product[]> {
+  const token = opts?.idToken?.trim();
+  const existing = token ? inflightRemoteAdmin : inflightRemotePublic;
+  if (existing) return existing;
+  const promise = (async () => {
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch("/api/catalog", {
+        cache: "no-store",
+        ...(Object.keys(headers).length ? { headers } : {}),
+      });
+      const j = (await res.json()) as {
+        products?: Product[];
+        catalogBackedBy?: string;
+      };
+      if (j.catalogBackedBy === "firestore") {
+        remoteCatalogBackend = "firestore";
+      } else if (j.catalogBackedBy === "server_unconfigured") {
+        remoteCatalogBackend = "server_unconfigured";
       }
-    })();
-    void inflightRemoteFetch.finally(() => {
-      inflightRemoteFetch = null;
-    });
-  }
-  return inflightRemoteFetch;
+      const products = Array.isArray(j.products) ? j.products : [];
+      remoteCatalogProductCount = products.length;
+      return products;
+    } catch {
+      remoteCatalogProductCount = null;
+      return [];
+    }
+  })();
+  if (token) inflightRemoteAdmin = promise;
+  else inflightRemotePublic = promise;
+  void promise.finally(() => {
+    if (token) inflightRemoteAdmin = null;
+    else inflightRemotePublic = null;
+  });
+  return promise;
 }
 
 /** Merged view: localStorage + server catalog (same tab / other devices). */
@@ -89,9 +101,9 @@ export function getMergedProducts(): Product[] {
   return mergeCatalogViews(readCatalogProducts(), remoteCatalogSnapshot);
 }
 
-/** Storefront listing: merged localStorage + remote (GET /api/catalog). Empty until products exist in Admin or Firestore. */
+/** Storefront listing: merged catalog minus soft-deleted rows. */
 export function getStorefrontProducts(): Product[] {
-  return getMergedProducts();
+  return getMergedProducts().filter((p) => !p.deletedAt);
 }
 
 async function uploadDataUrlImagesForCatalog(
@@ -167,7 +179,7 @@ async function tryPushCatalogToCloud(): Promise<void> {
       if (hasDataUrls) {
         writeCatalogProducts(source, { skipCloudPush: true, silent: true });
       }
-      const next = await fetchRemoteCatalogSnapshot();
+      const next = await fetchRemoteCatalogSnapshot({ idToken: token });
       setRemoteCatalogSnapshot(next);
       dispatchSaveStatus("cloud_synced");
       return;
@@ -294,6 +306,9 @@ function normalizeProduct(raw: unknown): Product | null {
   if (typeof raw.galleryBackground === "string" && /^#[0-9A-Fa-f]{3,8}$/.test(raw.galleryBackground.trim())) {
     p.galleryBackground = raw.galleryBackground.trim();
   }
+  if (typeof raw.deletedAt === "string" && raw.deletedAt.trim()) {
+    p.deletedAt = raw.deletedAt.trim();
+  }
   return p;
 }
 
@@ -351,8 +366,58 @@ export function upsertCatalogProduct(product: Product): void {
   writeCatalogProducts(cur);
 }
 
-export function deleteCatalogProduct(id: string): void {
-  writeCatalogProducts(readCatalogProducts().filter((p) => p.id !== id));
+function stripDeletedAt(p: Product): Product {
+  const next = { ...p };
+  delete next.deletedAt;
+  return next;
+}
+
+/** Hide from shoppers; row stays for admin + cloud sync (Firestore). */
+export function softDeleteCatalogProduct(id: string): void {
+  const ts = new Date().toISOString();
+  let cur = readCatalogProducts();
+  const i = cur.findIndex((p) => p.id === id);
+  let row: Product;
+  if (i >= 0) {
+    cur = [...cur];
+    row = { ...cur[i]!, deletedAt: ts };
+    cur[i] = row;
+  } else {
+    const r = remoteCatalogSnapshot.find((p) => p.id === id);
+    if (!r) return;
+    row = { ...r, deletedAt: ts };
+    cur = [...cur, row];
+  }
+  const ri = remoteCatalogSnapshot.findIndex((p) => p.id === id);
+  if (ri >= 0) {
+    remoteCatalogSnapshot = remoteCatalogSnapshot.map((p) =>
+      p.id === id ? { ...p, deletedAt: ts } : p
+    );
+  } else {
+    remoteCatalogSnapshot = [...remoteCatalogSnapshot, row];
+  }
+  writeCatalogProducts(cur);
+}
+
+export function restoreCatalogProduct(id: string): void {
+  let cur = readCatalogProducts();
+  const i = cur.findIndex((p) => p.id === id);
+  if (i >= 0) {
+    cur = [...cur];
+    cur[i] = stripDeletedAt(cur[i]!);
+  } else {
+    const r = remoteCatalogSnapshot.find((p) => p.id === id);
+    if (!r?.deletedAt) return;
+    cur = [...cur, stripDeletedAt(r)];
+  }
+  remoteCatalogSnapshot = remoteCatalogSnapshot.map((p) =>
+    p.id === id ? stripDeletedAt(p) : p
+  );
+  if (!remoteCatalogSnapshot.some((p) => p.id === id)) {
+    const r = cur.find((p) => p.id === id);
+    if (r) remoteCatalogSnapshot = [...remoteCatalogSnapshot, r];
+  }
+  writeCatalogProducts(cur);
 }
 
 export function newCatalogProductId(): string {

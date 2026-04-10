@@ -23,9 +23,9 @@ export function AnalyticsPixels() {
 
   useEffect(() => {
     const id = fb.replace(/\D/g, "");
-    if (!id || document.getElementById("fb-pixel-demo")) return;
+    if (!id || document.getElementById("fb-pixel-loader")) return;
     const s = document.createElement("script");
-    s.id = "fb-pixel-demo";
+    s.id = "fb-pixel-loader";
     s.async = true;
     s.src = "https://connect.facebook.net/en_US/fbevents.js";
     s.onload = () => {
@@ -42,9 +42,9 @@ export function AnalyticsPixels() {
 
   useEffect(() => {
     const gtmId = gtm.trim();
-    if (!gtmId.startsWith("GTM-") || document.getElementById("gtm-demo")) return;
+    if (!gtmId.startsWith("GTM-") || document.getElementById("gtm-loader")) return;
     const s = document.createElement("script");
-    s.id = "gtm-demo";
+    s.id = "gtm-loader";
     s.async = true;
     s.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(gtmId)}`;
     document.head.appendChild(s);

@@ -1,10 +1,19 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useAuth } from "@/context/auth-context";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 import { getProducts } from "@/lib/storefront-catalog";
 import { getProductMeta, setProductMeta } from "@/lib/product-admin-meta";
-import { Copy, Pencil, Search } from "lucide-react";
+import { Copy, Pencil, RotateCcw, Search, Trash2 } from "lucide-react";
+import {
+  fetchRemoteCatalogSnapshot,
+  setRemoteCatalogSnapshot,
+  softDeleteCatalogProduct,
+  restoreCatalogProduct,
+} from "@/lib/catalog-products-storage";
+import { deleteProductMeta } from "@/lib/product-admin-meta";
 import { Link } from "@/i18n/navigation";
 
 type Props = {
@@ -15,11 +24,14 @@ type Props = {
 export function ProductCatalog({ onEdit, onDuplicate }: Props) {
   const t = useTranslations("admin");
   const tc = useTranslations("categories");
+  const locale = useLocale();
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [stockFilter, setStockFilter] = useState<"all" | "low" | "out">("all");
+  const [tab, setTab] = useState<"active" | "deleted">("active");
   const [tick, bump] = useState(0);
 
   useEffect(() => {
@@ -32,9 +44,27 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
     };
   }, []);
 
+  /** Full manifest from Firestore (includes soft-deleted) for this admin session. */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (!user) return;
+      const auth = getFirebaseAuth();
+      const token = await auth?.currentUser?.getIdToken();
+      if (!token || cancelled) return;
+      const remote = await fetchRemoteCatalogSnapshot({ idToken: token });
+      if (!cancelled) setRemoteCatalogSnapshot(remote);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
+
   const rows = useMemo(() => {
     void tick;
-    const products = getProducts();
+    const products = getProducts().filter((p) =>
+      tab === "active" ? !p.deletedAt : !!p.deletedAt
+    );
     return products.filter((p) => {
       if (query && !p.title.toLowerCase().includes(query.toLowerCase())) return false;
       if (cat && p.categorySlug !== cat) return false;
@@ -52,7 +82,7 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
       if (stockFilter === "out" && stock > 0) return false;
       return true;
     });
-  }, [query, cat, priceMin, priceMax, stockFilter, tick]);
+  }, [query, cat, priceMin, priceMax, stockFilter, tick, tab]);
 
   const toggleVisible = (id: string) => {
     const m = getProductMeta(id);
@@ -66,6 +96,21 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
     setProductMeta(id, { flashSale: { endsAt, discountPct: pct } });
   };
 
+  const removeProduct = (id: string, title: string) => {
+    const ok = window.confirm(
+      t("catalogDeleteConfirm", { title: title.slice(0, 80) })
+    );
+    if (!ok) return;
+    deleteProductMeta(id);
+    softDeleteCatalogProduct(id);
+    bump((n) => n + 1);
+  };
+
+  const restoreProduct = (id: string) => {
+    restoreCatalogProduct(id);
+    bump((n) => n + 1);
+  };
+
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -73,6 +118,31 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
           {t("catalogTitle")}
         </h3>
         <p className="text-[11px] text-slate-500">{t("catalogHint")}</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setTab("active")}
+          className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
+            tab === "active"
+              ? "border-emerald-600 bg-emerald-600 text-white"
+              : "border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200"
+          }`}
+        >
+          {t("catalogTabActive")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("deleted")}
+          className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
+            tab === "deleted"
+              ? "border-rose-600 bg-rose-600 text-white"
+              : "border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200"
+          }`}
+        >
+          {t("catalogTabDeleted")}
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -139,7 +209,7 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
-                  {t("catalogEmpty")}
+                  {tab === "deleted" ? t("catalogEmptyDeleted") : t("catalogEmpty")}
                 </td>
               </tr>
             ) : null}
@@ -152,31 +222,47 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
                   : p.inStock
                     ? 10
                     : 0;
+              const isDeleted = !!p.deletedAt;
               return (
                 <tr key={p.id} className="border-b border-slate-100 dark:border-slate-800">
                   <td className="py-2">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={visible}
-                      onClick={() => toggleVisible(p.id)}
-                      className={`relative h-7 w-12 rounded-full transition ${
-                        visible ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-                          visible ? "left-6" : "left-0.5"
+                    {isDeleted ? (
+                      <span className="text-[10px] font-bold text-slate-400">—</span>
+                    ) : (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={visible}
+                        onClick={() => toggleVisible(p.id)}
+                        className={`relative h-7 w-12 rounded-full transition ${
+                          visible ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
                         }`}
-                      />
-                    </button>
+                      >
+                        <span
+                          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
+                            visible ? "left-6" : "left-0.5"
+                          }`}
+                        />
+                      </button>
+                    )}
                   </td>
-                  <td className="py-2 font-medium">{p.title}</td>
+                  <td className="py-2 font-medium">
+                    <div>{p.title}</div>
+                    {isDeleted && p.deletedAt ? (
+                      <div className="mt-0.5 text-[10px] text-slate-400">
+                        {new Date(p.deletedAt).toLocaleString(locale)}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="py-2 text-xs">{tc(p.categorySlug)}</td>
                   <td className="py-2 tabular-nums">₹{p.price.toLocaleString("en-IN")}</td>
                   <td className="py-2">{stock}</td>
                   <td className="py-2">
-                    <FlashQuickRow onApply={(h, pct) => applyFlash(p.id, h, pct)} />
+                    {isDeleted ? (
+                      <span className="text-[10px] text-slate-400">—</span>
+                    ) : (
+                      <FlashQuickRow onApply={(h, pct) => applyFlash(p.id, h, pct)} />
+                    )}
                   </td>
                   <td className="py-2">
                     <div className="flex flex-wrap gap-1">
@@ -196,12 +282,33 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
                         <Copy className="mr-1 inline h-3 w-3" />
                         {t("duplicate")}
                       </button>
-                      <Link
-                        href={`/product/${p.id}`}
-                        className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold dark:border-slate-600"
-                      >
-                        {t("buyLink")}
-                      </Link>
+                      {isDeleted ? (
+                        <button
+                          type="button"
+                          className="rounded-lg border border-emerald-200 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-200 dark:hover:bg-emerald-950/50"
+                          onClick={() => restoreProduct(p.id)}
+                        >
+                          <RotateCcw className="mr-1 inline h-3 w-3" />
+                          {t("catalogRestore")}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="rounded-lg border border-rose-200 px-2 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/50"
+                          onClick={() => removeProduct(p.id, p.title)}
+                        >
+                          <Trash2 className="mr-1 inline h-3 w-3" />
+                          {t("catalogDelete")}
+                        </button>
+                      )}
+                      {!isDeleted ? (
+                        <Link
+                          href={`/product/${p.id}`}
+                          className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold dark:border-slate-600"
+                        >
+                          {t("buyLink")}
+                        </Link>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

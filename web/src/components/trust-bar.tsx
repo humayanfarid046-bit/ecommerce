@@ -7,7 +7,7 @@ export async function TrustBar() {
   const t = await getTranslations("trustBar");
 
   return (
-    <div className="border-t border-[#E5E7EB] bg-[#F5F7FA] text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+    <div className="border-t border-[#E5E7EB] bg-[#F5F7FA] text-slate-700 dark:border-slate-800 dark:bg-[#121a2a] dark:text-slate-200">
       <div
         className={`${STORE_SHELL} py-2.5 md:py-3`}
         style={{ lineHeight: 1.6 }}

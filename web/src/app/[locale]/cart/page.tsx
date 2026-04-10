@@ -84,12 +84,12 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
       {lines.length > 0 ? <CartExitIntent /> : null}
-      <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
         {t("title")}
       </h1>
       {lines.length === 0 ? (
         <div className="mt-8 glass rounded-2xl p-8 text-center">
-          <p className="text-neutral-500">{t("empty")}</p>
+          <p className="text-neutral-500 dark:text-slate-400">{t("empty")}</p>
           <Link
             href="/search"
             className="mt-4 inline-block rounded-xl bg-[#0066ff] px-6 py-2 text-sm font-medium text-white hover:bg-[#0052cc]"
@@ -114,7 +114,7 @@ export default function CartPage() {
               >
                 <Link
                   href={`/product/${product.id}`}
-                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-neutral-100"
+                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-neutral-100 dark:bg-slate-800"
                 >
                   <Image
                     src={product.images[0]!}
@@ -126,15 +126,15 @@ export default function CartPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link href={`/product/${product.id}`}>
-                    <h2 className="font-medium text-slate-900 transition hover:text-[#0066ff]">
+                    <h2 className="font-medium text-slate-900 transition hover:text-[#0066ff] dark:text-slate-100 dark:hover:text-[#7eb3ff]">
                       {product.title}
                     </h2>
                   </Link>
-                  <p className="mt-1 text-sm text-neutral-500">{product.brand}</p>
-                  <p className="mt-2 font-semibold text-slate-900">
+                  <p className="mt-1 text-sm text-neutral-500 dark:text-slate-400">{product.brand}</p>
+                  <p className="mt-2 font-semibold text-slate-900 dark:text-slate-100">
                     {showCatDisc ? (
                       <>
-                        <span className="mr-2 text-neutral-400 line-through">
+                        <span className="mr-2 text-neutral-400 line-through dark:text-slate-500">
                           ₹{product.price.toLocaleString("en-IN")}
                         </span>
                         <span>₹{unit.toLocaleString("en-IN")}</span>
@@ -144,14 +144,14 @@ export default function CartPage() {
                     )}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm text-neutral-600">
+                    <label className="flex items-center gap-2 text-sm text-neutral-600 dark:text-slate-300">
                       {t("qty")}
                       <select
                         value={qty}
                         onChange={(e) =>
                           setQty(product.id, Number(e.target.value))
                         }
-                        className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-slate-900"
+                        className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                           <option key={n} value={n}>
@@ -163,7 +163,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() => moveToWishlist(product.id)}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-[#0066ff] hover:text-[#0052cc]"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-[#0066ff] hover:text-[#0052cc] dark:text-[#7eb3ff] dark:hover:text-[#93c5fd]"
                     >
                       <Heart className="h-4 w-4" />
                       {t("moveToWishlist")}
@@ -181,16 +181,16 @@ export default function CartPage() {
               </motion.div>
             );
             })}
-            <div className="rounded-2xl border border-dashed border-[#0066ff]/35 bg-gradient-to-br from-[#0066ff]/[0.06] to-transparent p-6">
-              <h2 className="text-base font-semibold text-slate-900">
+            <div className="rounded-2xl border border-dashed border-[#0066ff]/35 bg-gradient-to-br from-[#0066ff]/[0.06] to-transparent p-6 dark:border-[#0066ff]/25 dark:from-[#0066ff]/10">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {t("saveForLaterTitle")}
               </h2>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-slate-400">
                 {t("saveForLaterSubtitle")}
               </p>
               <Link
                 href="/wishlist"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#0066ff] shadow-sm ring-1 ring-[#0066ff]/20 transition hover:bg-[#0066ff]/5"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#0066ff] shadow-sm ring-1 ring-[#0066ff]/20 transition hover:bg-[#0066ff]/5 dark:bg-slate-800 dark:text-[#7eb3ff] dark:ring-[#0066ff]/35 dark:hover:bg-slate-700/80"
               >
                 <Heart className="h-4 w-4" />
                 {t("wishlistLink")}
@@ -199,7 +199,7 @@ export default function CartPage() {
           </div>
           <div className="space-y-4 lg:col-span-1">
             <div className="glass rounded-2xl p-4">
-              <label className="text-xs font-medium uppercase text-neutral-500">
+              <label className="text-xs font-medium uppercase text-neutral-500 dark:text-slate-400">
                 {t("coupon")}
               </label>
               <div className="mt-2 flex gap-2">
@@ -207,17 +207,17 @@ export default function CartPage() {
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value)}
                   placeholder={t("couponPlaceholder")}
-                  className="min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                  className="min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 />
                 <button
                   type="button"
                   onClick={applyCoupon}
-                  className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-slate-900 hover:bg-neutral-100"
+                  className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-slate-900 hover:bg-neutral-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                 >
                   {t("apply")}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-neutral-500">{t("couponHint")}</p>
+              <p className="mt-2 text-xs text-neutral-500 dark:text-slate-400">{t("couponHint")}</p>
             </div>
             <PriceSummary
               itemTotal={itemTotal}
@@ -226,7 +226,7 @@ export default function CartPage() {
             />
             <Link
               href="/checkout"
-              className="block w-full rounded-2xl bg-[#0066ff] py-3 text-center text-sm font-semibold text-white transition hover:bg-[#0052cc]"
+              className="block w-full rounded-2xl bg-[#0066ff] py-3 text-center text-sm font-semibold text-white transition hover:bg-[#0052cc] dark:bg-[#3b82f6] dark:hover:bg-[#2563eb]"
             >
               {t("proceedCheckout")}
             </Link>

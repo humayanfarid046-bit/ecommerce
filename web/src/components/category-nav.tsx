@@ -38,7 +38,7 @@ export function CategoryNav({
             <span
               className={cn(
                 "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl shadow-sm",
-                "dark:border-slate-600 dark:bg-white"
+                "dark:border-slate-600 dark:bg-slate-800 dark:shadow-slate-950/40"
               )}
               aria-hidden
             >
@@ -69,8 +69,8 @@ export function CategoryNav({
             className={cn(
               "flex items-center gap-1 rounded-sm px-3 py-2 text-sm font-semibold transition",
               flipkartStyle
-                ? "text-slate-700 hover:bg-slate-100 hover:text-[#2874f0]"
-                : "rounded-full text-slate-600 hover:bg-[#0066ff]/8 hover:text-[#0066ff]"
+                ? "text-slate-700 hover:bg-slate-100 hover:text-[#2874f0] dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-[#7eb3ff]"
+                : "rounded-full text-slate-600 hover:bg-[#0066ff]/8 hover:text-[#0066ff] dark:text-slate-300 dark:hover:bg-[#0066ff]/15 dark:hover:text-[#7eb3ff]"
             )}
           >
             <span aria-hidden>{c.icon}</span>
@@ -88,14 +88,15 @@ export function CategoryNav({
                 transition={{ duration: 0.15 }}
                 className={cn(
                   "absolute left-0 top-full z-30 mt-1 min-w-[200px] rounded-2xl border border-slate-200/90",
-                  "bg-white/95 p-2 shadow-[0_12px_40px_rgba(0,102,255,0.12)] backdrop-blur-xl"
+                  "bg-white/95 p-2 shadow-[0_12px_40px_rgba(0,102,255,0.12)] backdrop-blur-xl",
+                  "dark:border-slate-600 dark:bg-slate-900/95 dark:shadow-black/40"
                 )}
               >
                 {c.children.map((ch) => (
                   <Link
                     key={ch.slug}
                     href={`/category/${c.slug}?sub=${ch.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#0066ff]/8 hover:text-[#0066ff]"
+                    className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#0066ff]/8 hover:text-[#0066ff] dark:text-slate-200 dark:hover:bg-[#0066ff]/15 dark:hover:text-[#7eb3ff]"
                   >
                     {ts(ch.slug)}
                   </Link>

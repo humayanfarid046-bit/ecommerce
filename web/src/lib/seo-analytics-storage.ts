@@ -1,6 +1,6 @@
 /** Client-only SEO, redirects, analytics demo (replace with API). */
 
-import { categories, getProducts } from "@/lib/storefront-catalog";
+import { categories, getStorefrontProducts } from "@/lib/storefront-catalog";
 import { setProductMeta } from "@/lib/product-admin-meta";
 import { buildSitemapXml } from "./sitemap-build";
 
@@ -175,7 +175,7 @@ export function applyBulkSeoTemplate(
   storeName: string
 ): number {
   let n = 0;
-  for (const p of getProducts()) {
+  for (const p of getStorefrontProducts()) {
     if (p.categorySlug !== categorySlug) continue;
     const title = template
       .replace(/\{name\}/g, p.title)

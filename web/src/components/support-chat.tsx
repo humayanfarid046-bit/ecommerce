@@ -5,12 +5,29 @@ import { MessageCircle, X, ExternalLink } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  fetchStorefrontContact,
+  whatsappHref,
+} from "@/lib/storefront-contact-client";
 
 const FAQ_KEYS = ["q1", "q2", "q3"] as const;
 
 export function SupportChat() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("chat");
+  const [waHref, setWaHref] = useState("https://wa.me/");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const c = await fetchStorefrontContact();
+      if (cancelled) return;
+      setWaHref(whatsappHref(c, "Hi — I need help with my order."));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const fn = () => setOpen(true);
@@ -84,7 +101,7 @@ export function SupportChat() {
                   <ExternalLink className="h-4 w-4" />
                 </Link>
                 <a
-                  href="https://wa.me/"
+                  href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-center text-xs font-semibold text-emerald-700 underline dark:text-emerald-400"

@@ -2,15 +2,19 @@ import { NextResponse } from "next/server";
 import { getAdminFirestore } from "@/lib/firebase-admin";
 import type { Product } from "@/lib/product-model";
 import { parseStoredProduct } from "@/lib/catalog-products-storage";
+import { verifyModuleAccess } from "@/lib/server-access";
 
 const DOC_PATH = "publicCatalog/manifest";
 
 /**
  * Public product list for storefront — synced from admin (Firestore `publicCatalog/manifest`).
+ * Without auth: soft-deleted rows (`deletedAt`) are omitted. With Bearer + products access: full manifest.
  * `catalogBackedBy`: `firestore` = server can read manifest; `server_unconfigured` = no Admin SDK env (shoppers never see admin-only local saves).
- * Firebase Storage is unrelated to this list (images may use Storage URLs or `/` paths).
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const gate = await verifyModuleAccess(req, "products");
+  const forAdmin = gate.ok;
+
   const db = getAdminFirestore();
   if (!db) {
     return NextResponse.json({
@@ -39,7 +43,8 @@ export async function GET() {
       const p = parseStoredProduct(row);
       if (p) products.push(p);
     }
-    return NextResponse.json({ products, catalogBackedBy: "firestore" as const });
+    const out = forAdmin ? products : products.filter((p) => !p.deletedAt);
+    return NextResponse.json({ products: out, catalogBackedBy: "firestore" as const });
   } catch {
     return NextResponse.json({
       products: [] as Product[],

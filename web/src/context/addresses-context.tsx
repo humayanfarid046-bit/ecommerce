@@ -20,25 +20,6 @@ import { syncAddressPinsForAdmin } from "@/lib/address-pins-sync";
 
 const STORAGE_KEY = "ecom_addresses_v1";
 
-const seed: SavedAddress[] = [
-  {
-    id: "seed-home",
-    label: "Home",
-    line1: "12 MG Road",
-    city: "Bengaluru",
-    pin: "560001",
-    state: "Karnataka",
-  },
-  {
-    id: "seed-work",
-    label: "Work",
-    line1: "Tech Park, Block B",
-    city: "Bengaluru",
-    pin: "560103",
-    state: "Karnataka",
-  },
-];
-
 type AddressesContextValue = {
   addresses: SavedAddress[];
   add: (a: Omit<SavedAddress, "id">) => void;
@@ -52,11 +33,11 @@ function readLocal(): SavedAddress[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [...seed];
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as SavedAddress[];
-    return Array.isArray(parsed) && parsed.length ? parsed : [...seed];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return [...seed];
+    return [];
   }
 }
 
@@ -157,7 +138,7 @@ export function AddressesProvider({ children }: { children: React.ReactNode }) {
   const remove = useCallback((id: string) => {
     setAddresses((prev) => {
       const next = prev.filter((x) => x.id !== id);
-      return next.length ? next : [...seed];
+      return next;
     });
   }, []);
 

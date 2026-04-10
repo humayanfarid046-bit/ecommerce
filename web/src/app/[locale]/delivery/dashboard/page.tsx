@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { DeliveryPartnerAppBar } from "@/components/delivery-partner-app-bar";
 import { SignaturePad } from "@/components/signature-pad";
@@ -37,6 +38,7 @@ type RazorpaySuccess = {
 };
 
 export default function DeliveryDashboardPage() {
+  const { user, status: authStatus } = useAuth();
   const [rows, setRows] = useState<DeliveryOrder[]>([]);
   const [history, setHistory] = useState<
     Array<{ orderId: string; amount: number; paidAt: string; paymentStatus: "PENDING" | "PAID"; collectedVia: string }>
@@ -112,10 +114,20 @@ export default function DeliveryDashboardPage() {
   }
 
   useEffect(() => {
+    if (authStatus !== "ready") return;
+    if (!user) {
+      setError("Please sign in.");
+      return;
+    }
+    setError(null);
+  }, [authStatus, user]);
+
+  useEffect(() => {
+    if (authStatus !== "ready" || !user?.uid) return;
     void load();
     const id = window.setInterval(() => void load(), 30000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [authStatus, user?.uid]);
 
   useEffect(() => {
     if (!dutyOnline || typeof navigator === "undefined" || !navigator.geolocation) return;

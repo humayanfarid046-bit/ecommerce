@@ -3,20 +3,29 @@
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { getSupportState, logWhatsAppClick } from "@/lib/support-review-storage";
+import { logWhatsAppClick } from "@/lib/support-review-storage";
+import {
+  fetchStorefrontContact,
+  whatsappHref,
+} from "@/lib/storefront-contact-client";
 
 export function WhatsAppChatWidget() {
   const t = useTranslations("nav");
-  const [num, setNum] = useState("919876543210");
+  const [href, setHref] = useState(
+    "https://wa.me/?text=Hi%20%E2%80%94%20I%20need%20help%20with%20my%20order."
+  );
 
   useEffect(() => {
-    const sync = () => setNum(getSupportState().chatConfig.whatsappE164);
-    sync();
-    window.addEventListener("lc-support", sync);
-    return () => window.removeEventListener("lc-support", sync);
+    let cancelled = false;
+    void (async () => {
+      const c = await fetchStorefrontContact();
+      if (cancelled) return;
+      setHref(whatsappHref(c, "Hi — I need help with my order."));
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  const href = `https://wa.me/${num.replace(/\D/g, "")}?text=${encodeURIComponent("Hi — I need help with my order.")}`;
 
   return (
     <a

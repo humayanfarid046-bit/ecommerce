@@ -1,6 +1,8 @@
 /**
- * Pull Firestore → localStorage for logged-in Firebase users (demo bridge).
- * Production: prefer server writes + Firestore listeners.
+ * On sign-in, pull Firestore cloud data into local caches so the storefront matches the database.
+ * - Profile, wallet, payment history merge here.
+ * - Orders: real-time subscription on account orders page (`subscribeUserOrdersFromFirestore`).
+ * - Delivery partners: lists/updates via `/api/delivery/dashboard` (Admin SDK reads collectionGroup orders + riderWallets).
  */
 
 import {

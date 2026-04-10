@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Mail, Phone, MessageCircle } from "lucide-react";
+import { HelpContactSection } from "@/components/help-contact-section";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -41,42 +41,7 @@ export default async function HelpPage({ params }: Props) {
         </div>
       </section>
 
-      <section
-        id="contact"
-        className="scroll-mt-24 mt-12 rounded-2xl border border-[#0066ff]/20 bg-[#0066ff]/[0.06] p-6 dark:border-[#0066ff]/30 dark:bg-[#0066ff]/10"
-      >
-        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">
-          {t("contactHeading")}
-        </h2>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <a
-            href="tel:+910000000000"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-          >
-            <Phone className="h-4 w-4 text-[#0066ff]" />
-            {t("callUs")}
-          </a>
-          <a
-            href="mailto:support@example.com"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-          >
-            <Mail className="h-4 w-4 text-[#0066ff]" />
-            {t("emailUs")}
-          </a>
-          <a
-            href="https://wa.me/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {t("whatsapp")}
-          </a>
-        </div>
-        <p className="mt-4 text-xs text-slate-600 dark:text-slate-400">
-          {t("contactDemo")}
-        </p>
-      </section>
+      <HelpContactSection />
 
       <p className="mt-8 text-center">
         <Link

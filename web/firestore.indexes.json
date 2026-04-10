@@ -1,5 +1,5 @@
 {
-  "_comment": "Composite indexes for collection-group queries. Single-field overrides below for orderBy / equality scans. Deploy: npm run firebase:deploy:firestore (from web/).",
+  "_comment": "Collection-group queries used by /api/admin/*, /api/delivery/*, /api/reviews. Deploy: npm run firebase:deploy:firestore (web/).",
   "indexes": [
     {
       "collectionGroup": "productReviews",
@@ -19,6 +19,30 @@
     }
   ],
   "fieldOverrides": [
+    {
+      "collectionGroup": "productReviews",
+      "fieldPath": "status",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "supportThreads",
+      "fieldPath": "updatedAt",
+      "indexes": [
+        {
+          "order": "DESCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        },
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
     {
       "collectionGroup": "orders",
       "fieldPath": "id",
@@ -57,6 +81,20 @@
       "collectionGroup": "orders",
       "fieldPath": "status",
       "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "returns",
+      "fieldPath": "createdAt",
+      "indexes": [
+        {
+          "order": "DESCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        },
         {
           "order": "ASCENDING",
           "queryScope": "COLLECTION_GROUP"

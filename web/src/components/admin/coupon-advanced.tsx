@@ -2,27 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { categories } from "@/lib/storefront-catalog";
 import { Tag } from "lucide-react";
-
-const USAGE_DEMO = [
-  { day: "Mon", uses: 12 },
-  { day: "Tue", uses: 19 },
-  { day: "Wed", uses: 8 },
-  { day: "Thu", uses: 24 },
-  { day: "Fri", uses: 31 },
-  { day: "Sat", uses: 42 },
-  { day: "Sun", uses: 18 },
-];
 
 export function CouponAdvanced() {
   const t = useTranslations("admin");
@@ -127,20 +108,9 @@ export function CouponAdvanced() {
         <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
           {t("couponUsageChart")}
         </p>
-        <div className="mt-2 h-48 w-full">
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={USAGE_DEMO} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700" />
-              <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip
-                contentStyle={{ borderRadius: "12px", fontSize: "12px" }}
-                formatter={(v) => [v, t("couponUses")]}
-              />
-              <Bar dataKey="uses" fill="#0066ff" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <p className="mt-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-400">
+          {t("couponUsageChartEmpty")}
+        </p>
       </div>
     </div>
   );

@@ -44,6 +44,8 @@ export type Product = {
   colorOptions?: { id: string; label: string; hex: string }[];
   /** Hex (e.g. #fafafa) behind product photos on PDP gallery */
   galleryBackground?: string;
+  /** ISO timestamp — product hidden from shoppers; admin can still list / restore */
+  deletedAt?: string;
 };
 
 export const categories: Category[] = [

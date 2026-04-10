@@ -38,6 +38,16 @@ export function setProductMeta(id: string, patch: Partial<ProductAdminMeta>): vo
   window.dispatchEvent(new CustomEvent("lc-product-meta"));
 }
 
+/** Remove admin overrides when a product is deleted from the catalog. */
+export function deleteProductMeta(id: string): void {
+  if (typeof window === "undefined") return;
+  const all = readRaw();
+  if (!(id in all)) return;
+  delete all[id];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  window.dispatchEvent(new CustomEvent("lc-product-meta"));
+}
+
 export function slugifyName(name: string): string {
   return name
     .toLowerCase()

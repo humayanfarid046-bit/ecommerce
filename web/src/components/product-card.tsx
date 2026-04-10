@@ -98,7 +98,7 @@ export function ProductCard({
             toggleWish(product.id);
           }}
           className={cn(
-            "absolute right-2 top-2 z-10 rounded-full bg-white/95 p-1.5 shadow-sm ring-1 ring-[#E5E7EB] transition-colors hover:bg-white",
+            "absolute right-2 top-2 z-10 rounded-full bg-white/95 p-1.5 shadow-sm ring-1 ring-[#E5E7EB] transition-colors hover:bg-white dark:bg-slate-800/95 dark:ring-slate-600 dark:hover:bg-slate-700",
             wish
               ? "text-rose-500"
               : "text-slate-400 hover:text-rose-500"

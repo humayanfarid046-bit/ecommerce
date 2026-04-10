@@ -288,7 +288,7 @@ export function AccountAddressSection() {
                   label: e.target.value as AddressLabel,
                 }))
               }
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="Home">{t("labelHome")}</option>
               <option value="Work">{t("labelWork")}</option>
@@ -301,7 +301,7 @@ export function AccountAddressSection() {
             <input
               value={form.pin}
               onChange={(e) => setForm((f) => ({ ...f, pin: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
               maxLength={6}
               inputMode="numeric"
             />
@@ -313,7 +313,7 @@ export function AccountAddressSection() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, line1: e.target.value }))
               }
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
           <label className="block text-xs font-medium text-slate-500 sm:col-span-2">
@@ -323,7 +323,7 @@ export function AccountAddressSection() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, line2: e.target.value }))
               }
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
           <label className="block text-xs font-medium text-slate-500 sm:col-span-2">
@@ -333,7 +333,7 @@ export function AccountAddressSection() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, city: e.target.value }))
               }
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
         </div>

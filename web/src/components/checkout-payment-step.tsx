@@ -6,12 +6,11 @@ import { useTranslations } from "next-intl";
 import { getGatewaySettings } from "@/lib/razorpay-gateway-settings";
 import { RazorpayCheckoutButton } from "@/components/razorpay-checkout-button";
 import {
-  CheckoutBankOffersRow,
   CheckoutOmnichannelBanner,
   CheckoutSavedCardsNote,
   CheckoutWebOtpHint,
 } from "@/components/checkout-payment-ux-blocks";
-import type { SavedCardDemo } from "@/lib/saved-cards-demo";
+import type { SavedCard } from "@/lib/saved-cards-storage";
 import { PaymentMethodIcons } from "@/components/payment-method-icons";
 import { RippleButton } from "@/components/ripple-button";
 import {
@@ -29,7 +28,7 @@ import {
 type Props = {
   payKey: string;
   setPayKey: (k: string) => void;
-  savedCards: SavedCardDemo[];
+  savedCards: SavedCard[];
   cardNumber: string;
   setCardNumber: (v: string) => void;
   cardExpiry: string;
@@ -51,7 +50,7 @@ type Props = {
   onRazorpayPaid?: (paymentId: string) => void;
 };
 
-function cardBrandStyle(brand: SavedCardDemo["brand"]) {
+function cardBrandStyle(brand: SavedCard["brand"]) {
   switch (brand) {
     case "visa":
       return "from-[#1a1f71] to-[#1434cb]";
@@ -132,7 +131,6 @@ export function CheckoutPaymentStep({
       ) : null}
 
       <CheckoutOmnichannelBanner />
-      <CheckoutBankOffersRow payKey={payKey} />
 
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50/90 to-teal-50/50 px-4 py-3 text-sm dark:border-emerald-900/40 dark:from-emerald-950/40 dark:to-teal-950/20">
         <Sparkles className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />

@@ -73,7 +73,7 @@ export function AccountSidebar({
 
       <aside className="hidden w-56 shrink-0 lg:block">
         <nav
-          className="glass sticky top-24 space-y-1 rounded-2xl border border-slate-200/80 p-2"
+          className="glass sticky top-24 space-y-1 rounded-2xl border border-slate-200/80 p-2 dark:border-slate-700/80"
           aria-label="Account"
         >
           {resolved.map(({ href, label, icon: Icon }) => {
@@ -85,8 +85,8 @@ export function AccountSidebar({
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
                   active
-                    ? "bg-[#0066ff]/10 text-[#0066ff]"
-                    : "text-slate-600 hover:bg-slate-50"
+                    ? "bg-[#0066ff]/10 text-[#0066ff] dark:bg-[#0066ff]/20 dark:text-[#7eb3ff]"
+                    : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80"
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0 opacity-90" />

@@ -6,6 +6,7 @@ rules_version = '2';
  * (see `.github/workflows/firestore-deploy.yml`).
  *
  * Deploy (from `web/`): `npx firebase deploy --only firestore` or `npm run firebase:deploy:firestore`
+ * Indexes: `firestore.indexes.json` (collectionGroup orders, productReviews, returns, supportThreads, …).
  * Needs `.firebaserc` with project id (copy from `.firebaserc.example`).
  * CI: repo Secrets `FIREBASE_PROJECT_ID` + `FIREBASE_SERVICE_ACCOUNT_JSON` → push these rules or Actions → Run workflow.
  *
@@ -22,6 +23,17 @@ service cloud.firestore {
     match /publicCatalog/manifest {
       allow read: if true;
       allow write: if false;
+    }
+
+    /** Storefront-facing public docs (contact, etc.) — public read; Admin SDK only writes. */
+    match /publicStorefront/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    /** Server-only config (e.g. delivery rider token TTL) — Admin SDK; clients denied. */
+    match /systemConfig/{docId} {
+      allow read, write: if false;
     }
 
     function signedIn() {
@@ -138,6 +150,9 @@ service cloud.firestore {
       allow read, write: if false;
     }
     match /inventoryAlerts/{docId} {
+      allow read, write: if false;
+    }
+    match /inventorySnapshots/{docId} {
       allow read, write: if false;
     }
 

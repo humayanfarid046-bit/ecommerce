@@ -1,6 +1,6 @@
 /** Client-only support tickets, review moderation, chat (persisted in localStorage). */
 
-import { getProducts } from "@/lib/storefront-catalog";
+import { getStorefrontProducts } from "@/lib/storefront-catalog";
 import { appendActivityLog } from "@/lib/admin-security-storage";
 
 const KEY = "lc_support_review_v2";
@@ -208,7 +208,7 @@ export type LowRatingProduct = {
 };
 
 export function getLowRatingProducts(maxRating = 3): LowRatingProduct[] {
-  return getProducts()
+  return getStorefrontProducts()
     .filter((p) => p.rating < maxRating && p.reviewCount > 0)
     .map((p) => ({
       productId: p.id,
@@ -221,7 +221,7 @@ export function getLowRatingProducts(maxRating = 3): LowRatingProduct[] {
 
 /** When no catalogue item is &lt; maxRating, returns lowest-rated products for visibility. */
 export function getLowestRatedProductsFallback(limit = 5): LowRatingProduct[] {
-  return [...getProducts()]
+  return [...getStorefrontProducts()]
     .filter((p) => p.reviewCount > 0)
     .sort((a, b) => a.rating - b.rating)
     .slice(0, limit)

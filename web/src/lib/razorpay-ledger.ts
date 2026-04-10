@@ -1,4 +1,4 @@
-/** Client-side payment ledger (demo). Production: Razorpay Dashboard + your DB. */
+/** Client-side Razorpay payment ledger mirror (localStorage). Production: also use Dashboard + your DB. */
 
 import {
   estimateGatewayFeePaise,
@@ -31,57 +31,15 @@ export type RzpLedgerEntry = {
   invoiceSent?: boolean;
 };
 
-const seed: RzpLedgerEntry[] = [
-  {
-    id: "pay_seed_1",
-    razorpayOrderId: "order_OR1050demo",
-    razorpayPaymentId: "pay_OR1050demo",
-    orderRef: "ORD-1050",
-    method: "upi",
-    amountPaise: 2499_00,
-    status: "captured",
-    gatewayFeePaise: estimateGatewayFeePaise(2499_00, "upi"),
-    netPaise: netAfterGatewayFeePaise(2499_00, "upi"),
-    capturedAt: "2026-04-06T10:13:00+05:30",
-    invoiceSent: true,
-  },
-  {
-    id: "pay_seed_2",
-    razorpayOrderId: "order_FAILdemo",
-    razorpayPaymentId: "pay_FAILdemo",
-    orderRef: "LC-DEMO-007",
-    method: "card",
-    amountPaise: 1500_00,
-    status: "failed",
-    gatewayFeePaise: 0,
-    netPaise: 0,
-    capturedAt: "2026-03-20T10:05:00+05:30",
-    invoiceSent: false,
-  },
-  {
-    id: "pay_seed_3",
-    razorpayOrderId: "order_PENDdemo",
-    razorpayPaymentId: null,
-    orderRef: "LC-DEMO-PEND",
-    method: "netbanking",
-    amountPaise: 3200_00,
-    status: "authorized",
-    gatewayFeePaise: 0,
-    netPaise: 0,
-    capturedAt: "2026-04-06T14:00:00+05:30",
-    invoiceSent: false,
-  },
-];
-
 function read(): RzpLedgerEntry[] {
-  if (typeof window === "undefined") return [...seed];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [...seed];
+    if (!raw) return [];
     const p = JSON.parse(raw) as RzpLedgerEntry[];
-    return Array.isArray(p) && p.length ? p : [...seed];
+    return Array.isArray(p) ? p : [];
   } catch {
-    return [...seed];
+    return [];
   }
 }
 

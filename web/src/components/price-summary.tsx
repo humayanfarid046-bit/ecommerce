@@ -55,26 +55,26 @@ export function PriceSummary({
 
   return (
     <div className={cn("glass space-y-3 rounded-2xl p-4", className)}>
-      <h2 className="text-sm font-semibold text-slate-900">{t("priceDetails")}</h2>
+      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("priceDetails")}</h2>
       <div className="space-y-2 text-sm">
-        <div className="flex justify-between text-neutral-600">
+        <div className="flex justify-between text-neutral-600 dark:text-slate-400">
           <span>{t("itemTotal")}</span>
           <span>₹{itemTotal.toLocaleString("en-IN")}</span>
         </div>
         {pd > 0 && (
-          <div className="flex justify-between text-emerald-700">
+          <div className="flex justify-between text-emerald-700 dark:text-emerald-400">
             <span>{tc("prepaidSavingsLine")}</span>
             <span>− ₹{pd.toLocaleString("en-IN")}</span>
           </div>
         )}
         {couponDiscount > 0 && (
-          <div className="flex justify-between text-emerald-700">
+          <div className="flex justify-between text-emerald-700 dark:text-emerald-400">
             <span>{tc("couponSavingsLine")}</span>
             <span>− ₹{couponDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
         {hasGst && (
-          <div className="flex justify-between text-neutral-600">
+          <div className="flex justify-between text-neutral-600 dark:text-slate-400">
             <span>
               {tc("gstLine", { pct: gstPercent ?? 0 })}
             </span>
@@ -83,29 +83,29 @@ export function PriceSummary({
         )}
         {showSplitDelivery ? (
           <>
-            <div className="flex justify-between text-neutral-600">
+            <div className="flex justify-between text-neutral-600 dark:text-slate-400">
               <span>{t("delivery")}</span>
               <span>
                 {deliveryFee === 0 ? (
-                  <span className="text-emerald-700">{t("free")}</span>
+                  <span className="text-emerald-700 dark:text-emerald-400">{t("free")}</span>
                 ) : (
                   `₹${deliveryFee.toLocaleString("en-IN")}`
                 )}
               </span>
             </div>
             {codHandling && codHandling > 0 ? (
-              <div className="flex justify-between text-neutral-600">
+              <div className="flex justify-between text-neutral-600 dark:text-slate-400">
                 <span>{tc("codHandlingLine")}</span>
                 <span>₹{codHandling.toLocaleString("en-IN")}</span>
               </div>
             ) : null}
           </>
         ) : (
-          <div className="flex justify-between text-neutral-600">
+          <div className="flex justify-between text-neutral-600 dark:text-slate-400">
             <span>{t("delivery")}</span>
             <span>
               {delivery === 0 ? (
-                <span className="text-emerald-700">{t("free")}</span>
+                <span className="text-emerald-700 dark:text-emerald-400">{t("free")}</span>
               ) : (
                 `₹${delivery.toLocaleString("en-IN")}`
               )}
@@ -118,7 +118,7 @@ export function PriceSummary({
             <span>− ₹{walletApplied.toLocaleString("en-IN")}</span>
           </div>
         )}
-        <div className="flex justify-between border-t border-neutral-200 pt-3 font-semibold text-slate-900">
+        <div className="flex justify-between border-t border-neutral-200 pt-3 font-semibold text-slate-900 dark:border-slate-600 dark:text-slate-100">
           <span>{t("total")}</span>
           <span>₹{grand.toLocaleString("en-IN")}</span>
         </div>

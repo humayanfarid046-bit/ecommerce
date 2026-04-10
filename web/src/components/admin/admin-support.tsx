@@ -39,6 +39,7 @@ import {
   type TicketPriority,
   type TicketStatus,
 } from "@/lib/support-review-storage";
+import type { StorefrontContact } from "@/lib/storefront-contact-types";
 
 function statusIcon(status: TicketStatus) {
   if (status === "open")
@@ -99,6 +100,13 @@ export function AdminSupport() {
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [liveFallback, setLiveFallback] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [sfContact, setSfContact] = useState<StorefrontContact>({
+    supportPhoneE164: "",
+    supportEmail: "",
+    whatsappE164: "",
+  });
+  const [sfContactLoading, setSfContactLoading] = useState(false);
+  const [sfContactSaving, setSfContactSaving] = useState(false);
 
   const mapLocalReviewsToLive = useCallback(
     (src: SupportState) =>
@@ -210,6 +218,35 @@ export function AdminSupport() {
   }, [loadRemote]);
 
   useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setSfContactLoading(true);
+      try {
+        const res = await fetch("/api/admin/storefront-contact", {
+          headers: await getAuthHeader(),
+        });
+        const j = (await res.json().catch(() => ({}))) as {
+          contact?: StorefrontContact;
+          error?: string;
+        };
+        if (cancelled) return;
+        if (res.ok && j.contact) {
+          setSfContact(j.contact);
+        } else if (!res.ok) {
+          setToast(j.error ?? t("storefrontContactLoadError"));
+        }
+      } catch {
+        if (!cancelled) setToast(t("storefrontContactLoadError"));
+      } finally {
+        if (!cancelled) setSfContactLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getAuthHeader, t]);
+
+  useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => setToast(null), 4500);
     return () => window.clearTimeout(id);
@@ -229,6 +266,42 @@ export function AdminSupport() {
   function persist(next: SupportState) {
     setState(next);
     saveSupportState(next);
+  }
+
+  async function saveSfContact() {
+    setSfContactSaving(true);
+    try {
+      const res = await fetch("/api/admin/storefront-contact", {
+        method: "POST",
+        headers: {
+          ...(await getAuthHeader()),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sfContact),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        contact?: StorefrontContact;
+        error?: string;
+      };
+      if (res.ok && j.contact) {
+        setSfContact(j.contact);
+        setToast(t("storefrontContactSaved"));
+        const s = getSupportState();
+        persist({
+          ...s,
+          chatConfig: {
+            ...s.chatConfig,
+            whatsappE164: j.contact.whatsappE164,
+          },
+        });
+      } else {
+        setToast(j.error ?? t("storefrontContactLoadError"));
+      }
+    } catch {
+      setToast(t("storefrontContactLoadError"));
+    } finally {
+      setSfContactSaving(false);
+    }
   }
 
   function updateReview(id: string, patch: Partial<ReviewModeration>) {
@@ -992,24 +1065,74 @@ export function AdminSupport() {
 
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
           <div>
-            <label className="text-xs font-bold text-slate-500">
-              {t("whatsappNumberLabel")}
-              <input
-                value={state.chatConfig.whatsappE164}
-                onChange={(e) =>
-                  persist({
-                    ...state,
-                    chatConfig: {
-                      ...state.chatConfig,
-                      whatsappE164: e.target.value.replace(/\D/g, ""),
-                    },
-                  })
-                }
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-950"
-                placeholder="919876543210"
-              />
-            </label>
-            <p className="mt-2 text-xs text-slate-500">{t("whatsappLogHint")}</p>
+            {sfContactLoading ? (
+              <p className="flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                …
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-500">
+                  {t("storefrontContactPhoneLabel")}
+                  <input
+                    value={sfContact.supportPhoneE164}
+                    onChange={(e) =>
+                      setSfContact((c) => ({
+                        ...c,
+                        supportPhoneE164: e.target.value.replace(/\D/g, ""),
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-950"
+                    placeholder="919876543210"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-500">
+                  {t("storefrontContactEmailLabel")}
+                  <input
+                    value={sfContact.supportEmail}
+                    onChange={(e) =>
+                      setSfContact((c) => ({
+                        ...c,
+                        supportEmail: e.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                    placeholder="support@example.com"
+                    type="email"
+                    autoComplete="email"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-500">
+                  {t("storefrontContactWhatsappLabel")}
+                  <input
+                    value={sfContact.whatsappE164}
+                    onChange={(e) =>
+                      setSfContact((c) => ({
+                        ...c,
+                        whatsappE164: e.target.value.replace(/\D/g, ""),
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-950"
+                    placeholder="919876543210"
+                    inputMode="numeric"
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={sfContactSaving}
+                  onClick={() => void saveSfContact()}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0066ff] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#0052cc] disabled:opacity-60"
+                >
+                  {sfContactSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null}
+                  {t("storefrontContactSave")}
+                </button>
+              </div>
+            )}
+            <p className="mt-4 text-xs text-slate-500">{t("whatsappLogHint")}</p>
             <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto text-[11px] font-mono text-slate-600 dark:text-slate-400">
               {state.chatConfig.whatsappLogs.slice(0, 15).map((l, i) => (
                 <li key={i}>

@@ -1,33 +1,75 @@
 /**
- * Deploy Firestore rules + indexes using FIREBASE_SERVICE_ACCOUNT_JSON from the environment
- * (same value as Vercel — paste into the shell or load from a JSON file).
+ * Deploy Firestore rules + indexes using a service account (same as Vercel).
  *
- * Usage (PowerShell, from web/):
- *   $env:FIREBASE_SERVICE_ACCOUNT_JSON = Get-Content C:\path\service-account.json -Raw
- *   $env:FIREBASE_PROJECT_ID = "your-project-id"   # optional if .firebaserc has default
- *   npm run firebase:deploy:firestore
+ * Loads web/.env and web/.env.local (Next.js-style: .env.local overrides .env).
+ * Plain `node` does not read .env files — that is why deploy failed when the JSON
+ * lived only in .env.local. Shell-set FIREBASE_SERVICE_ACCOUNT_JSON still wins.
  *
- * Deploys Firestore rules/indexes and Storage rules (see firebase.json).
+ * Fallback: GOOGLE_APPLICATION_CREDENTIALS → read JSON from that file path.
+ *
+ * Usage (from web/): npm run firebase:deploy:firestore
  */
 
 const { writeFileSync, mkdtempSync, readFileSync, existsSync } = require("node:fs");
 const { tmpdir } = require("node:os");
-const { join } = require("node:path");
+const { join, isAbsolute } = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+const root = join(__dirname, "..");
+
+/** Preserve credential if user exported it in the shell before npm run. */
+const shellServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+
+try {
+  const dotenv = require("dotenv");
+  dotenv.config({ path: join(root, ".env") });
+  dotenv.config({ path: join(root, ".env.local"), override: true });
+} catch (e) {
+  console.warn(
+    "[deploy-firestore] dotenv:",
+    e instanceof Error ? e.message : e
+  );
+}
+
+if (shellServiceAccountJson && String(shellServiceAccountJson).trim()) {
+  process.env.FIREBASE_SERVICE_ACCOUNT_JSON = shellServiceAccountJson;
+}
+
+let json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+if (!json || !String(json).trim()) {
+  const pathCandidates = [
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
+    process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  ].filter(Boolean);
+  for (const p of pathCandidates) {
+    if (!p) continue;
+    const resolved = isAbsolute(p) ? p : join(root, p);
+    if (existsSync(resolved)) {
+      try {
+        json = readFileSync(resolved, "utf8");
+        if (String(json).trim()) break;
+      } catch {
+        /* next */
+      }
+    }
+  }
+}
+
 if (!json || !String(json).trim()) {
   console.error(
-    "Missing FIREBASE_SERVICE_ACCOUNT_JSON.\n" +
-      "Example (PowerShell): $env:FIREBASE_SERVICE_ACCOUNT_JSON = Get-Content .\\sa.json -Raw\n" +
-      "Then: npm run firebase:deploy:firestore"
+    "Missing service account credentials.\n\n" +
+      "Fix one of:\n" +
+      "  • Add FIREBASE_SERVICE_ACCOUNT_JSON to web/.env.local (same as Vercel), then run from web/.\n" +
+      "  • Or PowerShell: $env:FIREBASE_SERVICE_ACCOUNT_JSON = Get-Content .\\path\\key.json -Raw\n" +
+      "  • Or set FIREBASE_SERVICE_ACCOUNT_PATH or GOOGLE_APPLICATION_CREDENTIALS to the key file path.\n\n" +
+      "Note: Next.js loads .env.local for `next dev`/`next build`, but this script needed dotenv — now fixed."
   );
   process.exit(1);
 }
 
 let project = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 if (!project) {
-  const rcPath = join(__dirname, "..", ".firebaserc");
+  const rcPath = join(root, ".firebaserc");
   if (existsSync(rcPath)) {
     try {
       const rc = JSON.parse(readFileSync(rcPath, "utf8"));
@@ -38,7 +80,9 @@ if (!project) {
   }
 }
 if (!project) {
-  console.error("Set FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID, or add default in .firebaserc");
+  console.error(
+    "Set FIREBASE_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID, or add default in .firebaserc"
+  );
   process.exit(1);
 }
 

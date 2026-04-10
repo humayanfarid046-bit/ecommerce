@@ -13,7 +13,6 @@ import {
   MapPin,
   CreditCard,
   Shield,
-  CircleHelp,
   MessageCircle,
   LogOut,
   Sparkles,
@@ -35,7 +34,11 @@ import { loadGamification } from "@/lib/gamification-storage";
 import { ProfileAvatarPreview } from "@/components/profile-avatar-preview";
 import { DrawerCategoryAccordion } from "@/components/drawer-category-accordion";
 import { DrawerOutfitChips } from "@/components/drawer-outfit-chips";
-import { getSupportState, logWhatsAppClick } from "@/lib/support-review-storage";
+import { logWhatsAppClick } from "@/lib/support-review-storage";
+import {
+  fetchStorefrontContact,
+  whatsappHref,
+} from "@/lib/storefront-contact-client";
 import { useMobileDrawer } from "@/context/mobile-drawer-context";
 
 function Divider() {
@@ -95,9 +98,7 @@ export function MobileNavDrawer() {
   const t = useTranslations("nav");
   const tf = useTranslations("footer");
   const { ids: wishIds } = useWishlist();
-  const [waHref, setWaHref] = useState(
-    "https://wa.me/919876543210?text=Hi%20%E2%80%94%20I%20need%20help."
-  );
+  const [waHref, setWaHref] = useState("https://wa.me/");
   const [walletPaise, setWalletPaise] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [profileTick, setProfileTick] = useState(0);
@@ -149,15 +150,17 @@ export function MobileNavDrawer() {
   }, []);
 
   useEffect(() => {
-    const sync = () => {
-      const num = getSupportState().chatConfig.whatsappE164.replace(/\D/g, "");
+    let cancelled = false;
+    void (async () => {
+      const c = await fetchStorefrontContact();
+      if (cancelled) return;
       setWaHref(
-        `https://wa.me/${num}?text=${encodeURIComponent("Hi — I need help with my order.")}`
+        whatsappHref(c, "Hi — I need help with my order.")
       );
+    })();
+    return () => {
+      cancelled = true;
     };
-    sync();
-    window.addEventListener("lc-support", sync);
-    return () => window.removeEventListener("lc-support", sync);
   }, []);
 
   useEffect(() => {
@@ -412,34 +415,12 @@ export function MobileNavDrawer() {
             <GroupLabel>{t("drawerGroupSupport")}</GroupLabel>
             <div className="space-y-1">
               <DrawerRow
-                href="/help"
-                onNavigate={close}
-                icon={<CircleHelp className="h-4 w-4" />}
-                label={t("drawerHelpCenter")}
-              />
-              <DrawerRow
                 href="/help#contact"
                 onNavigate={close}
                 icon={<Phone className="h-4 w-4" />}
                 label={t("drawerContactUs")}
                 hint={t("drawerContactUsHint")}
               />
-              <button
-                type="button"
-                className="flex w-full items-center gap-3 rounded-xl border border-transparent px-2 py-2.5 text-left transition hover:border-slate-200 hover:bg-white dark:hover:border-slate-600 dark:hover:bg-slate-800/80"
-                onClick={() => {
-                  close();
-                  window.dispatchEvent(new CustomEvent("lc-open-support-chat"));
-                }}
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  <MessageCircle className="h-4 w-4" />
-                </span>
-                <span className="flex-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
-                  {t("drawerSupportChat")}
-                </span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </button>
               <a
                 href={waHref}
                 target="_blank"

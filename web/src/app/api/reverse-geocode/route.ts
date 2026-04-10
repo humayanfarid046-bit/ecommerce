@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "LibasCollection/1.0 (e-commerce demo)",
+        "User-Agent": "LibasStore/1.0 (contact via site operator)",
         Accept: "application/json",
       },
       next: { revalidate: 0 },

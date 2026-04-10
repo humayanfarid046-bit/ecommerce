@@ -130,7 +130,7 @@ export function RazorpayPaymentsPanel() {
         refundId?: string;
         amount?: number;
         error?: string;
-        demo?: boolean;
+        unconfigured?: boolean;
       };
       if (res.ok && data.refundId) {
         markRefundedInLedger(pid, data.refundId, data.amount ?? row.amountPaise);
@@ -138,7 +138,7 @@ export function RazorpayPaymentsPanel() {
       } else {
         markRefundedInLedger(
           pid,
-          `rfnd_demo_${Date.now().toString(36)}`,
+          `rfnd_local_${Date.now().toString(36)}`,
           row.amountPaise
         );
         setRzpToast(t("rzpRefundDemoFallback"));

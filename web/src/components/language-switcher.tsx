@@ -23,7 +23,7 @@ export function LanguageSwitcher({ variant = "default" }: LangProps) {
         "flex items-center gap-0.5 rounded-full p-0.5",
         variant === "onPrimary"
           ? "border border-white/30 bg-white/10"
-          : "border border-slate-200/90 bg-slate-50/80"
+          : "border border-slate-200/90 bg-slate-50/80 dark:border-slate-600 dark:bg-slate-800/90"
       )}
       role="navigation"
       aria-label="Language"
@@ -41,7 +41,7 @@ export function LanguageSwitcher({ variant = "default" }: LangProps) {
                 : "bg-[#0066ff] text-white shadow-sm"
               : variant === "onPrimary"
                 ? "text-white/90 hover:text-white"
-                : "text-slate-500 hover:text-[var(--electric)]"
+                : "text-slate-500 hover:text-[var(--electric)] dark:text-slate-400 dark:hover:text-[#7eb3ff]"
           )}
         >
           {labels[loc] ?? loc.toUpperCase()}

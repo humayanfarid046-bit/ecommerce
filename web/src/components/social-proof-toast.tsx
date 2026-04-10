@@ -5,7 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
-import { pickRandomPerson, randomMins } from "@/lib/social-proof-messages";
+import {
+  pickRandomPerson,
+  randomMins,
+  SOCIAL_PROOF_PEOPLE,
+} from "@/lib/social-proof-messages";
 
 type Props = {
   /** Current product title on PDP; optional on other pages. */
@@ -41,13 +45,14 @@ export function SocialProofToast({ productTitle }: Props) {
 
   const rotate = useCallback(() => {
     const p = pickRandomPerson();
+    if (!p) return;
     setPayload({ name: p.name, city: p.city, mins: randomMins() });
     setVisible(true);
     window.setTimeout(() => setVisible(false), 5200);
   }, []);
 
   useEffect(() => {
-    if (!showOnThisPage) return;
+    if (!showOnThisPage || !SOCIAL_PROOF_PEOPLE.length) return;
     const first = window.setTimeout(rotate, 4000 + Math.random() * 3000);
     const interval = window.setInterval(
       () => rotate(),
