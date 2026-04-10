@@ -28,6 +28,7 @@ import { useAuth } from "@/context/auth-context";
 import { categories } from "@/lib/storefront-catalog";
 import { useMobileDrawer } from "@/context/mobile-drawer-context";
 import { getSupportState, logWhatsAppClick } from "@/lib/support-review-storage";
+import { DrawerOutfitChips } from "@/components/drawer-outfit-chips";
 
 function CategoryDrawerAccordion({
   onPick,
@@ -39,7 +40,7 @@ function CategoryDrawerAccordion({
   const ts = useTranslations("categorySub");
 
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-2">
       {categories.map((c) => {
         const hasChildren = Boolean(c.children?.length);
         const expanded = openId === c.id;
@@ -50,39 +51,48 @@ function CategoryDrawerAccordion({
               key={c.id}
               href={`/category/${c.slug}`}
               onClick={onPick}
-              className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-3 text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
+              className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 shadow-sm transition hover:border-[#2874f0]/40 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
             >
-              <span className="text-lg" aria-hidden>
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl dark:border-slate-600 dark:bg-slate-800"
+                aria-hidden
+              >
                 {c.icon}
               </span>
-              <span className="min-w-0 truncate">{title}</span>
+              <span className="min-w-0 flex-1 truncate">{title}</span>
             </Link>
           );
         }
         return (
           <div
             key={c.id}
-            className="rounded-lg border border-slate-100 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-800/50"
+            className={cn(
+              "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-900",
+              expanded && "ring-2 ring-[#2874f0]/35"
+            )}
           >
             <button
               type="button"
               onClick={() => setOpenId(expanded ? null : c.id)}
               aria-expanded={expanded}
-              className="flex w-full items-center gap-2 px-3 py-3 text-left text-sm font-semibold text-slate-800 dark:text-slate-100"
+              className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm font-bold text-slate-900 dark:text-slate-50"
             >
-              <span className="text-lg" aria-hidden>
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl dark:border-slate-600 dark:bg-slate-800"
+                aria-hidden
+              >
                 {c.icon}
               </span>
               <span className="min-w-0 flex-1 truncate">{title}</span>
-              <span className="shrink-0 text-[10px] font-bold text-slate-400">
+              <span className="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                 {expanded ? "−" : "+"}
               </span>
             </button>
             {expanded ? (
-              <div className="border-t border-slate-100 px-2 py-2 dark:border-slate-600">
+              <div className="border-t border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-600 dark:bg-slate-950/60">
                 <Link
                   href={`/category/${c.slug}`}
-                  className="block rounded-md px-3 py-2 text-sm font-medium text-[#2874f0]"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-bold text-[#2874f0] dark:text-[#7cb4ff]"
                   onClick={onPick}
                 >
                   {tc("viewAllInCategory", { name: title })}
@@ -91,7 +101,7 @@ function CategoryDrawerAccordion({
                   <Link
                     key={ch.slug}
                     href={`/category/${c.slug}?sub=${ch.slug}`}
-                    className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-700/80"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-800"
                     onClick={onPick}
                   >
                     {ts(ch.slug)}
@@ -153,14 +163,8 @@ export function SiteHeader() {
         >
           {/* Mobile: row1 logo + menu + wishlist + cart; row2 full-width search; desktop: logo | search | nav */}
           <div className="flex w-full min-w-0 items-center justify-between gap-2 md:contents">
-            <div className="flex min-h-[44px] min-w-0 shrink-0 items-center gap-2 md:order-1">
-              <Link
-                href="/"
-                className="flex min-h-[44px] shrink-0 items-center text-base font-extrabold tracking-tight text-white min-[400px]:text-lg md:text-xl"
-              >
-                <span className="italic">{tb("name")}</span>
-              </Link>
-
+            {/* Mobile: hamburger left (first tap target), then brand — avoids “middle” feel */}
+            <div className="flex min-h-[44px] min-w-0 shrink-0 items-center gap-1.5 md:order-1 md:gap-2">
               <button
                 type="button"
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10 md:hidden"
@@ -169,6 +173,12 @@ export function SiteHeader() {
               >
                 <Menu className="h-6 w-6" strokeWidth={2} />
               </button>
+              <Link
+                href="/"
+                className="flex min-h-[44px] min-w-0 shrink-0 items-center text-base font-extrabold tracking-tight text-white min-[400px]:text-lg md:text-xl"
+              >
+                <span className="italic">{tb("name")}</span>
+              </Link>
             </div>
 
             <nav className="ml-auto flex min-h-[44px] shrink-0 items-center gap-2.5 sm:gap-3 md:order-3 md:ml-auto md:gap-4 lg:gap-6">
@@ -247,12 +257,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile: horizontal category icons */}
-      <div className="border-b border-slate-200 bg-white md:hidden">
-        <CategoryNav variant="mobileScroll" />
-      </div>
-
-      {/* Desktop category strip */}
+      {/* Desktop category strip (mobile: categories live in drawer + search) */}
       <div className="hidden border-b border-slate-200 bg-white shadow-sm md:block">
         <CategoryNav flipkartStyle />
       </div>
@@ -295,63 +300,61 @@ export function SiteHeader() {
           </button>
         </div>
 
-        <div className="mt-3 flex flex-1 flex-col overflow-hidden px-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+        <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-lg bg-slate-100 px-3 pb-2 pt-3 dark:bg-slate-950">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("drawerShopBy")}
           </p>
-          <div className="mt-2 flex-1 overflow-y-auto overscroll-contain pb-4">
+          <div className="mt-2 flex-1 overflow-y-auto overscroll-contain pb-2">
             <CategoryDrawerAccordion onPick={() => closeDrawer()} />
           </div>
         </div>
 
-        <div className="mt-auto border-t border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-900/90">
+        <DrawerOutfitChips onPick={() => closeDrawer()} />
+
+        <div className="mt-auto border-t border-slate-800 bg-slate-950 p-3 text-slate-100">
           {authStatus === "ready" && user ? (
             <Link
               href="/account"
-              className="mb-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+              className="mb-2 flex items-center gap-2 rounded-lg bg-[#2874f0] px-3 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#2463d1]"
               onClick={() => closeDrawer()}
             >
-              <User className="h-4 w-4 text-[#2874f0]" />
+              <User className="h-4 w-4 shrink-0 text-white" />
               {t("drawerMyAccount")}
             </Link>
           ) : (
             <Link
               href="/login"
-              className="mb-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+              className="mb-2 flex items-center gap-2 rounded-lg bg-[#2874f0] px-3 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#2463d1]"
               onClick={() => closeDrawer()}
             >
-              <User className="h-4 w-4 text-[#2874f0]" />
+              <User className="h-4 w-4 shrink-0 text-white" />
               {t("login")}
             </Link>
           )}
-          <div className="flex items-center justify-between rounded-lg px-2 py-2">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-              {t("languageLabel")}
-            </span>
-            <LanguageSwitcher />
+          <div className="flex items-center justify-between rounded-lg px-2 py-2 text-slate-200">
+            <span className="text-xs font-semibold">{t("languageLabel")}</span>
+            <LanguageSwitcher variant="onPrimary" />
           </div>
-          <div className="flex items-center justify-between rounded-lg px-2 py-2">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-              {t("themeToggle")}
-            </span>
-            <ThemeToggle />
+          <div className="flex items-center justify-between rounded-lg px-2 py-2 text-slate-200">
+            <span className="text-xs font-semibold">{t("themeToggle")}</span>
+            <ThemeToggle variant="onPrimary" />
           </div>
           <button
             type="button"
-            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-100 hover:bg-white/10"
             onClick={() => {
               closeDrawer();
               window.dispatchEvent(new CustomEvent("lc-open-support-chat"));
             }}
           >
-            <MessageCircle className="h-4 w-4 shrink-0 text-[#2874f0]" />
+            <MessageCircle className="h-4 w-4 shrink-0 text-[#7cb4ff]" />
             {t("drawerSupportChat")}
           </button>
           <a
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50 dark:text-emerald-200 dark:hover:bg-emerald-950/40"
+            className="flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-emerald-300 hover:bg-white/10"
             onClick={() => {
               try {
                 logWhatsAppClick(
@@ -368,21 +371,21 @@ export function SiteHeader() {
           </a>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm font-semibold text-slate-100 hover:bg-white/10"
             onClick={() => {
               closeDrawer();
               window.dispatchEvent(new CustomEvent("lc-open-engagement-hub"));
             }}
           >
-            <Gift className="h-4 w-4 shrink-0 text-violet-600" />
+            <Gift className="h-4 w-4 shrink-0 text-violet-300" />
             {t("drawerRewards")}
           </button>
           <Link
             href="/help"
-            className="mt-0.5 flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-slate-800"
+            className="mt-0.5 flex items-center gap-2 rounded-lg px-2 py-2.5 text-sm font-semibold text-slate-100 hover:bg-white/10"
             onClick={() => closeDrawer()}
           >
-            <CircleHelp className="h-4 w-4 text-[#2874f0]" />
+            <CircleHelp className="h-4 w-4 text-[#7cb4ff]" />
             {t("helpSupport")}
           </Link>
         </div>

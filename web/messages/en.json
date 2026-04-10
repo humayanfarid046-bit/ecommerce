@@ -33,7 +33,20 @@
     "user": "Member",
     "drawerSupportChat": "Support chat",
     "drawerWhatsApp": "WhatsApp us",
-    "drawerRewards": "Rewards & spin"
+    "drawerRewards": "Rewards & spin",
+    "drawerShopByStyle": "Shop by outfit / style",
+    "drawerOutfitSaree": "Saree",
+    "drawerOutfitChuridar": "Churidar",
+    "drawerOutfitLehenga": "Lehenga",
+    "drawerOutfitKurta": "Kurta",
+    "drawerOutfitSalwar": "Salwar",
+    "drawerOutfitKurti": "Kurti",
+    "drawerOutfitDupatta": "Dupatta",
+    "drawerOutfitAnarkali": "Anarkali",
+    "drawerOutfitPalazzo": "Palazzo",
+    "drawerOutfitGown": "Gown",
+    "drawerOutfitSharara": "Sharara",
+    "drawerOutfitPunjabi": "Punjabi"
   },
   "share": {
     "share": "Share link",

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { categories } from "@/lib/storefront-catalog";
 import { ProductCard } from "@/components/product-card";
 import { ContinueShoppingSection } from "@/components/continue-shopping-section";
 import { InstagramFeed } from "@/components/instagram-feed";
@@ -20,7 +19,6 @@ import { CATALOG_EVENT } from "@/lib/catalog-products-storage";
 
 export function HomePageContent() {
   const t = useTranslations("home");
-  const tc = useTranslations("categories");
   const [tick, setTick] = useState(0);
   const catalog = useCatalogProducts();
 
@@ -71,29 +69,8 @@ export function HomePageContent() {
 
         switch (parsed.key) {
           case "categories":
-            return (
-              <section key={raw}>
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
-                  {t("shopByCategory")}
-                </h2>
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 md:mt-6">
-                  {categories.map((c) => (
-                    <Link
-                      key={c.id}
-                      href={`/category/${c.slug}`}
-                      className="glass flex flex-col items-center gap-3 rounded-3xl p-6 text-center transition hover:shadow-[0_12px_40px_rgba(0,102,255,0.15)]"
-                    >
-                      <span className="text-4xl" aria-hidden>
-                        {c.icon}
-                      </span>
-                      <span className="text-sm font-bold text-slate-800">
-                        {tc(c.slug)}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            );
+            /* Categories live in drawer (mobile) + header strip (desktop); no duplicate grid under hero. */
+            return null;
           case "featured":
             return (
               <section key={raw} className={blockGap}>

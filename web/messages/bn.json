@@ -33,7 +33,20 @@
     "user": "মেম্বার",
     "drawerSupportChat": "সাপোর্ট চ্যাট",
     "drawerWhatsApp": "হোয়াটসঅ্যাপ",
-    "drawerRewards": "রিওয়ার্ড ও স্পিন"
+    "drawerRewards": "রিওয়ার্ড ও স্পিন",
+    "drawerShopByStyle": "পোশাকের ধরন অনুযায়ী",
+    "drawerOutfitSaree": "শাড়ি",
+    "drawerOutfitChuridar": "চুরিদার",
+    "drawerOutfitLehenga": "লেহেঙ্গা",
+    "drawerOutfitKurta": "কুর্তা",
+    "drawerOutfitSalwar": "সালোয়ার",
+    "drawerOutfitKurti": "কুর্তি",
+    "drawerOutfitDupatta": "দুপাট্টা",
+    "drawerOutfitAnarkali": "আনারকলি",
+    "drawerOutfitPalazzo": "পলাজ্যো",
+    "drawerOutfitGown": "গাউন",
+    "drawerOutfitSharara": "শরারা",
+    "drawerOutfitPunjabi": "পাঞ্জাবি"
   },
   "share": {
     "share": "লিঙ্ক শেয়ার",

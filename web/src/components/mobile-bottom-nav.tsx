@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
-import { Home, LayoutGrid, ShoppingCart, User, Search } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, User } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ export function MobileBottomNav() {
         match: (p: string) => boolean;
       };
 
+  /** Four tabs: Home, Categories (drawer), Cart, Account. Search stays in header only. */
   const nav: Entry[] = [
     {
       kind: "link",
@@ -44,13 +45,6 @@ export function MobileBottomNav() {
       label: t("bottomCategories"),
       Icon: LayoutGrid,
       match: (p) => p.includes("/category"),
-    },
-    {
-      kind: "link",
-      href: "/search",
-      label: t("bottomSearch"),
-      Icon: Search,
-      match: (p) => p.startsWith("/search"),
     },
     {
       kind: "link",
@@ -70,7 +64,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[52] flex min-h-[calc(3.25rem+env(safe-area-inset-bottom))] items-stretch justify-around border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] pt-1.5 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-[52] flex min-h-[calc(3.25rem+env(safe-area-inset-bottom))] items-stretch justify-around border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)] pt-1.5 text-slate-400 shadow-[0_-4px_16px_rgba(0,0,0,0.35)] lg:hidden"
       aria-label={t("bottomNavAria")}
     >
       {nav.map((item) => {
@@ -84,7 +78,7 @@ export function MobileBottomNav() {
               onClick={() => openDrawer()}
               className={cn(
                 "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1 text-[9px] font-semibold leading-tight sm:text-[10px]",
-                active ? "text-[#2874f0]" : "text-slate-600"
+                active ? "text-[#5ab0ff]" : "text-slate-400"
               )}
             >
               <Icon className="h-5 w-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
@@ -100,13 +94,13 @@ export function MobileBottomNav() {
             href={item.href}
             className={cn(
               "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1 text-[9px] font-semibold leading-tight sm:text-[10px]",
-              active ? "text-[#2874f0]" : "text-slate-600"
+              active ? "text-[#5ab0ff]" : "text-slate-400"
             )}
           >
             <span className="relative inline-flex items-center justify-center">
               <Icon className="h-5 w-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
               {item.href === "/cart" && count > 0 ? (
-                <span className="absolute -right-1.5 -top-1 z-[1] flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[9px] font-bold text-white ring-2 ring-white">
+                <span className="absolute -right-1.5 -top-1 z-[1] flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[9px] font-bold text-white ring-2 ring-slate-950">
                   {count > 99 ? "99+" : count}
                 </span>
               ) : null}

@@ -89,7 +89,7 @@ function uid() {
 export function defaultCmsState(): CmsState {
   return {
     banners: [],
-    sectionOrder: ["categories", "featured", "continue", "instagram"],
+    sectionOrder: ["featured", "continue", "instagram"],
     customSections: [],
     flashSale: {
       enabled: false,
