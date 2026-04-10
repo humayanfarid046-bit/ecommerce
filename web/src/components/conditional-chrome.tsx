@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { SeoHeadInjector } from "@/components/seo-head-injector";
 import { SitePromoPopup } from "@/components/site-promo-popup";
@@ -9,7 +10,8 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { HelpSupportFab } from "@/components/help-support-fab";
 
 /**
- * Hides storefront header/footer on `/admin` routes so the admin shell is full-width.
+ * Hides storefront header/footer on `/admin` and `/delivery/*` so admin / delivery partner
+ * UIs are not wrapped in the shopper shell (cart, account, bottom nav, promo FABs).
  * Header/footer are passed from the server layout so server-only components (e.g. SiteFooter
  * with getTranslations) are not imported into this client module.
  */
@@ -25,10 +27,14 @@ export function ConditionalChrome({
   trustBar?: React.ReactNode;
   footer: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isAdmin = pathname?.includes("/admin");
+  const pathname = usePathname() ?? "";
+  const isAdmin = pathname.includes("/admin");
+  /** Default locale may omit prefix (`/delivery/...`); others use `/bn/delivery/...`. */
+  const isDeliveryPartnerShell =
+    pathname.startsWith("/delivery") ||
+    routing.locales.some((loc) => pathname.startsWith(`/${loc}/delivery`));
 
-  if (isAdmin) {
+  if (isAdmin || isDeliveryPartnerShell) {
     return <>{children}</>;
   }
 

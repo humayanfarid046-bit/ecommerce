@@ -4,6 +4,17 @@ import { verifyUserIdToken } from "@/lib/verify-user-token";
 import { getUserRole } from "@/lib/server-rbac";
 import { parseUserOrderDocument } from "@/lib/user-order-firestore";
 import { creditRiderWalletOnDelivery } from "@/lib/server-rider-wallet";
+import { getSiteUrl } from "@/lib/sitemap-build";
+import { getProductIdToTitleMap } from "@/lib/server-catalog-titles";
+import { verifyRazorpayPaymentSignature } from "@/lib/razorpay-verify-signature";
+
+function requestOrigin(req: Request): string {
+  try {
+    return new URL(req.url).origin;
+  } catch {
+    return getSiteUrl();
+  }
+}
 
 export async function GET(req: Request) {
   const auth = await verifyUserIdToken(req);
@@ -46,10 +57,18 @@ export async function GET(req: Request) {
     .limit(200)
     .get();
 
+  const productTitles = await getProductIdToTitleMap(db);
+
   const orders = liveSnap.docs.map((doc) => {
     const p = doc.ref.path.split("/");
     const userId = p[1] ?? "";
     const r = parseUserOrderDocument(doc.id, doc.data() as Record<string, unknown>);
+    const lineItems = (r.lineItems ?? []).map((li) => ({
+      variantId: li.variantId,
+      productId: li.productId,
+      qty: li.qty,
+      productTitle: productTitles.get(li.productId) ?? "",
+    }));
     return {
       userId,
       orderId: r.id,
@@ -59,7 +78,7 @@ export async function GET(req: Request) {
       amount: r.totalRupees,
       paymentStatus: r.paymentStatus ?? "PENDING",
       deliveryPartnerId: r.deliveryPartnerId ?? "",
-      lineItems: r.lineItems ?? [],
+      lineItems,
       itemTitle: r.itemTitle ?? "",
       otpRequired: Boolean(r.deliveryOtp),
       deliveredAt: r.deliveredAt ?? "",
@@ -85,6 +104,12 @@ export async function GET(req: Request) {
   const cashCollectedToday = completedToday
     .filter((h) => h.collectedVia === "cash" && h.paymentStatus === "PAID")
     .reduce((s, h) => s + Math.max(0, Number(h.amount) || 0), 0);
+
+  const walletSnap = await db.doc(`riderWallets/${auth.uid}`).get();
+  const wd = (walletSnap.data() ?? {}) as Record<string, unknown>;
+  const cashInHandPaise = Math.max(0, Math.floor(Number(wd.cashInHandPaise) || 0));
+  const lifetimeOnlinePaise = Math.max(0, Math.floor(Number(wd.lifetimeOnlineReportedPaise) || 0));
+
   return NextResponse.json({
     ok: true,
     dutyOnline,
@@ -95,6 +120,12 @@ export async function GET(req: Request) {
       pending: orders.length,
       completed: completedToday.length,
       cashCollected: cashCollectedToday,
+    },
+    wallet: {
+      /** Cash collected (COD) rider still holds — settle with admin */
+      cashInHandRupees: cashInHandPaise / 100,
+      /** Online/UPI amounts recorded via this app (lifetime counter) */
+      lifetimeOnlineRupees: lifetimeOnlinePaise / 100,
     },
     orders,
     history: history.slice(0, 80),
@@ -126,6 +157,9 @@ export async function PATCH(req: Request) {
     onlineAmount?: number;
     otp?: string;
     signature?: string;
+    razorpay_order_id?: string;
+    razorpay_payment_id?: string;
+    razorpay_signature?: string;
     online?: boolean;
     reason?: string;
     lat?: number;
@@ -211,8 +245,8 @@ export async function PATCH(req: Request) {
   let qrOrder: { orderId: string; amount: number; currency: string; keyId: string } | null = null;
   if (body.paymentMethod === "qr") {
     const amountPaise = Math.max(100, Math.floor((Number(data.totalRupees) || 0) * 100));
-    const base = new URL(req.url);
-    const r = await fetch(new URL("/api/razorpay/create-order", base), {
+    const origin = requestOrigin(req);
+    const r = await fetch(`${origin}/api/razorpay/create-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: `dlv_${orderId}` }),
@@ -229,6 +263,28 @@ export async function PATCH(req: Request) {
     body.paymentMethod === "qr_confirm" ||
     body.paymentMethod === "partial"
   ) {
+    if (body.paymentMethod === "qr_confirm") {
+      const keySecret = process.env.RAZORPAY_KEY_SECRET;
+      const rzOrder = String(body.razorpay_order_id ?? "").trim();
+      const rzPay = String(body.razorpay_payment_id ?? "").trim();
+      const rzSig = String(body.razorpay_signature ?? "").trim();
+      if (keySecret) {
+        if (!rzOrder || !rzPay || !rzSig) {
+          return NextResponse.json(
+            {
+              error:
+                "Razorpay payment proof missing. Complete payment in the Razorpay window, or set RAZORPAY_KEY_SECRET only in production.",
+            },
+            { status: 400 }
+          );
+        }
+        if (!verifyRazorpayPaymentSignature(rzOrder, rzPay, rzSig, keySecret)) {
+          return NextResponse.json({ error: "Invalid Razorpay payment signature." }, { status: 400 });
+        }
+      }
+      /* No RAZORPAY_KEY_SECRET: allow qr_confirm without crypto proof (local dev only). */
+    }
+
     const nowIso = new Date().toISOString();
     const total = Math.max(0, Number(data.totalRupees) || 0);
     const cashAmount = Math.max(0, Number(body.cashAmount) || 0);
@@ -245,6 +301,8 @@ export async function PATCH(req: Request) {
     if (body.paymentMethod === "cash" && cashAmount <= 0) {
       return NextResponse.json({ error: "Cash amount required." }, { status: 400 });
     }
+    const sigRaw = String(body.signature ?? "");
+    const sigStored = sigRaw.length > 80000 ? `${sigRaw.slice(0, 80000)}…[truncated]` : sigRaw;
     await ref.set(
       {
         status: "delivered",
@@ -265,7 +323,10 @@ export async function PATCH(req: Request) {
                 : "qr",
           cashAmount,
           onlineAmount,
-          signature: String(body.signature ?? "").slice(0, 120),
+          signature: sigStored,
+          ...(body.paymentMethod === "qr_confirm" && body.razorpay_payment_id
+            ? { razorpayPaymentId: String(body.razorpay_payment_id) }
+            : {}),
         },
         updatedAt: Date.now(),
       },

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { DeliveryPartnerAppBar } from "@/components/delivery-partner-app-bar";
+import { SignaturePad } from "@/components/signature-pad";
 
 type DeliveryOrder = {
   userId: string;
@@ -11,9 +13,20 @@ type DeliveryOrder = {
   address: string;
   amount: number;
   paymentStatus: "PENDING" | "PAID";
-  lineItems: Array<{ variantId: string; productId: string; qty: number }>;
+  lineItems: Array<{
+    variantId: string;
+    productId: string;
+    qty: number;
+    productTitle?: string;
+  }>;
   itemTitle: string;
   otpRequired: boolean;
+};
+
+type RazorpaySuccess = {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
 };
 
 export default function DeliveryDashboardPage() {
@@ -28,14 +41,17 @@ export default function DeliveryDashboardPage() {
     cashCollected: 0,
   });
   const [dutyOnline, setDutyOnline] = useState(false);
+  const [wallet, setWallet] = useState({ cashInHandRupees: 0, lifetimeOnlineRupees: 0 });
   const [error, setError] = useState<string | null>(null);
   const [busyOrder, setBusyOrder] = useState<string | null>(null);
+  const [qrOtp, setQrOtp] = useState("");
   const [qrPopup, setQrPopup] = useState<{
     userId: string;
     orderId: string;
     keyId: string;
     rzOrderId: string;
     amount: number;
+    otpRequired: boolean;
   } | null>(null);
   const [paymentModal, setPaymentModal] = useState<{
     order: DeliveryOrder;
@@ -63,11 +79,16 @@ export default function DeliveryDashboardPage() {
         history?: Array<{ orderId: string; amount: number; paidAt: string; paymentStatus: "PENDING" | "PAID"; collectedVia: string }>;
         todaySummary?: { totalOrders?: number; pending?: number; completed?: number; cashCollected?: number };
         dutyOnline?: boolean;
+        wallet?: { cashInHandRupees?: number; lifetimeOnlineRupees?: number };
       };
       if (!res.ok) {
         setError(j.error ?? "Failed to load delivery orders.");
         return;
       }
+      setWallet({
+        cashInHandRupees: Number(j.wallet?.cashInHandRupees ?? 0),
+        lifetimeOnlineRupees: Number(j.wallet?.lifetimeOnlineRupees ?? 0),
+      });
       setRows(Array.isArray(j.orders) ? j.orders : []);
       setHistory(Array.isArray(j.history) ? j.history : []);
       setTodaySummary({
@@ -172,12 +193,14 @@ export default function DeliveryDashboardPage() {
         return;
       }
       if (j.qrOrder) {
+        setQrOtp("");
         setQrPopup({
           userId: o.userId,
           orderId: o.orderId,
           keyId: j.qrOrder.keyId,
           rzOrderId: j.qrOrder.orderId,
           amount: j.qrOrder.amount,
+          otpRequired: o.otpRequired,
         });
       }
     } catch {
@@ -198,12 +221,79 @@ export default function DeliveryDashboardPage() {
       },
       body: JSON.stringify({ action: "toggle_duty", online: next }),
     });
-    if (res.ok) setDutyOnline(next);
+    if (res.ok) {
+      setDutyOnline(next);
+      setError(null);
+      return;
+    }
+    const j = (await res.json().catch(() => ({}))) as { error?: string };
+    setError(j.error ?? "Could not update duty status.");
+  }
+
+  async function patchMarkDeliveredQr(
+    popup: NonNullable<typeof qrPopup>,
+    otp: string,
+    rz: RazorpaySuccess | null
+  ) {
+    const digits = otp.replace(/\D/g, "").slice(0, 6);
+    if (popup.otpRequired && digits.length !== 6) {
+      setError("Enter the 6-digit delivery OTP from the customer.");
+      return;
+    }
+    const token = await getFirebaseAuth()?.currentUser?.getIdToken();
+    if (!token) {
+      setError("Please login.");
+      return;
+    }
+    const body: Record<string, unknown> = {
+      userId: popup.userId,
+      orderId: popup.orderId,
+      paymentMethod: "qr_confirm",
+      otp: digits,
+    };
+    if (rz) {
+      body.razorpay_order_id = rz.razorpay_order_id;
+      body.razorpay_payment_id = rz.razorpay_payment_id;
+      body.razorpay_signature = rz.razorpay_signature;
+    }
+    const res = await fetch("/api/delivery/dashboard", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const j = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      setError(j.error ?? "Could not complete delivery.");
+      return;
+    }
+    setQrPopup(null);
+    setQrOtp("");
+    await load();
+  }
+
+  function loadRazorpayScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const w = window as unknown as { Razorpay?: unknown };
+      if (w.Razorpay) {
+        resolve();
+        return;
+      }
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.async = true;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("script"));
+      document.body.appendChild(s);
+    });
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 p-4 text-slate-100">
-      <div className="mx-auto max-w-md space-y-3">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <DeliveryPartnerAppBar />
+      <main className="mx-auto max-w-md space-y-3 p-4 pb-16">
         <h1 className="text-xl font-black">Delivery Dashboard</h1>
         <p className="text-xs text-slate-400">Assigned out-for-delivery orders only</p>
         <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900 p-3 text-sm">
@@ -222,7 +312,20 @@ export default function DeliveryDashboardPage() {
           <div className="rounded-lg border border-slate-700 bg-slate-900 p-2">Done: {todaySummary.completed}</div>
         </div>
         <div className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-sm">
-          Session paid collection: Rs {totalCash.toLocaleString("en-IN")}
+          <p className="text-xs text-slate-400">Today — cash marked received (session)</p>
+          <p className="font-semibold text-white">
+            Rs {totalCash.toLocaleString("en-IN")}
+          </p>
+        </div>
+        <div className="rounded-xl border border-amber-800/60 bg-amber-950/30 p-3 text-sm">
+          <p className="text-xs font-bold text-amber-200/90">Cash with you (give to admin)</p>
+          <p className="text-lg font-black text-white">
+            Rs {wallet.cashInHandRupees.toLocaleString("en-IN")}
+          </p>
+          <p className="mt-2 text-[11px] text-slate-400">
+            Online/UPI recorded (lifetime): Rs{" "}
+            {wallet.lifetimeOnlineRupees.toLocaleString("en-IN")}
+          </p>
         </div>
         {error ? <p className="text-sm text-rose-400">{error}</p> : null}
         {rows.map((o) => (
@@ -233,12 +336,12 @@ export default function DeliveryDashboardPage() {
                 Call
               </a>
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address || o.customerName)}`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(o.address || o.customerName)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-lg border border-slate-600 px-3 py-1 text-xs"
               >
-                Open in Maps
+                Navigate
               </a>
             </div>
             <p className="mt-2 text-xs text-slate-300">{o.address || "Address not available"}</p>
@@ -248,7 +351,10 @@ export default function DeliveryDashboardPage() {
               <ul className="mt-1 list-disc pl-4 text-xs text-slate-400">
                 {o.lineItems.map((x, i) => (
                   <li key={`${x.variantId}-${i}`}>
-                    {x.variantId} x {x.qty}
+                    <span className="font-medium text-slate-200">
+                      {x.productTitle || x.productId}
+                    </span>
+                    {x.variantId ? ` · ${x.variantId}` : ""} × {x.qty}
                   </li>
                 ))}
               </ul>
@@ -309,50 +415,89 @@ export default function DeliveryDashboardPage() {
             ))}
           </ul>
         </div>
-      </div>
+      </main>
       {qrPopup ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-xl bg-slate-900 p-4">
-            <p className="text-sm font-bold">QR Payment Initialized</p>
+            <p className="text-sm font-bold">Online payment (Razorpay)</p>
             <p className="mt-1 text-xs text-slate-400">Order: {qrPopup.orderId}</p>
-            <p className="text-xs text-slate-400">Gateway order: {qrPopup.rzOrderId}</p>
-            <p className="text-xs text-slate-400">Amount: Rs {(qrPopup.amount / 100).toLocaleString("en-IN")}</p>
+            <p className="text-xs text-slate-400">Razorpay order: {qrPopup.rzOrderId}</p>
+            <p className="text-xs text-slate-400">
+              Amount: Rs {(qrPopup.amount / 100).toLocaleString("en-IN")}
+            </p>
+            {qrPopup.otpRequired ? (
+              <input
+                value={qrOtp}
+                onChange={(e) =>
+                  setQrOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                placeholder="Customer delivery OTP (6 digits)"
+                className="mt-3 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-2 text-sm font-mono tracking-widest"
+                inputMode="numeric"
+              />
+            ) : null}
             <button
               type="button"
-              onClick={async () => {
-                const token = await getFirebaseAuth()?.currentUser?.getIdToken();
-                if (!token) {
-                  setError("Please login.");
-                  return;
-                }
-                const res = await fetch("/api/delivery/dashboard", {
-                  method: "PATCH",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({
-                    userId: qrPopup.userId,
-                    orderId: qrPopup.orderId,
-                    paymentMethod: "qr_confirm",
-                  }),
-                });
-                const j = (await res.json().catch(() => ({}))) as { error?: string };
-                if (!res.ok) {
-                  setError(j.error ?? "Failed to confirm QR payment.");
-                  return;
-                }
-                setQrPopup(null);
-                await load();
+              onClick={() => {
+                void (async () => {
+                  setError(null);
+                  const popup = qrPopup;
+                  try {
+                    await loadRazorpayScript();
+                  } catch {
+                    setError("Could not load Razorpay.");
+                    return;
+                  }
+                  const w = window as unknown as {
+                    Razorpay: new (opts: {
+                      key: string;
+                      amount: number;
+                      currency: string;
+                      order_id: string;
+                      name: string;
+                      description?: string;
+                      handler: (response: RazorpaySuccess) => void;
+                    }) => { open: () => void };
+                  };
+                  const Rzp = w.Razorpay;
+                  const rzp = new Rzp({
+                    key: popup.keyId,
+                    amount: popup.amount,
+                    currency: "INR",
+                    order_id: popup.rzOrderId,
+                    name: "Order payment",
+                    description: popup.orderId,
+                    handler: (response: RazorpaySuccess) => {
+                      void patchMarkDeliveredQr(popup, qrOtp, response);
+                    },
+                  });
+                  rzp.open();
+                })();
               }}
-              className="mt-3 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold"
+              className="mt-3 w-full rounded-lg bg-[#0066ff] px-3 py-2.5 text-xs font-bold text-white"
             >
-              Payment Confirmed (Mark Delivered)
+              Pay with Razorpay
             </button>
+            <p className="mt-2 text-[11px] leading-snug text-slate-500">
+              After successful payment, delivery is marked automatically (OTP verified on server when
+              required).
+            </p>
+            {typeof window !== "undefined" && window.location.hostname === "localhost" ? (
+              <button
+                type="button"
+                onClick={() => void patchMarkDeliveredQr(qrPopup, qrOtp, null)}
+                className="mt-2 w-full rounded-lg border border-amber-700/60 px-3 py-2 text-[11px] font-bold text-amber-200"
+              >
+                Dev: mark delivered without Razorpay proof
+              </button>
+            ) : null}
             <button
               type="button"
-              onClick={() => setQrPopup(null)}
-              className="mt-2 rounded-lg border border-slate-600 px-3 py-1.5 text-xs"
+              onClick={() => {
+                setQrPopup(null);
+                setQrOtp("");
+              }}
+              className="mt-3 w-full rounded-lg border border-slate-600 px-3 py-2 text-xs"
             >
               Close
             </button>
@@ -446,12 +591,11 @@ export default function DeliveryDashboardPage() {
                 className="mt-2 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-1.5 text-xs"
               />
             ) : null}
-            <input
-              value={paymentModal.signature}
-              onChange={(e) => setPaymentModal((m) => (m ? { ...m, signature: e.target.value } : m))}
-              placeholder="Customer signature (text optional)"
-              className="mt-2 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-1.5 text-xs"
-            />
+            <div className="mt-2">
+              <SignaturePad
+                onChange={(v) => setPaymentModal((m) => (m ? { ...m, signature: v } : m))}
+              />
+            </div>
             <button
               type="button"
               onClick={async () => {
@@ -496,7 +640,7 @@ export default function DeliveryDashboardPage() {
           </div>
         </div>
       ) : null}
-    </main>
+    </div>
   );
 }
 

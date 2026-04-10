@@ -56,7 +56,8 @@ export function statusToStep(
     case "pending":
       return 0;
     case "shipped":
-      return 1;
+      /** Align with Firestore `out_for_delivery` (admin "shipped" row). */
+      return 2;
     case "delivered":
       return 3;
     case "cancelled":

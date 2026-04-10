@@ -748,8 +748,12 @@ export function AdminOrders() {
             orderId: o.id,
             deliveryPartnerId: p.uid,
             deliveryPartnerName: p.name,
-            status: "processing",
-            shipmentStep: 1,
+            /** Must match logged-in rider dashboard query (out_for_delivery + partner id). */
+            status: "out_for_delivery",
+            shipmentStep: 2,
+            /** Surface partner on labels / notifications; link flow may still add overrides. */
+            riderName: p.name,
+            riderPhone: p.phone?.replace(/\D/g, "") ?? "",
           }),
         });
         const j = (await res.json().catch(() => ({}))) as { error?: string };
@@ -760,11 +764,20 @@ export function AdminOrders() {
         setOrders((prev) =>
           prev.map((x) =>
             x.id === o.id
-              ? { ...x, deliveryPartnerId: p.uid, deliveryPartnerName: p.name }
+              ? {
+                  ...x,
+                  status: "shipped",
+                  deliveryPartnerId: p.uid,
+                  deliveryPartnerName: p.name,
+                  riderName: p.name,
+                  riderPhone: p.phone?.replace(/\D/g, "") || x.riderPhone,
+                }
               : x
           )
         );
-        setToast("Delivery partner assigned.");
+        setOrderTracking(o.id, { step: 2 });
+        dispatchOrderTrackingEvent();
+        setToast("Delivery partner assigned — order is out for delivery on their app.");
       } catch {
         setToast("Failed to assign delivery partner");
       }

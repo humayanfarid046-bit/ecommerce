@@ -87,6 +87,19 @@ export async function PATCH(req: Request) {
   const existingSnap = await orderRef.get();
   const existing = (existingSnap.data() ?? {}) as Record<string, unknown>;
 
+  /** Reassigning the app-logged-in rider invalidates anonymous /delivery/[token] links for safety. */
+  if (body.deliveryPartnerId !== undefined && body.riderToken === undefined) {
+    const newPid = String(body.deliveryPartnerId).trim();
+    const oldPid =
+      typeof existing.deliveryPartnerId === "string"
+        ? existing.deliveryPartnerId.trim()
+        : "";
+    const hadToken = typeof existing.riderToken === "string" && existing.riderToken.length > 0;
+    if (hadToken && newPid !== oldPid) {
+      patch.riderTokenRevokedAt = Date.now();
+    }
+  }
+
   if (body.action === "stock_in_rto") {
     if (existing.rtoPendingStockIn !== true) {
       return NextResponse.json({ error: "No pending RTO stock-in for this order." }, { status: 400 });
