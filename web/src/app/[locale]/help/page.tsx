@@ -1,6 +1,16 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { HelpContactSection } from "@/components/help-contact-section";
+import { HelpIntro } from "@/components/help-intro";
+import { ChevronDown } from "lucide-react";
+import {
+  innerPageShell,
+  appHeading,
+  appCard,
+  sectionLabel,
+  pressable,
+} from "@/lib/app-inner-ui";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -12,28 +22,37 @@ export default async function HelpPage({ params }: Props) {
   const faqIds = ["cancel", "return", "wallet", "delivery", "account"] as const;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 md:py-14">
-      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
-        {t("title")}
-      </h1>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-        {t("intro")}
-      </p>
+    <div className={cn(innerPageShell, "min-h-[65vh]")}>
+      <header className="mb-2">
+        <h1 className={cn(appHeading, "text-[1.65rem] font-bold tracking-tight md:text-3xl")}>
+          {t("title")}
+        </h1>
+      </header>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {t("faqHeading")}
-        </h2>
-        <div className="mt-4 space-y-2">
+      <HelpIntro />
+
+      <section className="mb-10">
+        <p className={sectionLabel}>{t("faqHeading")}</p>
+        <div
+          className={cn(
+            "mt-4 space-y-2.5 p-4 sm:p-5",
+            appCard,
+            "border-slate-100/90 bg-white shadow-[0_2px_20px_rgba(15,23,42,0.06)] dark:border-white/[0.07] dark:bg-[#161d2b] dark:shadow-[0_12px_48px_rgba(0,0,0,0.42)]"
+          )}
+        >
           {faqIds.map((id) => (
             <details
               key={id}
-              className="group rounded-2xl border border-slate-200/90 bg-white/80 open:shadow-md dark:border-slate-700/80 dark:bg-slate-900/40"
+              className={cn(
+                "group overflow-hidden rounded-2xl border border-slate-100/80 bg-slate-50/50 open:bg-white dark:border-white/[0.06] dark:bg-white/[0.03] dark:open:bg-[#1a2230]",
+                pressable
+              )}
             >
-              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-100 [&::-webkit-details-marker]:hidden">
-                {t(`faq.${id}.q`)}
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 text-[13px] font-semibold text-slate-900 [&::-webkit-details-marker]:hidden dark:text-[#e8edf5]">
+                <span className="min-w-0 flex-1 leading-snug">{t(`faq.${id}.q`)}</span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500" />
               </summary>
-              <p className="border-t border-slate-100 px-4 pb-3 pt-2 text-sm leading-relaxed text-slate-600 dark:border-slate-700 dark:text-slate-300">
+              <p className="border-t border-slate-100/90 px-3.5 pb-3.5 pt-2.5 text-[12px] leading-relaxed text-slate-600 dark:border-white/[0.06] dark:text-slate-300/90">
                 {t(`faq.${id}.a`)}
               </p>
             </details>
@@ -43,10 +62,10 @@ export default async function HelpPage({ params }: Props) {
 
       <HelpContactSection />
 
-      <p className="mt-8 text-center">
+      <p className="mt-10">
         <Link
           href="/"
-          className="text-sm font-semibold text-[#0066ff] hover:underline"
+          className="inline-flex text-[13px] font-semibold text-[#0066ff] transition hover:underline dark:text-[#7cb4ff]"
         >
           {t("backHome")}
         </Link>

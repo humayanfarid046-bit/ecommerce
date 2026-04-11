@@ -22,6 +22,12 @@ import { CategoryAwarePrice } from "@/components/category-aware-price";
 import { AccountLegalInformation } from "@/components/account-legal-information";
 import { readProfile, type StoredProfile } from "@/lib/account-profile-storage";
 import { getWallet, walletUserId } from "@/lib/wallet-storage";
+import {
+  appCard,
+  gradientCta,
+  pressable,
+  sectionLabel,
+} from "@/lib/app-inner-ui";
 
 export default function AccountOverviewPage() {
   const { user } = useAuth();
@@ -100,7 +106,9 @@ export default function AccountOverviewPage() {
 
   return (
     <div className="account-prose-tight space-y-8 sm:space-y-10">
-      <header className="glass flex flex-col gap-6 rounded-3xl border border-slate-200/80 p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
+      <header
+        className={`${appCard} flex flex-col gap-6 rounded-[22px] p-4 sm:p-6 md:flex-row md:items-center md:justify-between`}
+      >
         <div className="flex items-center gap-4">
           <ProfileAvatarPreview
             imageSrc={profile.photoDataUrl}
@@ -108,7 +116,7 @@ export default function AccountOverviewPage() {
             nameLabel={displayName}
           />
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-[#e8edf5] sm:text-2xl">
               {displayName}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -128,7 +136,9 @@ export default function AccountOverviewPage() {
         </div>
       </header>
 
-      <div className="glass flex flex-col gap-4 rounded-2xl border border-slate-200/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div
+        className={`${appCard} flex flex-col gap-4 rounded-[18px] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5`}
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0066ff]/10 text-[#0066ff]">
             <Wallet className="h-5 w-5" />
@@ -137,57 +147,55 @@ export default function AccountOverviewPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               {t("storeBalance")}
             </p>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-[#e8edf5]">
               ₹{(walletPaise / 100).toLocaleString("en-IN")}
             </p>
           </div>
         </div>
         <Link
           href="/account/payments#wallet-add-money"
-          className="inline-flex items-center justify-center rounded-xl bg-[#2874f0] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#1a65d8]"
+          className={`${gradientCta} inline-flex items-center justify-center px-5 py-3 text-sm font-bold`}
         >
           {t("walletAddMoneyTitle")}
         </Link>
       </div>
 
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
-          {t("quickStats")}
-        </h2>
+        <h2 className={sectionLabel}>{t("quickStats")}</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-4">
-          <div className="glass rounded-2xl border border-slate-200/80 p-4">
-            <div className="flex items-center gap-2 text-slate-500">
+          <div className={`${appCard} rounded-[18px] p-4`}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ShoppingBag className="h-4 w-4 text-[#0066ff]" />
               <p className="text-xs font-semibold">{t("statOrders")}</p>
             </div>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
+            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-[#e8edf5]">
               {orderCount}
             </p>
           </div>
-          <div className="glass rounded-2xl border border-slate-200/80 p-4">
-            <div className="flex items-center gap-2 text-slate-500">
+          <div className={`${appCard} rounded-[18px] p-4`}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <IndianRupee className="h-4 w-4 text-emerald-600" />
               <p className="text-xs font-semibold">{t("statTotalSpent")}</p>
             </div>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
+            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-[#e8edf5]">
               ₹{totalSpent.toLocaleString("en-IN")}
             </p>
           </div>
-          <div className="glass rounded-2xl border border-slate-200/80 p-4">
-            <div className="flex items-center gap-2 text-slate-500">
+          <div className={`${appCard} rounded-[18px] p-4`}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <Heart className="h-4 w-4 text-rose-500" />
               <p className="text-xs font-semibold">{t("statSavedItems")}</p>
             </div>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
+            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-[#e8edf5]">
               {wishIds.length}
             </p>
           </div>
-          <div className="glass rounded-2xl border border-slate-200/80 p-4">
-            <div className="flex items-center gap-2 text-slate-500">
+          <div className={`${appCard} rounded-[18px] p-4`}>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <ShoppingBag className="h-4 w-4 text-violet-600" />
               <p className="text-xs font-semibold">{t("statCart")}</p>
             </div>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
+            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-[#e8edf5]">
               {cartCount}
             </p>
           </div>
@@ -195,16 +203,20 @@ export default function AccountOverviewPage() {
       </div>
 
       <section>
-        <h2 className="text-lg font-bold text-slate-900">{t("recentTitle")}</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-[#e8edf5]">
+          {t("recentTitle")}
+        </h2>
         {recentProducts.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">{t("recentDesc")}</p>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+            {t("recentDesc")}
+          </p>
         ) : (
           <ul className="mt-4 space-y-2">
             {recentProducts.slice(0, 6).map((p) => (
               <li key={p.id}>
                 <Link
                   href={`/product/${p.id}`}
-                  className="glass flex min-w-0 justify-between gap-2 rounded-xl border border-slate-200/60 px-3 py-3 text-sm text-slate-700 transition hover:border-[#0066ff]/30 hover:bg-white sm:px-4"
+                  className={`${appCard} ${pressable} flex min-w-0 justify-between gap-2 rounded-xl px-3 py-3 text-sm text-slate-700 transition hover:border-[#0066ff]/35 dark:text-slate-200 sm:px-4`}
                 >
                   <span className="min-w-0 line-clamp-2 font-medium sm:line-clamp-1">
                     {p.title}

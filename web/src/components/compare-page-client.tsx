@@ -8,6 +8,13 @@ import { getProductById, type Product } from "@/lib/storefront-catalog";
 import { effectiveUnitPriceAfterCategoryDiscount } from "@/lib/category-discount-storage";
 import { useTranslations } from "next-intl";
 import { Scale, Star, Trash2 } from "lucide-react";
+import {
+  appCard,
+  appHeading,
+  gradientCta,
+  innerPageShellMax,
+  innerPageShellWide,
+} from "@/lib/app-inner-ui";
 
 export function ComparePageClient() {
   const { ids, remove, clear } = useCompare();
@@ -57,28 +64,30 @@ export function ComparePageClient() {
 
   if (products.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <Scale className="mx-auto h-14 w-14 text-neutral-300" />
-        <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-slate-100">
-          {t("emptyTitle")}
-        </h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">{t("emptyBody")}</p>
-        <Link
-          href="/search"
-          className="mt-6 inline-block rounded-2xl bg-[#0066ff] px-6 py-3 text-sm font-bold text-white hover:bg-[#0052cc]"
-        >
-          {t("browse")}
-        </Link>
+      <div className={`${innerPageShellWide} text-center`}>
+        <div className={`${appCard} mx-auto max-w-md p-8 sm:p-10`}>
+          <Scale className="mx-auto h-14 w-14 text-slate-300 dark:text-slate-500" />
+          <h1 className={`${appHeading} mt-4 text-xl sm:text-2xl`}>
+            {t("emptyTitle")}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            {t("emptyBody")}
+          </p>
+          <Link
+            href="/search"
+            className={`${gradientCta} mt-6 inline-block rounded-2xl px-6 py-3 text-sm font-bold`}
+          >
+            {t("browse")}
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
+    <div className={innerPageShellMax}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          {t("title")}
-        </h1>
+        <h1 className={`${appHeading} text-xl sm:text-2xl`}>{t("title")}</h1>
         <button
           type="button"
           onClick={clear}
@@ -88,11 +97,13 @@ export function ComparePageClient() {
         </button>
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-700">
+      <div
+        className={`${appCard} mt-8 overflow-x-auto rounded-[18px] border-white/[0.07] p-0 dark:border-white/[0.07]`}
+      >
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/90 dark:border-slate-700 dark:bg-slate-800/50">
-              <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800">
+            <tr className="border-b border-slate-200/80 bg-slate-50/90 dark:border-white/[0.07] dark:bg-[#1a2235]">
+              <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:bg-[#1a2235] dark:text-slate-400">
                 {t("feature")}
               </th>
               {products.map((p) => (
@@ -136,7 +147,7 @@ export function ComparePageClient() {
                 key={row.label}
                 className="border-b border-slate-100 dark:border-slate-800"
               >
-                <td className="sticky left-0 bg-white px-4 py-3 text-xs font-bold text-slate-600 dark:bg-slate-950 dark:text-slate-300">
+                <td className="sticky left-0 bg-white px-4 py-3 text-xs font-bold text-slate-600 dark:bg-[#161d2b] dark:text-slate-300">
                   {row.label}
                 </td>
                 {row.values.map((v, i) => (
@@ -150,12 +161,12 @@ export function ComparePageClient() {
               </tr>
             ))}
             <tr>
-              <td className="sticky left-0 bg-white px-4 py-4 dark:bg-slate-950" />
+              <td className="sticky left-0 bg-white px-4 py-4 dark:bg-[#161d2b]" />
               {products.map((p) => (
                 <td key={p.id} className="px-4 py-4 text-center">
                   <Link
                     href={`/product/${p.id}`}
-                    className="inline-block rounded-xl bg-[#0066ff] px-4 py-2 text-xs font-bold text-white hover:bg-[#0052cc]"
+                    className={`${gradientCta} inline-block rounded-xl px-4 py-2 text-xs font-bold`}
                   >
                     {t("viewProduct")}
                   </Link>

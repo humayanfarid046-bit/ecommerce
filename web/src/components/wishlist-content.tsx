@@ -19,6 +19,14 @@ import { getTrustSignals } from "@/lib/product-trust";
 import { ProductCard } from "@/components/product-card";
 import { cn } from "@/lib/utils";
 import { PRODUCT_GRID_COLS, STORE_SHELL } from "@/lib/store-layout";
+import {
+  appCard,
+  appCardSubtle,
+  appHeading,
+  appSubhead,
+  gradientCta,
+  pressable,
+} from "@/lib/app-inner-ui";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -227,16 +235,14 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
       >
         {!embedded ? (
           <>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-              {t("title")}
-            </h1>
-            <p className="mt-1 text-sm text-neutral-500">{t("subtitle")}</p>
+            <h1 className={`${appHeading} text-xl sm:text-2xl`}>{t("title")}</h1>
+            <p className={`${appSubhead} mt-1`}>{t("subtitle")}</p>
           </>
         ) : null}
 
         <div
           className={cn(
-            "flex flex-col items-center rounded-3xl border border-neutral-200/80 bg-gradient-to-b from-rose-50/80 via-white to-[#0066ff]/5 px-6 py-14 text-center shadow-[0_24px_80px_rgba(0,102,255,0.08)]",
+            `${appCard} flex flex-col items-center bg-gradient-to-b from-rose-50/50 via-white to-[#0066ff]/[0.04] px-6 py-14 text-center dark:from-[#161d2b] dark:via-[#161d2b] dark:to-[#1a2235]`,
             embedded ? "mt-4" : "mt-12"
           )}
         >
@@ -248,20 +254,22 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
             <div className="absolute -right-2 -top-2 h-16 w-16 rounded-2xl bg-gradient-to-br from-[#0066ff] to-[#7c3aed] opacity-40 blur-xl" />
             <Heart className="relative z-[1] h-24 w-24 fill-rose-400/90 text-rose-500 drop-shadow-lg" />
           </div>
-          <p className="mt-6 max-w-md text-lg font-medium text-slate-800">
+          <p className="mt-6 max-w-md text-lg font-medium text-slate-800 dark:text-[#e8edf5]">
             {t("emptyTitle")}
           </p>
-          <p className="mt-2 max-w-sm text-sm text-neutral-500">{t("empty")}</p>
+          <p className="mt-2 max-w-sm text-sm text-neutral-500 dark:text-slate-400">
+            {t("empty")}
+          </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/search"
-              className="inline-flex min-w-[200px] justify-center rounded-2xl bg-[#0066ff] px-8 py-3 text-sm font-semibold text-white shadow-[0_8px_28px_rgba(0,102,255,0.35)] transition hover:bg-[#0052cc]"
+              className={`${gradientCta} inline-flex min-w-[200px] justify-center rounded-2xl px-8 py-3 text-sm font-semibold`}
             >
               {t("startExploring")}
             </Link>
             <Link
               href="/"
-              className="inline-flex min-w-[160px] justify-center rounded-2xl border-2 border-[#0066ff]/25 bg-white px-6 py-3 text-sm font-semibold text-[#0066ff] transition hover:bg-[#0066ff]/5"
+              className="inline-flex min-w-[160px] justify-center rounded-2xl border-2 border-[#0066ff]/30 bg-white px-6 py-3 text-sm font-semibold text-[#0066ff] transition hover:bg-[#0066ff]/5 dark:border-white/15 dark:bg-[#161d2b] dark:text-[#93c5fd]"
             >
               {t("shopNow")}
             </Link>
@@ -281,10 +289,8 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         {!embedded ? (
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-              {t("title")}
-            </h1>
-            <p className="mt-1 text-sm text-neutral-500">{t("subtitle")}</p>
+            <h1 className={`${appHeading} text-xl sm:text-2xl`}>{t("title")}</h1>
+            <p className={`${appSubhead} mt-1`}>{t("subtitle")}</p>
           </div>
         ) : (
           <div className="min-h-0 min-w-0 sm:flex-1" aria-hidden />
@@ -294,7 +300,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
           <button
             type="button"
             onClick={shareWishlist}
-            className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-neutral-50"
+            className={`${appCardSubtle} inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:brightness-[1.02] dark:text-slate-100`}
           >
             <Share2 className="h-4 w-4" />
             {t("share")}
@@ -302,7 +308,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
           <button
             type="button"
             onClick={copyLink}
-            className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-neutral-50"
+            className={`${appCardSubtle} inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:brightness-[1.02] dark:text-slate-100`}
           >
             {copied ? (
               <CheckCheck className="h-4 w-4 text-emerald-600" />
@@ -311,7 +317,9 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
             )}
             {copied ? t("copied") : t("copyLink")}
           </button>
-          <div className="flex rounded-xl border border-neutral-200 bg-neutral-50 p-0.5">
+          <div
+            className={`${appCardSubtle} flex rounded-xl p-0.5 dark:bg-[#161d2b]/80`}
+          >
             <button
               type="button"
               onClick={() => setViewMode("grid")}
@@ -344,7 +352,9 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-200/80 bg-white/60 px-4 py-3 backdrop-blur-sm">
+      <div
+        className={`${appCardSubtle} mt-6 flex flex-wrap items-center gap-3 px-4 py-3 backdrop-blur-sm`}
+      >
         <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
@@ -403,7 +413,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                 exit={{ opacity: 0, scale: 0.96 }}
                 transition={{ duration: 0.2 }}
                 className={cn(
-                  "glass relative rounded-2xl border border-neutral-200/80 p-4",
+                  `${appCard} ${pressable} relative rounded-[18px] p-4`,
                   list && "flex gap-4"
                 )}
               >

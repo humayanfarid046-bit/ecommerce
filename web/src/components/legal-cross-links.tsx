@@ -1,8 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { appCardSubtle } from "@/lib/app-inner-ui";
 
 const linkClass =
-  "text-sm font-bold text-[#0066ff] hover:underline dark:text-[#60a5fa]";
+  "text-sm font-bold text-[#0066ff] transition hover:underline dark:text-[#60a5fa]";
 
 type Props = { exclude?: "privacy" | "terms" | "shipping" | "cookies" };
 
@@ -18,7 +19,7 @@ export async function LegalCrossLinks({ exclude }: Props) {
 
   return (
     <nav
-      className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t border-slate-200 pt-8 dark:border-slate-700"
+      className={`${appCardSubtle} mt-8 flex flex-wrap gap-x-4 gap-y-2 p-4`}
       aria-label="Legal"
     >
       {items

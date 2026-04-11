@@ -6,6 +6,10 @@ import { AccountSidebar } from "@/components/account-sidebar";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { permissionsForScope } from "@/lib/panel-access";
+import { appCard, gradientCta, innerPageShell } from "@/lib/app-inner-ui";
+
+const accountLoadingShell =
+  "mx-auto w-full min-w-0 max-w-7xl px-5 py-16 text-center sm:px-6";
 
 const NAV_ICONS = [
   "LayoutDashboard",
@@ -27,20 +31,22 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
 
   if (status === "loading") {
     return (
-      <div className="mx-auto w-full min-w-0 max-w-7xl px-3 py-16 text-center sm:px-4">
-        <p className="text-sm text-slate-500">{t("sessionLoading")}</p>
+      <div className={accountLoadingShell}>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {t("sessionLoading")}
+        </p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="mx-auto w-full min-w-0 max-w-lg px-3 py-12 sm:px-4 sm:py-16">
-        <div className="glass rounded-2xl p-6 text-center sm:p-8">
-          <p className="text-slate-600">{t("signInPrompt")}</p>
+      <div className={`${innerPageShell} mx-auto w-full min-w-0 py-12 sm:py-16`}>
+        <div className={`${appCard} rounded-[20px] p-6 text-center sm:p-8`}>
+          <p className="text-slate-600 dark:text-slate-300">{t("signInPrompt")}</p>
           <Link
             href="/login"
-            className="mt-4 inline-block rounded-xl bg-[#0066ff] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#0066ff]/25 hover:bg-[#0052cc]"
+            className={`${gradientCta} mt-4 inline-block rounded-xl px-6 py-2.5 text-sm font-bold`}
           >
             {t("loginSignup")}
           </Link>

@@ -969,6 +969,7 @@
     "pageTitle": "Rewards & loyalty",
     "pageSubtitle": "Your coins, daily check-in, and spin offers (saved on this device).",
     "close": "Close",
+    "pointsLabel": "Your balance",
     "points": "{n} coins",
     "dailyTitle": "Daily check-in",
     "dailyDesc": "Visit once a day to earn coins (demo — stored on this device).",
@@ -1051,6 +1052,8 @@
   },
   "help": {
     "title": "Help",
+    "welcomePersonalized": "How can we help you today, {name}?",
+    "welcomeGeneric": "How can we help you today?",
     "intro": "Orders, returns, wallet refunds, and your account — answered below. Still stuck? Contact us.",
     "faqHeading": "Common questions",
     "faq": {
@@ -1091,7 +1094,10 @@
     "openChat": "Open support chat",
     "title": "Libas support",
     "close": "Close",
+    "greetingPersonalized": "How can we help you today, {name}?",
+    "greetingGeneric": "How can we help you today?",
     "botGreeting": "Hi! I’m your quick-help assistant. Pick a topic below or visit the help center.",
+    "moreHeading": "More options",
     "faqHeading": "Quick answers",
     "faq": {
       "q1": {
@@ -1108,7 +1114,7 @@
       }
     },
     "helpCenter": "Full help center",
-    "whatsappLink": "Chat on WhatsApp (configure number)"
+    "whatsappLink": "Message us on WhatsApp"
   },
   "admin": {
     "brand": "Libas Workspace",
