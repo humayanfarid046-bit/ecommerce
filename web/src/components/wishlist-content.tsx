@@ -254,10 +254,10 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
             <div className="absolute -right-2 -top-2 h-16 w-16 rounded-2xl bg-gradient-to-br from-[#0066ff] to-[#7c3aed] opacity-40 blur-xl" />
             <Heart className="relative z-[1] h-24 w-24 fill-rose-400/90 text-rose-500 drop-shadow-lg" />
           </div>
-          <p className="mt-6 max-w-md text-lg font-medium text-slate-800 dark:text-[#e8edf5]">
+          <p className="mt-6 max-w-md text-lg font-semibold text-text-primary dark:text-[#e8edf5]">
             {t("emptyTitle")}
           </p>
-          <p className="mt-2 max-w-sm text-sm text-neutral-500 dark:text-slate-400">
+          <p className="mt-2 max-w-sm text-sm font-medium text-text-secondary dark:text-slate-400">
             {t("empty")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -300,7 +300,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
           <button
             type="button"
             onClick={shareWishlist}
-            className={`${appCardSubtle} inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:brightness-[1.02] dark:text-slate-100`}
+            className={`${appCardSubtle} inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-text-primary shadow-sm transition hover:brightness-[1.02] dark:text-slate-100`}
           >
             <Share2 className="h-4 w-4" />
             {t("share")}
@@ -308,7 +308,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
           <button
             type="button"
             onClick={copyLink}
-            className={`${appCardSubtle} inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:brightness-[1.02] dark:text-slate-100`}
+            className={`${appCardSubtle} inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-text-primary shadow-sm transition hover:brightness-[1.02] dark:text-slate-100`}
           >
             {copied ? (
               <CheckCheck className="h-4 w-4 text-emerald-600" />
@@ -327,7 +327,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                 "rounded-lg px-2.5 py-1.5 transition",
                 viewMode === "grid"
                   ? "bg-white text-[#0066ff] shadow-sm"
-                  : "text-neutral-500 hover:text-slate-800"
+                  : "font-semibold text-text-secondary hover:text-text-primary"
               )}
               aria-pressed={viewMode === "grid"}
               aria-label={t("viewGrid")}
@@ -341,7 +341,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                 "rounded-lg px-2.5 py-1.5 transition",
                 viewMode === "list"
                   ? "bg-white text-[#0066ff] shadow-sm"
-                  : "text-neutral-500 hover:text-slate-800"
+                  : "font-semibold text-text-secondary hover:text-text-primary"
               )}
               aria-pressed={viewMode === "list"}
               aria-label={t("viewList")}
@@ -482,16 +482,16 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
 
                   <Link
                     href={`/product/${p.id}`}
-                    className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 transition hover:text-[#0066ff]"
+                    className="mt-1 line-clamp-2 text-sm font-semibold text-text-primary transition hover:text-[#0066ff]"
                   >
                     {p.title}
                   </Link>
-                  <p className="mt-0.5 text-xs text-neutral-500">{p.brand}</p>
+                  <p className="mt-0.5 text-xs font-semibold text-text-secondary">{p.brand}</p>
 
                   <CategoryAwarePrice product={p} variant="wishlist" />
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <label className="flex items-center gap-1 text-xs text-neutral-600">
+                    <label className="flex items-center gap-1 text-xs font-medium text-text-secondary">
                       <span className="sr-only">{t("size")}</span>
                       <select
                         value={v.size}
@@ -501,7 +501,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                             [p.id]: { ...v, size: e.target.value },
                           }))
                         }
-                        className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-slate-900"
+                        className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-medium text-text-primary"
                       >
                         {SIZES.map((s) => (
                           <option key={s} value={s}>
@@ -510,7 +510,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                         ))}
                       </select>
                     </label>
-                    <label className="flex items-center gap-1 text-xs text-neutral-600">
+                    <label className="flex items-center gap-1 text-xs font-medium text-text-secondary">
                       <span className="sr-only">{t("color")}</span>
                       <select
                         value={v.color}
@@ -520,7 +520,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                             [p.id]: { ...v, color: e.target.value },
                           }))
                         }
-                        className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-slate-900"
+                        className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-medium text-text-primary"
                       >
                         {COLORS.map((c) => (
                           <option key={c} value={c}>
@@ -567,7 +567,7 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
                       {t("notifyStock")}
                     </button>
                   </div>
-                  <p className="mt-1 text-[10px] text-neutral-400">
+                  <p className="mt-1 text-[10px] font-semibold text-text-secondary">
                     {t("notifyDemo")}
                   </p>
 
@@ -596,10 +596,10 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
 
       {recs.length > 0 ? (
         <section className="mt-16 border-t border-neutral-200/80 pt-10">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-text-primary">
             {t("recommendationsTitle")}
           </h2>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm font-medium text-text-secondary">
             {t("recommendationsSubtitle")}
           </p>
           <div className={`mt-6 ${PRODUCT_GRID_COLS}`}>

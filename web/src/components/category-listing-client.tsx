@@ -56,24 +56,24 @@ export function CategoryListingClient({
   const subLabel = sp.sub ? ts(sp.sub) : null;
 
   return (
-    <div className="w-full bg-slate-50/40 dark:bg-[#0c1019]/90">
+    <div className="w-full bg-white dark:bg-[#0c1019]/90">
       <div className={`${STORE_SHELL} py-8`}>
         <FilterListingShell
           maxPriceDefault={maxP || 100000}
           basePath={`/category/${slug}`}
           subLabel={subLabel}
         >
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">
+          <h1 className="text-xl font-extrabold tracking-tight text-text-primary dark:text-slate-100 md:text-2xl">
             <span aria-hidden>{icon} </span>
             {tc(slug)}
             {subLabel ? (
-              <span className="text-neutral-500 dark:text-neutral-400">
+              <span className="font-semibold text-text-secondary dark:text-neutral-400">
                 {" "}
                 / {subLabel}
               </span>
             ) : null}
           </h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-sm font-medium text-text-secondary dark:text-neutral-400">
             {tpc("productCount", { count: list.length })}
           </p>
           <div className={`mt-6 ${PRODUCT_GRID}`}>
@@ -82,7 +82,7 @@ export function CategoryListingClient({
             ))}
           </div>
           {list.length === 0 && (
-            <p className="mt-8 text-neutral-500 dark:text-neutral-400">
+            <p className="mt-8 font-medium text-text-secondary dark:text-neutral-400">
               {tpc("empty")}
             </p>
           )}

@@ -51,8 +51,8 @@ export function FilterListingShell({
             type="button"
             onClick={() => setOpen(true)}
             className={cn(
-              "hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-sm sm:inline-flex",
-              "transition hover:border-[#0066ff]/35 hover:bg-[#0066ff]/5 hover:text-[#0066ff] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              "hidden items-center gap-2 rounded-xl border border-[rgba(37,99,235,0.38)] bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-[0_4px_28px_rgba(37,99,235,0.05)] sm:inline-flex",
+              "transition hover:border-[#2563eb]/55 hover:bg-[#2563eb]/5 hover:text-[#2563eb] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             )}
           >
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2.25} />
@@ -82,13 +82,13 @@ export function FilterListingShell({
       {/* Drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-1rem,420px)] max-w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-out dark:border-r dark:border-slate-700 dark:bg-slate-950",
+          "fixed inset-y-0 left-0 z-[70] flex w-[min(100vw-1rem,420px)] max-w-full flex-col border-r border-[rgba(37,99,235,0.2)] bg-white shadow-[0_8px_40px_rgba(37,99,235,0.08)] transition-transform duration-300 ease-out dark:border-r dark:border-slate-700 dark:bg-slate-950 dark:shadow-2xl",
           open ? "translate-x-0" : "-translate-x-full pointer-events-none"
         )}
         aria-hidden={!open}
         id="filter-drawer"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+        <div className="flex shrink-0 items-center justify-between border-b border-[rgba(37,99,235,0.22)] px-4 py-3 dark:border-slate-700">
           <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
             {t("title")}
           </h2>
@@ -117,8 +117,8 @@ export function FilterListingShell({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "fixed bottom-20 left-1/2 z-[58] flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#0066ff]/30 bg-[#0066ff] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_32px_rgba(0,102,255,0.45)]",
-          "transition hover:bg-[#0052cc] md:hidden"
+          "fixed bottom-20 left-1/2 z-[58] flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#2563eb]/40 bg-[#2563eb] px-5 py-3 text-sm font-extrabold text-white shadow-[0_8px_32px_rgba(37,99,235,0.25)]",
+          "transition hover:bg-[#1d4ed8] md:hidden"
         )}
         aria-expanded={open}
         aria-controls="filter-drawer"

@@ -67,18 +67,18 @@ export function SearchListingClient({ sp }: { sp: Sp }) {
   const visualMode = sp.visual === "1";
 
   return (
-    <div className="w-full bg-slate-50/40 dark:bg-slate-950/40">
+    <div className="w-full bg-white dark:bg-slate-950/40">
       <div className={`${STORE_SHELL} py-8`}>
         <FilterListingShell maxPriceDefault={maxP || 100000} basePath="/search">
           {visualMode ? (
-            <p className="mb-3 rounded-2xl border border-[#0066ff]/25 bg-[#0066ff]/10 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-[#0066ff]/35 dark:bg-[#0066ff]/15 dark:text-slate-100">
+            <p className="mb-3 rounded-2xl border border-[#0066ff]/25 bg-[#0066ff]/10 px-4 py-3 text-sm font-semibold text-text-primary dark:border-[#0066ff]/35 dark:bg-[#0066ff]/15 dark:text-slate-100">
               {sp.rankedIds?.trim() ? t("visualBannerLive") : t("visualBanner")}
             </p>
           ) : null}
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">
+          <h1 className="text-xl font-extrabold tracking-tight text-text-primary dark:text-slate-100 md:text-2xl">
             {q ? t("resultsFor", { q }) : t("allProducts")}
           </h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-sm font-medium text-text-secondary dark:text-neutral-400">
             {t("productCount", { count: list.length })}
           </p>
           <div className={`mt-6 ${PRODUCT_GRID}`}>
@@ -87,7 +87,7 @@ export function SearchListingClient({ sp }: { sp: Sp }) {
             ))}
           </div>
           {list.length === 0 && (
-            <p className="mt-8 text-neutral-500 dark:text-neutral-400">
+            <p className="mt-8 font-medium text-text-secondary dark:text-neutral-400">
               {t("noMatch")}
             </p>
           )}

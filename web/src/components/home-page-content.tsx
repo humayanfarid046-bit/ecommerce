@@ -61,7 +61,7 @@ export function HomePageContent() {
           if (!list.length) return null;
           return (
             <section key={raw} className={blockGap}>
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
+              <h2 className="text-2xl font-extrabold tracking-tight text-text-primary dark:text-slate-100 md:text-3xl">
                 {sec.title}
               </h2>
               <div className={`mt-5 md:mt-6 ${PRODUCT_GRID}`}>
@@ -81,18 +81,18 @@ export function HomePageContent() {
             return (
               <section key={raw} className={blockGap}>
                 <div className="flex items-end justify-between gap-4">
-                  <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
+                  <h2 className="text-2xl font-extrabold tracking-tight text-text-primary dark:text-slate-100 md:text-3xl">
                     {t("featuredProducts")}
                   </h2>
                   <Link
                     href="/search"
-                    className="text-sm font-bold text-[#0066ff] transition hover:text-[#0052cc] dark:text-[#60a5fa] dark:hover:text-[#93c5fd]"
+                    className="text-sm font-bold text-[#2563eb] transition hover:text-[#1d4ed8] dark:text-[#60a5fa] dark:hover:text-[#93c5fd]"
                   >
                     {t("viewAll")}
                   </Link>
                 </div>
                 {catalog.length > 0 ? (
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-xs font-semibold text-text-secondary dark:text-slate-400">
                     {t("featuredShowing", {
                       visible: featuredSlice.length,
                       total: catalog.length,
@@ -113,7 +113,7 @@ export function HomePageContent() {
                           Math.min(v + FEATURED_PAGE, catalog.length)
                         )
                       }
-                      className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-800 shadow-sm transition hover:border-[#0066ff]/40 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                      className="rounded-xl border-2 border-[rgba(37,99,235,0.4)] bg-white px-6 py-2.5 text-sm font-bold text-[#2563eb] shadow-[0_2px_12px_rgba(37,99,235,0.08)] transition hover:bg-[rgba(37,99,235,0.06)] dark:border-slate-600 dark:bg-slate-900 dark:text-[#93c5fd] dark:hover:bg-slate-800"
                     >
                       {t("loadMore")}
                     </button>

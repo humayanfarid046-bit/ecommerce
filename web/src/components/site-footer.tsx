@@ -102,7 +102,7 @@ export async function SiteFooter() {
   ] as const;
 
   const linkClass =
-    "text-sm text-slate-600 transition-colors hover:text-[#2874f0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2874f0]/40 rounded-sm dark:text-slate-400 dark:hover:text-[#60a5fa]";
+    "text-sm text-slate-600 transition-colors hover:text-[#2563eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb]/40 rounded-sm dark:text-slate-400 dark:hover:text-[#60a5fa]";
 
   return (
     <footer
@@ -205,7 +205,7 @@ export async function SiteFooter() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2874f0]/40 hover:text-[#2874f0] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
+                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2563eb]/45 hover:text-[#2563eb] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
                 aria-label="Instagram"
               >
                 <SocialInstagram className="h-4 w-4" />
@@ -214,7 +214,7 @@ export async function SiteFooter() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2874f0]/40 hover:text-[#2874f0] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
+                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2563eb]/45 hover:text-[#2563eb] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
                 aria-label="Facebook"
               >
                 <SocialFacebook className="h-4 w-4" />
@@ -223,14 +223,14 @@ export async function SiteFooter() {
                 href="https://wa.me/8800000000000"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2874f0]/40 hover:text-[#2874f0] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
+                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2563eb]/45 hover:text-[#2563eb] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
                 aria-label={t("socialWhatsApp")}
               >
                 <SocialWhatsApp className="h-4 w-4" />
               </a>
               <a
                 href="mailto:support@ajhlibascollection.com"
-                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2874f0]/40 hover:text-[#2874f0] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
+                className="rounded-full border border-[#E5E7EB] bg-white p-2 text-slate-600 transition hover:border-[#2563eb]/45 hover:text-[#2563eb] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-[#60a5fa]"
                 aria-label={t("socialEmail")}
               >
                 <Mail className="h-4 w-4" strokeWidth={1.75} />
@@ -248,7 +248,7 @@ export async function SiteFooter() {
               <li key={c.id}>
                 <Link
                   href={`/category/${c.slug}`}
-                  className="text-sm text-slate-600 transition hover:text-[#2874f0] dark:text-slate-400 dark:hover:text-[#60a5fa]"
+                  className="text-sm text-slate-600 transition hover:text-[#2563eb] dark:text-slate-400 dark:hover:text-[#60a5fa]"
                 >
                   {tc(c.slug)}
                 </Link>
@@ -284,7 +284,7 @@ export async function SiteFooter() {
             href="https://razorpay.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 block text-center text-xs font-semibold text-[#2874f0] hover:underline dark:text-[#60a5fa]"
+            className="mt-1 block text-center text-xs font-semibold text-[#2563eb] hover:underline dark:text-[#60a5fa]"
           >
             {t("razorpayLink")}
           </a>

@@ -24,7 +24,7 @@ export function ProductTrustStrip({ product }: Props) {
           {t("highDemand")}
         </p>
       ) : null}
-      <p className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+      <p className="flex items-center gap-2 font-medium text-text-primary dark:text-slate-200">
         <Eye className="h-4 w-4 shrink-0 text-[#0066ff]" />
         {t("viewersNow", { count: viewers })}
       </p>

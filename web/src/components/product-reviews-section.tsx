@@ -117,13 +117,13 @@ export function ProductReviewsSection({ product }: { product: Product }) {
 
   return (
     <section className="mt-14 md:mt-20">
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+      <h2 className="text-lg font-semibold text-text-primary dark:text-slate-100">
         {t("reviewsTitle")}
       </h2>
 
       {user ? (
         <div className="mt-4 rounded-2xl border border-[#0066ff]/20 bg-[#0066ff]/5 p-4 dark:border-[#0066ff]/30 dark:bg-[#0066ff]/10">
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <p className="text-sm font-semibold text-text-primary dark:text-slate-100">
             {t("reviewsForm.writeTitle")}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
@@ -136,7 +136,7 @@ export function ProductReviewsSection({ product }: { product: Product }) {
                   "rounded-lg p-1 transition",
                   n <= ratingPick
                     ? "text-amber-500"
-                    : "text-slate-300 dark:text-slate-600"
+                    : "text-text-secondary/70 dark:text-slate-600"
                 )}
                 aria-label={t("reviewsForm.starLabel", { n })}
               >
@@ -162,24 +162,24 @@ export function ProductReviewsSection({ product }: { product: Product }) {
               {t("reviewsForm.submit")}
             </button>
             {submitNote ? (
-              <span className="text-xs text-slate-600 dark:text-slate-400">
+              <span className="text-xs font-medium text-text-secondary dark:text-slate-400">
                 {submitNote}
               </span>
             ) : null}
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mt-3 text-sm font-medium text-text-secondary dark:text-neutral-400">
           {t("reviewsForm.loginToReview")}
         </p>
       )}
 
       <div className="mt-4 space-y-4">
         {loading ? (
-          <p className="text-sm text-neutral-500">{t("reviewsForm.loading")}</p>
+          <p className="text-sm font-medium text-text-secondary">{t("reviewsForm.loading")}</p>
         ) : null}
         {!loading && merged.length === 0 ? (
-          <p className="text-neutral-500 dark:text-neutral-400">
+          <p className="font-medium text-text-secondary dark:text-neutral-400">
             {t("noReviews")}
           </p>
         ) : null}
@@ -189,7 +189,7 @@ export function ProductReviewsSection({ product }: { product: Product }) {
             className="glass rounded-2xl border border-neutral-200/80 p-4 dark:border-slate-700/80"
           >
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-slate-900 dark:text-slate-100">
+              <span className="font-semibold text-text-primary dark:text-slate-100">
                 {r.user}
               </span>
               {r.verifiedPurchase ? (
@@ -199,9 +199,9 @@ export function ProductReviewsSection({ product }: { product: Product }) {
                 </span>
               ) : null}
               <span className="text-amber-600">★ {r.rating}</span>
-              <span className="text-xs text-neutral-400">{r.date}</span>
+              <span className="text-xs font-medium text-text-secondary">{r.date}</span>
             </div>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-sm font-medium text-text-secondary dark:text-neutral-300">
               {r.text}
             </p>
             {r.images?.length ? (

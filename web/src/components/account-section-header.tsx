@@ -23,7 +23,7 @@ export function AccountSectionHeader({
     <header className="mb-6 min-w-0 space-y-2">
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#7eb3ff] transition hover:text-white"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] transition hover:text-[#1d4ed8] dark:text-[#7eb3ff] dark:hover:text-white"
       >
         <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={2.25} aria-hidden />
         {backLabel}

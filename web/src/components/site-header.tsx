@@ -35,7 +35,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-      <div className="bg-[#2874f0] text-white">
+      <div className="bg-[#2563eb] text-white">
         <div
           className={`${STORE_SHELL} flex flex-col gap-2.5 py-2 md:flex-row md:flex-wrap md:items-center md:gap-4 md:py-2.5`}
         >
@@ -100,7 +100,7 @@ export function SiteHeader() {
                 <span className="relative inline-flex items-center justify-center">
                   <Heart className="h-5 w-5" strokeWidth={2} />
                   {wishIds.length > 0 && (
-                    <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[10px] font-bold text-white ring-2 ring-[#2874f0]">
+                    <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff6161] px-0.5 text-[10px] font-bold text-white ring-2 ring-[#2563eb]">
                       {wishIds.length > 9 ? "9+" : wishIds.length}
                     </span>
                   )}
@@ -116,7 +116,7 @@ export function SiteHeader() {
                   <span className="relative inline-flex items-center justify-center">
                     <ShoppingCart className="h-6 w-6 md:h-5 md:w-5" strokeWidth={2} />
                     {count > 0 && (
-                      <span className="absolute -right-2 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff9f00] px-1 text-[11px] font-extrabold text-white ring-2 ring-[#2874f0]">
+                      <span className="absolute -right-2 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff9f00] px-1 text-[11px] font-extrabold text-white ring-2 ring-[#2563eb]">
                         {count > 99 ? "99+" : count}
                       </span>
                     )}
@@ -133,7 +133,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="hidden border-b border-slate-200 bg-white shadow-sm md:block">
+      <div className="hidden border-b border-[rgba(37,99,235,0.18)] bg-white shadow-[0_4px_24px_rgba(37,99,235,0.04)] md:block">
         <CategoryNav flipkartStyle />
       </div>
 

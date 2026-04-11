@@ -66,11 +66,11 @@ export function ComparePageClient() {
     return (
       <div className={`${innerPageShellWide} text-center`}>
         <div className={`${appCard} mx-auto max-w-md p-8 sm:p-10`}>
-          <Scale className="mx-auto h-14 w-14 text-slate-300 dark:text-slate-500" />
+          <Scale className="mx-auto h-14 w-14 text-text-secondary/80 dark:text-slate-500" />
           <h1 className={`${appHeading} mt-4 text-xl sm:text-2xl`}>
             {t("emptyTitle")}
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-2 text-sm font-medium text-text-secondary dark:text-slate-400">
             {t("emptyBody")}
           </p>
           <Link
@@ -128,7 +128,7 @@ export function ComparePageClient() {
                     </div>
                     <Link
                       href={`/product/${p.id}`}
-                      className="mt-2 line-clamp-2 block text-left text-xs font-bold text-slate-900 hover:text-[#0066ff] dark:text-slate-100"
+                      className="mt-2 line-clamp-2 block text-left text-xs font-bold text-text-primary hover:text-[#0066ff] dark:text-slate-100"
                     >
                       {p.title}
                     </Link>
@@ -147,13 +147,13 @@ export function ComparePageClient() {
                 key={row.label}
                 className="border-b border-slate-100 dark:border-slate-800"
               >
-                <td className="sticky left-0 bg-white px-4 py-3 text-xs font-bold text-slate-600 dark:bg-[#161d2b] dark:text-slate-300">
+                <td className="sticky left-0 bg-white px-4 py-3 text-xs font-bold text-text-secondary dark:bg-[#161d2b] dark:text-slate-300">
                   {row.label}
                 </td>
                 {row.values.map((v, i) => (
                   <td
                     key={products[i]!.id + row.label}
-                    className="px-4 py-3 text-center text-slate-800 dark:text-slate-200"
+                    className="px-4 py-3 text-center font-medium text-text-primary dark:text-slate-200"
                   >
                     {v}
                   </td>

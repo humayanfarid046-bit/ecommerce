@@ -27,10 +27,10 @@ export function ProductVisibilityGate({
   if (hidden) {
     return (
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
-        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <p className="text-lg font-semibold text-text-primary dark:text-slate-100">
           {t("hiddenByMerchant")}
         </p>
-        <p className="mt-2 text-sm text-slate-500">{t("hiddenByMerchantHint")}</p>
+        <p className="mt-2 text-sm font-medium text-text-secondary">{t("hiddenByMerchantHint")}</p>
       </div>
     );
   }

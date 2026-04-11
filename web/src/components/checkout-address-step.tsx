@@ -55,10 +55,10 @@ type Props = {
 };
 
 const inputClass =
-  "mt-1.5 w-full rounded-xl border border-neutral-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-neutral-400 focus:border-[#0066ff] focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-[#0066ff]/25";
+  "mt-1.5 w-full rounded-xl border border-neutral-200/90 bg-white px-3.5 py-2.5 text-sm font-medium text-text-primary shadow-sm transition placeholder:font-normal placeholder:text-text-secondary/75 focus:border-[#0066ff] focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-[#0066ff]/25";
 
 const labelClass =
-  "block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400";
+  "block text-[11px] font-bold uppercase tracking-[0.12em] text-text-secondary dark:text-slate-400";
 
 function labelIcon(a: SavedAddress["label"]) {
   switch (a) {
@@ -123,7 +123,7 @@ export function CheckoutAddressStep({
       {hasSaved && !useGuestForm ? (
         <>
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/80 dark:bg-slate-800/40">
-            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-secondary dark:text-slate-400">
               <Phone className="h-3.5 w-3.5" />
               {t("deliveryContactTitle")}
             </p>
@@ -180,13 +180,13 @@ export function CheckoutAddressStep({
                 </div>
               )}
             </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-xs font-medium text-text-secondary dark:text-slate-400">
               {t("contactRequiredHint")}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <p className="flex items-center gap-2 text-sm font-semibold text-text-primary dark:text-slate-200">
               <MapPin className="h-4 w-4 text-[#0066ff]" aria-hidden />
               {t("savedAddressesHint")}
             </p>
@@ -237,7 +237,7 @@ export function CheckoutAddressStep({
                             {labelTitle(a.label)}
                           </span>
                         </div>
-                        <p className="mt-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100">
+                        <p className="mt-2 text-sm font-semibold leading-snug text-text-primary dark:text-slate-100">
                           {a.line1}
                           {a.line2 ? `, ${a.line2}` : ""}
                         </p>
@@ -246,7 +246,7 @@ export function CheckoutAddressStep({
                           <span>
                             {a.city}
                             {a.state ? `, ${a.state}` : ""}
-                            <span className="font-mono text-slate-700 dark:text-slate-300">
+                            <span className="font-mono font-semibold text-text-primary dark:text-slate-300">
                               {" "}
                               — {a.pin}
                             </span>
@@ -271,7 +271,7 @@ export function CheckoutAddressStep({
       ) : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <p className="flex items-center gap-2 text-sm font-semibold text-text-primary dark:text-slate-200">
               <MapPin className="h-4 w-4 text-[#0066ff]" aria-hidden />
               {t("guestDeliveryTitle")}
             </p>
@@ -290,7 +290,7 @@ export function CheckoutAddressStep({
             <div className="space-y-2 rounded-2xl border border-[#0066ff]/25 bg-[#0066ff]/[0.06] px-4 py-3 dark:border-[#0066ff]/35 dark:bg-[#0066ff]/10">
               <div className="flex flex-wrap items-center gap-2">
                 <Sparkles className="h-4 w-4 shrink-0 text-[#0066ff]" />
-                <p className="min-w-0 flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+                <p className="min-w-0 flex-1 text-sm font-semibold text-text-primary dark:text-slate-100">
                   {t("magicCheckoutTitle")}
                 </p>
                 <button
@@ -301,7 +301,7 @@ export function CheckoutAddressStep({
                   {t("magicCheckoutCta")}
                 </button>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
+              <p className="text-xs font-medium text-text-secondary dark:text-slate-400">
                 {t("magicCheckoutAddressOnly")}
               </p>
             </div>
@@ -309,7 +309,7 @@ export function CheckoutAddressStep({
 
           {/* Contact — name + phone for delivery; email only if account has no email */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/80 dark:bg-slate-800/40">
-            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-secondary dark:text-slate-400">
               <Phone className="h-3.5 w-3.5" />
               {t("deliveryContactTitle")}
             </p>
@@ -366,14 +366,14 @@ export function CheckoutAddressStep({
                 </div>
               )}
             </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-xs font-medium text-text-secondary dark:text-slate-400">
               {t("contactRequiredHint")}
             </p>
           </div>
 
           {/* Street */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-700/80 dark:bg-slate-900/50">
-            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-secondary dark:text-slate-400">
               <Home className="h-3.5 w-3.5" />
               {t("addressSectionStreet")}
             </p>
@@ -441,7 +441,7 @@ export function CheckoutAddressStep({
                 {t("pinLookupSuccess")}
               </p>
             ) : (
-              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="mt-3 text-xs font-medium leading-relaxed text-text-secondary dark:text-slate-400">
                 {t("pinAutoHint")}
               </p>
             )}

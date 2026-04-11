@@ -100,7 +100,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       lang={locale}
       className={`${fontSans.variable} ${fontSans.className} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-background text-slate-600 transition-colors duration-200 dark:text-slate-300">
+      <body className="flex min-h-full flex-col bg-background transition-colors duration-200">
         <Script
           id="libas-theme-init"
           strategy="beforeInteractive"

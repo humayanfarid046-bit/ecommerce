@@ -142,7 +142,7 @@ export default function AccountOverviewPage() {
       >
         <div className="flex items-center gap-4">
           <div className="relative shrink-0 rounded-full bg-gradient-to-br from-white/45 via-amber-100/25 to-[#3b82f6]/45 p-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_10px_40px_rgba(0,0,0,0.35)]">
-            <div className="rounded-full bg-[#0c1019] p-[2px]">
+            <div className="rounded-full bg-slate-200 p-[2px] dark:bg-[#0c1019]">
               <ProfileAvatarPreview
                 imageSrc={profile.photoDataUrl}
                 initials={displayName.slice(0, 2)}
@@ -176,7 +176,7 @@ export default function AccountOverviewPage() {
                   </span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300">
                   <Sparkles className="h-3 w-3" />
                   {t("memberRegular")}
                 </span>

@@ -443,7 +443,7 @@ export function CheckoutPaymentStep({
           className={cn(
             "w-full rounded-[12px] py-4 text-base font-bold text-white transition",
             canPay
-              ? "bg-[#0066ff] shadow-[0_12px_36px_rgba(0,102,255,0.38)] hover:bg-[#0052cc]"
+              ? "bg-[#2563eb] shadow-[0_8px_32px_rgba(37,99,235,0.2)] hover:bg-[#1d4ed8]"
               : "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
           )}
         >

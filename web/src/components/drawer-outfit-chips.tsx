@@ -18,7 +18,7 @@ export function DrawerOutfitChips({ onPick }: { onPick: () => void }) {
             key={query}
             href={`/search?q=${encodeURIComponent(query)}`}
             onClick={onPick}
-            className="shrink-0 rounded-full border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-900 shadow-sm transition hover:border-[#2874f0] hover:bg-[#2874f0]/10 hover:text-[#2874f0] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-[#5ab0ff] dark:hover:bg-[#2874f0]/20"
+            className="shrink-0 rounded-full border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-900 shadow-sm transition-colors hover:border-[#2563eb]/50 hover:bg-[#F0F7FF] hover:text-[#1e40af] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-[#5ab0ff] dark:hover:bg-[#2874f0]/20 dark:hover:text-slate-100"
           >
             {t(labelKey)}
           </Link>

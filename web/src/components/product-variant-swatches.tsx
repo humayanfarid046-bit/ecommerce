@@ -25,7 +25,7 @@ export function ProductVariantSwatches({ sizes, colors }: Props) {
     <div className="mb-5 space-y-4">
       {sizes && sizes.length > 0 ? (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-text-secondary dark:text-neutral-400">
             {t("selectSize")}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -50,7 +50,7 @@ export function ProductVariantSwatches({ sizes, colors }: Props) {
 
       {colors && colors.length > 0 ? (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-text-secondary dark:text-neutral-400">
             {t("selectColor")}
           </p>
           <div className="flex flex-wrap items-center gap-3">

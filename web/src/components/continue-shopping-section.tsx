@@ -24,10 +24,10 @@ export function ContinueShoppingSection() {
     <section className="mt-8 border-t border-slate-200/90 pt-8 dark:border-slate-800 md:mt-10 md:pt-10">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">
+          <h2 className="text-lg font-extrabold tracking-tight text-text-primary dark:text-slate-100 md:text-2xl">
             {t("continueShopping")}
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs font-semibold text-text-secondary dark:text-slate-400">
             {t("continueShoppingSubtitle")}
           </p>
         </div>

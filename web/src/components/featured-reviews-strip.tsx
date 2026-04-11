@@ -73,7 +73,7 @@ export function FeaturedReviewsStrip() {
                 </p>
                 <Link
                   href={`/product/${r.productId}`}
-                  className="mt-3 inline-block text-xs font-bold text-[#0066ff] hover:underline"
+                  className="mt-3 inline-block text-xs font-bold text-[#2563eb] hover:underline"
                 >
                   {t("featuredReviewsCta")}
                 </Link>

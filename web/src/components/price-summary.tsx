@@ -55,9 +55,9 @@ export function PriceSummary({
 
   return (
     <div className={cn("glass space-y-3 rounded-[18px] p-4", className)}>
-      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("priceDetails")}</h2>
+      <h2 className="text-sm font-semibold text-text-primary dark:text-slate-100">{t("priceDetails")}</h2>
       <div className="space-y-2 text-sm">
-        <div className="flex justify-between text-neutral-600 dark:text-slate-400">
+        <div className="flex justify-between font-medium text-text-secondary dark:text-slate-400">
           <span>{t("itemTotal")}</span>
           <span>₹{itemTotal.toLocaleString("en-IN")}</span>
         </div>
@@ -74,7 +74,7 @@ export function PriceSummary({
           </div>
         )}
         {hasGst && (
-          <div className="flex justify-between text-neutral-600 dark:text-slate-400">
+          <div className="flex justify-between font-medium text-text-secondary dark:text-slate-400">
             <span>
               {tc("gstLine", { pct: gstPercent ?? 0 })}
             </span>
@@ -94,14 +94,14 @@ export function PriceSummary({
               </span>
             </div>
             {codHandling && codHandling > 0 ? (
-              <div className="flex justify-between text-neutral-600 dark:text-slate-400">
+              <div className="flex justify-between font-medium text-text-secondary dark:text-slate-400">
                 <span>{tc("codHandlingLine")}</span>
                 <span>₹{codHandling.toLocaleString("en-IN")}</span>
               </div>
             ) : null}
           </>
         ) : (
-          <div className="flex justify-between text-neutral-600 dark:text-slate-400">
+          <div className="flex justify-between font-medium text-text-secondary dark:text-slate-400">
             <span>{t("delivery")}</span>
             <span>
               {delivery === 0 ? (
@@ -118,7 +118,7 @@ export function PriceSummary({
             <span>− ₹{walletApplied.toLocaleString("en-IN")}</span>
           </div>
         )}
-        <div className="flex justify-between border-t border-neutral-200 pt-3 font-semibold text-slate-900 dark:border-slate-600 dark:text-slate-100">
+        <div className="flex justify-between border-t border-neutral-200 pt-3 text-base font-bold text-text-primary dark:border-slate-600 dark:text-slate-100">
           <span>{t("total")}</span>
           <span>₹{grand.toLocaleString("en-IN")}</span>
         </div>

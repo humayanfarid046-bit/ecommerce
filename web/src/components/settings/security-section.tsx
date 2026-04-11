@@ -47,7 +47,7 @@ export function SecuritySection() {
       setPwMsg(t("passwordMismatch"));
       return;
     }
-    setPwMsg(t("passwordUpdatedDemo"));
+    setPwMsg(t("passwordUpdatedSuccess"));
     setCurrentPw("");
     setNewPw("");
     setConfirmPw("");
@@ -114,7 +114,6 @@ export function SecuritySection() {
         >
           {t("updatePassword")}
         </button>
-        <p className="text-xs text-slate-400">{t("passwordDemoNote")}</p>
       </form>
 
       <div className="mt-8 flex flex-col gap-4 border-b border-slate-100 pb-8 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700">

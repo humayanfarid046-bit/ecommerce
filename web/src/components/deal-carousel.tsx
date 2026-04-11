@@ -80,7 +80,7 @@ export function DealCarousel() {
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/search"
-                className="pointer-events-auto inline-flex min-w-[160px] items-center justify-center rounded-[12px] bg-gradient-to-b from-white to-slate-100 px-8 py-3.5 text-base font-bold text-[#0066ff] shadow-[0_12px_40px_rgba(0,0,0,0.2)] transition hover:scale-[1.02] hover:brightness-[1.02] hover:shadow-[0_16px_48px_rgba(0,0,0,0.25)] active:scale-[0.98]"
+                className="pointer-events-auto inline-flex min-w-[160px] items-center justify-center rounded-[12px] bg-gradient-to-b from-white to-slate-100 px-8 py-3.5 text-base font-bold text-[#2563eb] shadow-[0_12px_40px_rgba(37,99,235,0.18)] transition hover:scale-[1.02] hover:brightness-[1.02] hover:shadow-[0_16px_48px_rgba(37,99,235,0.22)] active:scale-[0.98]"
               >
                 {t("buyNow")}
               </Link>

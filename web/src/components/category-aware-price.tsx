@@ -54,16 +54,16 @@ export function CategoryAwarePrice({ product, variant = "card", className }: Pro
   if (variant === "wishlist") {
     return (
       <div className={cn("mt-2 flex flex-wrap items-baseline gap-2", className)}>
-        <span className="text-lg font-bold text-slate-900">
+        <span className="text-lg font-bold text-text-primary">
           ₹{effective.toLocaleString("en-IN")}
         </span>
         {hasCatDisc ? (
-          <span className="text-xs text-neutral-400 line-through">
+          <span className="text-xs font-medium text-text-secondary line-through decoration-text-secondary/80">
             ₹{product.price.toLocaleString("en-IN")}
           </span>
         ) : null}
         {showMrp ? (
-          <span className="text-xs text-neutral-400 line-through">
+          <span className="text-xs font-medium text-text-secondary line-through decoration-text-secondary/80">
             ₹{product.mrp.toLocaleString("en-IN")}
           </span>
         ) : null}
@@ -74,7 +74,7 @@ export function CategoryAwarePrice({ product, variant = "card", className }: Pro
   if (variant === "pdp") {
     return (
       <div className={cn("mb-5 flex flex-wrap items-baseline gap-3", className)}>
-        <span className="text-3xl font-bold text-[#1F2937] dark:text-slate-100">
+        <span className="text-3xl font-bold text-text-primary dark:text-slate-100">
           ₹{effective.toLocaleString("en-IN")}
         </span>
         {hasCatDisc ? (
@@ -84,10 +84,10 @@ export function CategoryAwarePrice({ product, variant = "card", className }: Pro
         ) : null}
         {showMrp ? (
           <>
-            <span className="text-lg text-neutral-400 line-through decoration-neutral-400 dark:text-neutral-500">
+            <span className="text-lg font-medium text-text-secondary line-through decoration-text-secondary/80 dark:text-neutral-500">
               ₹{product.mrp.toLocaleString("en-IN")}
             </span>
-            <span className="rounded bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+            <span className="rounded-md bg-emerald-800 px-2 py-0.5 text-xs font-extrabold text-white shadow-sm ring-1 ring-black/10 dark:bg-emerald-700">
               {tProduct("percentOff", { n: product.discountPct })}
             </span>
           </>
@@ -104,16 +104,16 @@ export function CategoryAwarePrice({ product, variant = "card", className }: Pro
       )}
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="text-sm font-medium tracking-tight text-[#1F2937] dark:text-slate-100">
+        <span className="text-sm font-bold tracking-tight text-text-primary dark:text-slate-100">
           ₹{effective.toLocaleString("en-IN")}
         </span>
         {hasCatDisc ? (
-          <span className="text-xs font-normal text-slate-400 line-through decoration-slate-400 dark:text-slate-500">
+          <span className="text-xs font-medium text-text-secondary line-through decoration-text-secondary/80 dark:text-slate-500">
             ₹{product.price.toLocaleString("en-IN")}
           </span>
         ) : null}
         {showMrp ? (
-          <span className="text-xs font-normal text-slate-400 line-through decoration-slate-400 dark:text-slate-500">
+          <span className="text-xs font-medium text-text-secondary line-through decoration-text-secondary/80 dark:text-slate-500">
             ₹{product.mrp.toLocaleString("en-IN")}
           </span>
         ) : null}

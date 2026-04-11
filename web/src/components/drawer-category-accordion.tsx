@@ -23,10 +23,10 @@ export function DrawerCategoryAccordion({ onPick }: { onPick: () => void }) {
               key={c.id}
               href={`/category/${c.slug}`}
               onClick={onPick}
-              className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-900 shadow-sm transition hover:border-[#2874f0]/40 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
+              className="flex items-center gap-3 rounded-xl border border-[rgba(37,99,235,0.42)] bg-white px-3 py-3 text-sm font-bold text-slate-900 shadow-[0_4px_28px_rgba(37,99,235,0.05)] transition-colors hover:border-[#2563eb]/55 hover:bg-[#F0F7FF] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50 dark:hover:bg-slate-800"
             >
               <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl dark:border-slate-600 dark:bg-slate-800"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[rgba(37,99,235,0.35)] bg-white text-xl shadow-[0_2px_16px_rgba(37,99,235,0.05)] dark:border-slate-600 dark:bg-slate-800 dark:shadow-none"
                 aria-hidden
               >
                 {c.icon}
@@ -39,18 +39,18 @@ export function DrawerCategoryAccordion({ onPick }: { onPick: () => void }) {
           <div
             key={c.id}
             className={cn(
-              "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-900",
-              expanded && "ring-2 ring-[#2874f0]/35"
+              "overflow-hidden rounded-xl border border-[rgba(37,99,235,0.42)] bg-white shadow-[0_4px_28px_rgba(37,99,235,0.05)] dark:border-slate-600 dark:bg-slate-900 dark:shadow-none",
+              expanded && "ring-2 ring-[#2563eb]/40"
             )}
           >
             <button
               type="button"
               onClick={() => setOpenId(expanded ? null : c.id)}
               aria-expanded={expanded}
-              className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm font-bold text-slate-900 dark:text-slate-50"
+              className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm font-bold text-slate-900 transition-colors hover:bg-[#F0F7FF] dark:text-slate-50 dark:hover:bg-slate-800/80"
             >
               <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl dark:border-slate-600 dark:bg-slate-800"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[rgba(37,99,235,0.35)] bg-white text-xl shadow-[0_2px_16px_rgba(37,99,235,0.05)] dark:border-slate-600 dark:bg-slate-800 dark:shadow-none"
                 aria-hidden
               >
                 {c.icon}
@@ -61,10 +61,10 @@ export function DrawerCategoryAccordion({ onPick }: { onPick: () => void }) {
               </span>
             </button>
             {expanded ? (
-              <div className="border-t border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-600 dark:bg-slate-950/60">
+              <div className="border-t border-[rgba(37,99,235,0.18)] bg-[#fafbff] px-2 py-2 dark:border-slate-600 dark:bg-slate-950/60">
                 <Link
                   href={`/category/${c.slug}`}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-bold text-[#2874f0] dark:text-[#7cb4ff]"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-bold text-[#2563eb] dark:text-[#7cb4ff]"
                   onClick={onPick}
                 >
                   {tc("viewAllInCategory", { name: title })}
@@ -73,7 +73,7 @@ export function DrawerCategoryAccordion({ onPick }: { onPick: () => void }) {
                   <Link
                     key={ch.slug}
                     href={`/category/${c.slug}?sub=${ch.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-800"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-[#F0F7FF] dark:text-slate-200 dark:hover:bg-slate-800"
                     onClick={onPick}
                   >
                     {ts(ch.slug)}

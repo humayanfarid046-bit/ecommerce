@@ -27,7 +27,7 @@ export function StoreShareBar() {
           />
           <Link
             href="/help"
-            className="inline-flex items-center gap-2 rounded-xl border border-[#0066ff]/30 bg-[#0066ff]/10 px-4 py-2.5 text-sm font-bold text-[#0066ff] transition hover:bg-[#0066ff]/15 dark:border-[#3b82f6]/40 dark:bg-[#2563eb]/15 dark:text-[#93c5fd] dark:hover:bg-[#2563eb]/25"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#2563eb]/35 bg-[#2563eb]/10 px-4 py-2.5 text-sm font-bold text-[#2563eb] transition hover:bg-[#2563eb]/16 dark:border-[#3b82f6]/40 dark:bg-[#2563eb]/15 dark:text-[#93c5fd] dark:hover:bg-[#2563eb]/25"
           >
             <LifeBuoy className="h-4 w-4 shrink-0" />
             {t("getHelp")}

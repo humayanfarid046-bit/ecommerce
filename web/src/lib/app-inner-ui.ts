@@ -16,7 +16,7 @@ export const innerPageShellMax =
 
 /** Body copy for legal / policy pages */
 export const legalProse =
-  "space-y-5 text-sm leading-relaxed text-slate-600 dark:text-slate-300/90";
+  "space-y-5 text-sm font-medium leading-relaxed text-text-secondary dark:text-slate-300/90";
 
 /** Primary elevated card — light: white + soft shadow (see `.app-glass-surface` in globals.css); dark: glass */
 export const appCard =
@@ -30,17 +30,17 @@ export const pressable =
   "transition-transform duration-150 ease-out will-change-transform active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100";
 
 export const appHeading =
-  "text-lg font-semibold tracking-tight text-slate-900 dark:text-[#e8edf5]";
+  "text-lg font-semibold tracking-tight text-text-primary dark:text-[#e8edf5]";
 
 export const appSubhead =
-  "text-[13px] leading-relaxed text-slate-600 dark:text-slate-300/85";
+  "text-[13px] font-medium leading-relaxed text-text-secondary dark:text-slate-300/85";
 
 /** Card / section titles inside inner pages */
 export const appTextTitle =
-  "text-[15px] font-semibold tracking-tight text-slate-900 dark:text-[#e8edf5]";
+  "text-[15px] font-semibold tracking-tight text-text-primary dark:text-[#e8edf5]";
 
 export const sectionLabel =
-  "text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400/90";
+  "text-[11px] font-bold uppercase tracking-[0.14em] text-text-secondary dark:text-slate-400/90";
 
 /** Shared premium button radius (12px) */
 export const btnRadius12 = "rounded-[12px]";

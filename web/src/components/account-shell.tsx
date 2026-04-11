@@ -16,10 +16,10 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
   if (status === "loading") {
     return (
       <div
-        className={`${accountLoadingShell} flex items-center justify-center bg-[#0c1019] text-slate-200 sm:rounded-xl`}
+        className={`${accountLoadingShell} flex items-center justify-center bg-slate-50 text-slate-700 dark:bg-[#0c1019] dark:text-slate-200 sm:rounded-xl`}
       >
         <Loader2
-          className="h-8 w-8 animate-spin text-slate-400"
+          className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-400"
           aria-hidden
         />
         <span className="sr-only">{t("loadingAccount")}</span>
@@ -30,7 +30,7 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
   if (!user) {
     return (
       <div
-        className={`${innerPageShell} mx-auto w-full min-w-0 bg-[#0c1019] py-12 text-slate-100 sm:rounded-xl sm:py-16`}
+        className={`${innerPageShell} mx-auto w-full min-w-0 bg-slate-50 py-12 text-slate-900 dark:bg-[#0c1019] dark:text-slate-100 sm:rounded-xl sm:py-16`}
       >
         <div className={`${appCard} rounded-[20px] p-6 text-center sm:p-8`}>
           <p className="text-slate-600 dark:text-slate-300">{t("signInPrompt")}</p>
@@ -46,12 +46,12 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-7xl bg-[#0c1019] px-3 py-6 text-slate-100 sm:rounded-xl sm:px-4 md:px-6 md:py-8">
+    <div className="mx-auto w-full min-w-0 max-w-7xl bg-slate-50 px-3 py-6 text-slate-900 dark:bg-[#0c1019] dark:text-slate-100 sm:rounded-xl sm:px-4 md:px-6 md:py-8">
       <div className="flex justify-end">
         <button
           type="button"
           onClick={() => signOut()}
-          className="shrink-0 rounded-xl border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-slate-100 backdrop-blur-sm transition hover:bg-white/[0.1]"
+          className="shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100 dark:border-white/12 dark:bg-white/[0.06] dark:text-slate-100 dark:shadow-none dark:backdrop-blur-sm dark:hover:bg-white/[0.1]"
         >
           {t("signOut")}
         </button>

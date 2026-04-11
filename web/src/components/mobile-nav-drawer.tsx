@@ -30,7 +30,6 @@ import { useWishlist } from "@/context/wishlist-context";
 import { getWallet, walletUserId } from "@/lib/wallet-storage";
 import { getUserPaymentHistory } from "@/lib/user-payment-history";
 import { readProfile } from "@/lib/account-profile-storage";
-import { loadGamification } from "@/lib/gamification-storage";
 import { ProfileAvatarPreview } from "@/components/profile-avatar-preview";
 import { DrawerCategoryAccordion } from "@/components/drawer-category-accordion";
 import { DrawerOutfitChips } from "@/components/drawer-outfit-chips";
@@ -52,7 +51,7 @@ function Divider() {
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
       {children}
     </p>
   );
@@ -66,18 +65,21 @@ type RowProps = {
   hint?: string;
 };
 
+const drawerRowLinkClass =
+  "flex items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-[#F0F7FF] active:bg-[#F0F7FF] dark:hover:bg-slate-800/80 dark:active:bg-slate-800/80";
+const drawerRowIconClass =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[#2D3748] dark:bg-slate-800 dark:text-slate-200 [&_svg]:stroke-[#2D3748] dark:[&_svg]:stroke-current";
+
 function DrawerRow({ href, icon, label, onNavigate, hint }: RowProps) {
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      className="flex items-center gap-3 rounded-xl border border-transparent px-2 py-2.5 text-left transition hover:border-slate-200 hover:bg-white dark:hover:border-slate-600 dark:hover:bg-slate-800/80"
+      className={drawerRowLinkClass}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-        {icon}
-      </span>
+      <span className={drawerRowIconClass}>{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-slate-900 dark:text-slate-50">
+        <span className="block text-sm font-semibold text-neutral-900 dark:text-slate-50">
           {label}
         </span>
         {hint ? (
@@ -86,7 +88,10 @@ function DrawerRow({ href, icon, label, onNavigate, hint }: RowProps) {
           </span>
         ) : null}
       </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+      <ChevronRight
+        className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
+        aria-hidden
+      />
     </Link>
   );
 }
@@ -102,7 +107,6 @@ export function MobileNavDrawer() {
   const [walletPaise, setWalletPaise] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [profileTick, setProfileTick] = useState(0);
-  const [gamifyTick, setGamifyTick] = useState(0);
   const [logoutAsk, setLogoutAsk] = useState(false);
 
   const wUid = walletUserId(user);
@@ -144,12 +148,6 @@ export function MobileNavDrawer() {
   }, []);
 
   useEffect(() => {
-    const fn = () => setGamifyTick((x) => x + 1);
-    window.addEventListener("storage", fn);
-    return () => window.removeEventListener("storage", fn);
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
     void (async () => {
       const c = await fetchStorefrontContact();
@@ -176,10 +174,6 @@ export function MobileNavDrawer() {
     };
   }, [drawerOpen]);
 
-  useEffect(() => {
-    if (drawerOpen) setGamifyTick((x) => x + 1);
-  }, [drawerOpen]);
-
   const displayName = useMemo(() => {
     const saved = profile.displayName?.trim();
     if (saved) return saved;
@@ -197,11 +191,6 @@ export function MobileNavDrawer() {
     return h % 4 === 0;
   }, [user]);
 
-  const points = useMemo(() => {
-    void gamifyTick;
-    return loadGamification().points;
-  }, [gamifyTick]);
-
   const close = () => closeDrawer();
 
   const signedIn = authStatus === "ready" && Boolean(user);
@@ -218,14 +207,14 @@ export function MobileNavDrawer() {
       />
       <aside
         className={cn(
-          "fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-[min(100vw-2rem,340px)] flex-col bg-slate-100 shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
+          "fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-[min(100vw-2rem,340px)] flex-col bg-white shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
           drawerOpen
             ? "translate-x-0 pointer-events-auto"
             : "-translate-x-full pointer-events-none"
         )}
         aria-hidden={!drawerOpen}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-[#2874f0] px-3 py-3 text-white dark:border-slate-700">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/15 bg-[#2563eb] px-3 py-3 text-white dark:border-slate-700">
           <p className="text-sm font-bold">
             {isCategoryOnly ? t("drawerGroupCategories") : t("drawerMenuTitle")}
           </p>
@@ -255,16 +244,18 @@ export function MobileNavDrawer() {
             ) : (
               <>
             <GroupLabel>{t("drawerGroupProfile")}</GroupLabel>
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
               {signedIn ? (
                 <>
                   <div className="flex gap-3">
-                    <ProfileAvatarPreview
-                      imageSrc={profile.photoDataUrl}
-                      initials={(displayName || user!.email || "U").slice(0, 2)}
-                      nameLabel={displayName || user!.email || ""}
-                      sizeClassName="h-14 w-14"
-                    />
+                    <div className="shrink-0 rounded-full p-[2px] ring-2 ring-[#2563EB] ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                      <ProfileAvatarPreview
+                        imageSrc={profile.photoDataUrl}
+                        initials={(displayName || user!.email || "U").slice(0, 2)}
+                        nameLabel={displayName || user!.email || ""}
+                        sizeClassName="h-14 w-14"
+                      />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {t("drawerSignedInAs")}
@@ -295,7 +286,7 @@ export function MobileNavDrawer() {
                   <Link
                     href="/account/payments#wallet-add-money"
                     onClick={close}
-                    className="mt-3 flex items-center justify-between rounded-xl bg-[#2874f0]/10 px-3 py-2.5 text-left dark:bg-[#2874f0]/20"
+                    className="mt-3 flex items-center justify-between rounded-xl bg-[#2874f0]/10 px-3 py-2.5 text-left transition-colors hover:bg-[#F0F7FF] dark:bg-[#2874f0]/20 dark:hover:bg-slate-800/90"
                   >
                     <span className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
                       <Wallet className="h-4 w-4 text-[#2874f0]" />
@@ -358,26 +349,25 @@ export function MobileNavDrawer() {
               <DrawerRow
                 href="/"
                 onNavigate={close}
-                icon={<Home className="h-4 w-4" />}
+                icon={<Home className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerHomeShop")}
               />
               <DrawerRow
                 href="/rewards"
                 onNavigate={close}
-                icon={<Gift className="h-4 w-4" />}
+                icon={<Gift className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerRewardsSpin")}
-                hint={t("drawerPointsShort", { n: points })}
               />
               <DrawerRow
                 href="/account/orders"
                 onNavigate={close}
-                icon={<Package className="h-4 w-4" />}
+                icon={<Package className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerMyOrders")}
               />
               <DrawerRow
                 href="/account/wishlist"
                 onNavigate={close}
-                icon={<Heart className="h-4 w-4" />}
+                icon={<Heart className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerMyWishlist")}
               />
             </div>
@@ -388,25 +378,25 @@ export function MobileNavDrawer() {
               <DrawerRow
                 href="/account/personal"
                 onNavigate={close}
-                icon={<User className="h-4 w-4" />}
+                icon={<User className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerProfileSettings")}
               />
               <DrawerRow
                 href="/account/settings/addresses"
                 onNavigate={close}
-                icon={<MapPin className="h-4 w-4" />}
+                icon={<MapPin className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerSavedAddresses")}
               />
               <DrawerRow
                 href="/account/payments"
                 onNavigate={close}
-                icon={<CreditCard className="h-4 w-4" />}
+                icon={<CreditCard className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerPaymentsRefunds")}
               />
               <DrawerRow
                 href="/account/settings/security"
                 onNavigate={close}
-                icon={<Shield className="h-4 w-4" />}
+                icon={<Shield className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerSecurity")}
               />
             </div>
@@ -417,15 +407,14 @@ export function MobileNavDrawer() {
               <DrawerRow
                 href="/help#contact"
                 onNavigate={close}
-                icon={<Phone className="h-4 w-4" />}
+                icon={<Phone className="h-4 w-4" strokeWidth={2} />}
                 label={t("drawerContactUs")}
-                hint={t("drawerContactUsHint")}
               />
               <a
                 href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl border border-transparent px-2 py-2.5 transition hover:border-slate-200 hover:bg-white dark:hover:border-slate-600 dark:hover:bg-slate-800/80"
+                className={drawerRowLinkClass}
                 onClick={() => {
                   try {
                     logWhatsAppClick(
@@ -439,13 +428,16 @@ export function MobileNavDrawer() {
                   close();
                 }}
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                  <MessageCircle className="h-4 w-4" />
+                <span className={drawerRowIconClass}>
+                  <MessageCircle className="h-4 w-4" strokeWidth={2} />
                 </span>
-                <span className="flex-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
+                <span className="flex-1 text-sm font-semibold text-neutral-900 dark:text-slate-50">
                   {t("drawerWhatsApp")}
                 </span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
+                <ChevronRight
+                  className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
+                  aria-hidden
+                />
               </a>
             </div>
 
@@ -479,9 +471,9 @@ export function MobileNavDrawer() {
             <Link
               href="/account"
               onClick={close}
-              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-slate-200/80 py-2.5 text-sm font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-100"
+              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-sm font-bold text-neutral-900 transition-colors hover:bg-[#F0F7FF] dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
-              <ShoppingBag className="h-4 w-4" />
+              <ShoppingBag className="h-4 w-4" strokeWidth={2} />
               {t("drawerMyAccountFull")}
             </Link>
 

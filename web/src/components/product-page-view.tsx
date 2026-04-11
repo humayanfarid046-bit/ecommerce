@@ -149,10 +149,10 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
   if (product === null) {
     return (
       <div className={`${STORE_SHELL} py-16 text-center`}>
-        <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+        <p className="text-lg font-semibold text-text-primary dark:text-slate-100">
           {t("notFoundTitle")}
         </p>
-        <p className="mt-2 text-sm text-neutral-500">{t("notFoundHint")}</p>
+        <p className="mt-2 text-sm font-medium text-text-secondary">{t("notFoundHint")}</p>
         <Link
           href="/search"
           className="mt-6 inline-block rounded-xl bg-[#0066ff] px-6 py-2 text-sm font-bold text-white"
@@ -186,10 +186,10 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
             />
           </div>
           <div className="min-h-0 min-w-0 lg:max-h-[min(880px,calc(100dvh-8rem))] lg:overflow-y-auto lg:overscroll-contain lg:pl-1">
-            <p className="mb-5 text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="mb-5 text-sm font-semibold text-text-secondary dark:text-neutral-400">
               {product.brand}
             </p>
-            <h1 className="mb-5 text-2xl font-bold leading-tight tracking-tight text-[#1F2937] dark:text-slate-100">
+            <h1 className="mb-5 text-2xl font-bold leading-tight tracking-tight text-text-primary dark:text-slate-100">
               {product.title}
             </h1>
             <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -197,7 +197,7 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
                 <Star className="h-4 w-4 fill-current" />
                 {product.rating}
               </span>
-              <span className="text-neutral-500 dark:text-neutral-400">
+              <span className="font-medium text-text-secondary dark:text-neutral-400">
                 {t("ratingsReviews", { count: product.reviewCount })}
               </span>
             </div>
@@ -207,7 +207,7 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
               sizes={product.sizeOptions}
               colors={product.colorOptions}
             />
-            <p className="mb-5 text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="mb-5 text-sm font-medium text-text-secondary dark:text-neutral-300">
               {product.inStock ? (
                 <span className="text-emerald-700 dark:text-emerald-400">
                   {t("inStock")}
@@ -239,7 +239,7 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
             ) : null}
             {product.specifications && product.specifications.length > 0 ? (
               <div className="mt-8 rounded-lg border border-[#E5E7EB] bg-white p-5 shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.1)] dark:border-slate-700 dark:bg-slate-900">
-                <h2 className="text-base font-semibold text-[#1F2937] dark:text-slate-100">
+                <h2 className="text-base font-semibold text-text-primary dark:text-slate-100">
                   {t("specifications")}
                 </h2>
                 <table className="mt-3 w-full border-collapse text-sm">
@@ -251,11 +251,11 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
                       >
                         <th
                           scope="row"
-                          className="w-[40%] py-2.5 pr-4 text-left font-medium text-neutral-600 dark:text-neutral-400"
+                          className="w-[40%] py-2.5 pr-4 text-left font-semibold text-text-secondary dark:text-neutral-400"
                         >
                           {row.label}
                         </th>
-                        <td className="py-2.5 text-neutral-900 dark:text-neutral-200">
+                        <td className="py-2.5 font-medium text-text-primary dark:text-neutral-200">
                           {row.value}
                         </td>
                       </tr>
@@ -272,15 +272,15 @@ export function ProductPageView({ id, locale }: { id: string; locale: string }) 
                   : "mt-8 rounded-lg border border-[#E5E7EB] bg-white p-5 shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.1)] dark:border-slate-700 dark:bg-slate-900"
               }
             >
-              <h2 className="text-base font-semibold text-[#1F2937] dark:text-slate-100">
+              <h2 className="text-base font-semibold text-text-primary dark:text-slate-100">
                 {t("highlights")}
               </h2>
-              <ul className="mt-3 list-inside list-disc space-y-1 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+              <ul className="mt-3 list-inside list-disc space-y-1 text-sm font-medium leading-relaxed text-text-secondary dark:text-neutral-300">
                 {product.highlights.map((h) => (
                   <li key={h}>{h}</li>
                 ))}
               </ul>
-              <p className="mt-5 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+              <p className="mt-5 text-sm font-medium leading-relaxed text-text-secondary dark:text-neutral-300">
                 {product.description}
               </p>
             </div>
