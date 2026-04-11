@@ -12,8 +12,8 @@ const accountLoadingShell =
   "mx-auto w-full min-w-0 max-w-7xl px-5 py-16 text-center sm:px-6";
 
 const NAV_ICONS = [
-  "LayoutDashboard",
-  "Package",
+  "CircleUser",
+  "ClipboardList",
   "Heart",
   "Settings",
   "CreditCard",
@@ -31,17 +31,19 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
 
   if (status === "loading") {
     return (
-      <div className={accountLoadingShell}>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {t("sessionLoading")}
-        </p>
+      <div
+        className={`${accountLoadingShell} bg-[#0c1019] text-slate-200 sm:rounded-xl`}
+      >
+        <p className="text-sm text-slate-400">{t("sessionLoading")}</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className={`${innerPageShell} mx-auto w-full min-w-0 py-12 sm:py-16`}>
+      <div
+        className={`${innerPageShell} mx-auto w-full min-w-0 bg-[#0c1019] py-12 text-slate-100 sm:rounded-xl sm:py-16`}
+      >
         <div className={`${appCard} rounded-[20px] p-6 text-center sm:p-8`}>
           <p className="text-slate-600 dark:text-slate-300">{t("signInPrompt")}</p>
           <Link
@@ -73,30 +75,32 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-7xl px-3 py-6 sm:px-4 md:px-6 md:py-8">
+    <div className="mx-auto w-full min-w-0 max-w-7xl bg-[#0c1019] px-3 py-6 text-slate-100 sm:rounded-xl sm:px-4 md:px-6 md:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
             {t("signedInAs")}
           </p>
-          <p className="mt-0.5 break-words text-sm font-medium text-slate-800 dark:text-slate-100">
+          <p className="mt-0.5 break-words text-sm font-medium text-slate-200">
             {user.email ?? user.uid}
           </p>
         </div>
         <button
           type="button"
           onClick={() => signOut()}
-          className="w-full shrink-0 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          className="w-full shrink-0 rounded-xl border border-white/12 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-slate-100 backdrop-blur-sm transition hover:bg-white/[0.1] sm:w-auto"
         >
           {t("signOut")}
         </button>
       </div>
 
       <div className="mt-6 flex flex-col gap-6 lg:mt-8 lg:flex-row lg:gap-10">
-        <div className="w-full min-w-0 lg:w-56 lg:shrink-0">
+        <div className="w-full min-w-0 lg:w-60 lg:shrink-0">
           <AccountSidebar items={items} />
         </div>
-        <main className="min-w-0 w-full flex-1 overflow-x-hidden">{children}</main>
+        <main className="min-w-0 w-full flex-1 overflow-x-hidden pb-2">
+          {children}
+        </main>
       </div>
     </div>
   );

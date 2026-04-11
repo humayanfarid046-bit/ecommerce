@@ -110,23 +110,37 @@ export default function AccountOverviewPage() {
         className={`${appCard} flex flex-col gap-6 rounded-[22px] p-4 sm:p-6 md:flex-row md:items-center md:justify-between`}
       >
         <div className="flex items-center gap-4">
-          <ProfileAvatarPreview
-            imageSrc={profile.photoDataUrl}
-            initials={displayName.slice(0, 2)}
-            nameLabel={displayName}
-          />
+          <div className="relative shrink-0 rounded-full bg-gradient-to-br from-white/45 via-amber-100/25 to-[#3b82f6]/45 p-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.18),0_10px_40px_rgba(0,0,0,0.35)]">
+            <div className="rounded-full bg-[#0c1019] p-[2px]">
+              <ProfileAvatarPreview
+                imageSrc={profile.photoDataUrl}
+                initials={displayName.slice(0, 2)}
+                nameLabel={displayName}
+                sizeClassName="h-[76px] w-[76px]"
+                className="[&_button]:ring-2 [&_button]:ring-white/25 [&_button]:shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+              />
+            </div>
+          </div>
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-[#e8edf5] sm:text-2xl">
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-[#e8edf5] sm:text-2xl">
               {displayName}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {isPremium ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-sm">
-                  <Crown className="h-3 w-3" />
-                  {t("memberPremium")}
+                <span className="relative inline-flex overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-amber-500 to-amber-700 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(245,158,11,0.45)] ring-1 ring-amber-300/50">
+                  <span
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+                    aria-hidden
+                  >
+                    <span className="absolute -left-1/4 top-0 h-full w-[55%] min-w-[4rem] bg-gradient-to-r from-transparent via-white/45 to-transparent animate-account-premium-shimmer" />
+                  </span>
+                  <span className="relative flex items-center gap-1">
+                    <Crown className="h-3 w-3" strokeWidth={2} />
+                    {t("memberPremium")}
+                  </span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-300">
                   <Sparkles className="h-3 w-3" />
                   {t("memberRegular")}
                 </span>

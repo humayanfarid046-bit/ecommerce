@@ -3,19 +3,25 @@
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  Package,
+  CircleUser,
+  ClipboardList,
   Heart,
   Settings,
   CreditCard,
   Store,
+  ChevronRight,
 } from "lucide-react";
 
-type Item = {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-};
+const iconMap = {
+  CircleUser,
+  ClipboardList,
+  Heart,
+  Settings,
+  CreditCard,
+  Store,
+} as const;
+
+type IconName = keyof typeof iconMap;
 
 export function AccountSidebar({
   items,
@@ -23,19 +29,11 @@ export function AccountSidebar({
   items: { href: string; label: string; icon: string }[];
 }) {
   const pathname = usePathname();
-  const iconMap = {
-    LayoutDashboard,
-    Package,
-    Heart,
-    Settings,
-    CreditCard,
-    Store,
-  } as const;
 
-  const resolved: Item[] = items.map((i) => ({
+  const resolved = items.map((i) => ({
     href: i.href,
     label: i.label,
-    icon: iconMap[i.icon as keyof typeof iconMap] ?? LayoutDashboard,
+    icon: iconMap[i.icon as IconName] ?? CircleUser,
   }));
 
   function navActive(href: string) {
@@ -46,56 +44,47 @@ export function AccountSidebar({
   }
 
   return (
-    <>
-      <nav
-        className="flex w-full min-w-0 flex-wrap gap-2 lg:hidden"
-        aria-label="Account"
-      >
+    <nav className="w-full" aria-label="Account">
+      <ul className="overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.04] shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
         {resolved.map(({ href, label, icon: Icon }) => {
           const active = navActive(href);
           return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "inline-flex min-h-[2.5rem] min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 py-2 text-left text-[11px] font-bold leading-tight transition sm:text-xs",
-                active
-                  ? "bg-[#0066ff] text-white shadow-md shadow-[#0066ff]/20"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-              )}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 break-words">{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <aside className="hidden w-56 shrink-0 lg:block">
-        <nav
-          className="glass sticky top-24 space-y-1 rounded-2xl border border-slate-200/80 p-2 dark:border-slate-700/80"
-          aria-label="Account"
-        >
-          {resolved.map(({ href, label, icon: Icon }) => {
-            const active = navActive(href);
-            return (
+            <li key={href}>
               <Link
-                key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+                  "group flex items-center gap-3 border-b border-white/[0.06] px-3 py-3.5 transition last:border-b-0 sm:px-4 sm:py-3.5",
                   active
-                    ? "bg-[#0066ff]/10 text-[#0066ff] dark:bg-[#0066ff]/20 dark:text-[#7eb3ff]"
-                    : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80"
+                    ? "bg-[#0066ff]/12 text-white"
+                    : "text-slate-300 hover:bg-white/[0.05] hover:text-white"
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0 opacity-90" />
-                {label}
+                <span
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition",
+                    active
+                      ? "border-[#0066ff]/45 bg-[#0066ff]/18 text-[#93c5fd]"
+                      : "border-white/[0.08] bg-white/[0.05] text-slate-400 group-hover:border-white/15 group-hover:text-slate-200"
+                  )}
+                >
+                  <Icon className="h-[22px] w-[22px]" strokeWidth={1.65} />
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-medium leading-snug tracking-[-0.01em]">
+                  {label}
+                </span>
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-slate-300",
+                    active && "text-[#7eb3ff]"
+                  )}
+                  strokeWidth={2}
+                  aria-hidden
+                />
               </Link>
-            );
-          })}
-        </nav>
-      </aside>
-    </>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

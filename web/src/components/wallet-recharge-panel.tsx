@@ -173,39 +173,49 @@ export function WalletRechargePanel() {
         {t("quickAmounts")}
       </p>
       <div className="flex flex-wrap gap-2">
-        {CHIPS.map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => setAmountRupees(n)}
-            className={cn(
-              "rounded-xl border-2 px-4 py-2 text-sm font-bold transition",
-              amountRupees === n
-                ? "border-[#2874f0] bg-[#2874f0]/10 text-[#2874f0]"
-                : "border-[#E5E7EB] bg-white text-slate-800 hover:border-[#2874f0]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            )}
-          >
-            ₹{n.toLocaleString("en-IN")}
-          </button>
-        ))}
+        {CHIPS.map((n) => {
+          const selected = amountRupees === n;
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setAmountRupees(n)}
+              className={cn(
+                "rounded-xl border px-4 py-2.5 text-sm font-semibold backdrop-blur-xl transition duration-200",
+                selected
+                  ? "border-cyan-400/90 bg-cyan-500/15 text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.45),0_0_2px_rgba(34,211,238,0.8)] ring-1 ring-cyan-400/70 backdrop-blur-md"
+                  : "border-slate-200/80 bg-white/55 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl hover:bg-white/75 dark:border-white/12 dark:bg-white/[0.08] dark:text-slate-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] dark:hover:bg-white/[0.12]"
+              )}
+            >
+              ₹{n.toLocaleString("en-IN")}
+            </button>
+          );
+        })}
       </div>
       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
         {t("customAmount")}
-        <input
-          type="number"
-          min={1}
-          max={maxRupees}
-          value={amountRupees || ""}
-          onChange={(e) =>
-            setAmountRupees(
-              Math.min(
-                maxRupees,
-                Math.max(1, Number(e.target.value) || 0)
+        <div className="mt-2 overflow-hidden rounded-lg bg-slate-950 px-4 pt-3 ring-1 ring-white/10 dark:bg-[#060a12] dark:ring-white/[0.08]">
+          <input
+            type="number"
+            min={1}
+            max={maxRupees}
+            value={amountRupees || ""}
+            onChange={(e) =>
+              setAmountRupees(
+                Math.min(
+                  maxRupees,
+                  Math.max(1, Number(e.target.value) || 0)
+                )
               )
-            )
-          }
-          className="mt-1 w-full rounded-xl border border-[#E5E7EB] bg-white px-3 py-2.5 font-mono text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-        />
+            }
+            className={cn(
+              "w-full border-0 border-b-2 border-b-cyan-500/30 bg-transparent pb-3 font-mono text-base tabular-nums text-slate-100 outline-none transition",
+              "shadow-[0_1px_0_0_rgba(34,211,238,0.2)]",
+              "placeholder:text-slate-500",
+              "focus:border-b-cyan-400 focus:shadow-[0_4px_28px_rgba(34,211,238,0.4)] focus:ring-0"
+            )}
+          />
+        </div>
       </label>
       <p className="text-[11px] text-slate-500 dark:text-slate-400">
         {t("maxRechargeHint", { max: maxRupees.toLocaleString("en-IN") })}
@@ -215,13 +225,13 @@ export function WalletRechargePanel() {
         disabled={busy || amountRupees < 1}
         onClick={() => void pay()}
         className={cn(
-          "inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition sm:w-auto sm:px-8",
+          "inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition duration-150 ease-out",
           busy || amountRupees < 1
-            ? "cursor-not-allowed bg-slate-400"
-            : "bg-[#2874f0] hover:bg-[#1a65d8]"
+            ? "cursor-not-allowed bg-gradient-to-r from-slate-500 to-slate-600 opacity-80 shadow-none hover:brightness-100 active:scale-100"
+            : "bg-gradient-to-r from-[#0066ff] via-[#6366f1] to-[#0891b2] shadow-[0_10px_32px_rgba(0,102,255,0.38),inset_0_1px_0_0_rgba(255,255,255,0.14)] hover:brightness-[1.06] hover:shadow-[0_12px_36px_rgba(0,102,255,0.45)] active:scale-[0.98] active:shadow-[0_6px_20px_rgba(0,102,255,0.5)] motion-reduce:active:scale-100"
         )}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
         {busy ? t("opening") : t("addMoney")}
       </button>
     </div>

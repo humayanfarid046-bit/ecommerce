@@ -56,7 +56,7 @@ export function CategoryListingClient({
   const subLabel = sp.sub ? ts(sp.sub) : null;
 
   return (
-    <div className="w-full bg-slate-50/40 dark:bg-slate-950/40">
+    <div className="w-full bg-slate-50/40 dark:bg-[#0c1019]/90">
       <div className={`${STORE_SHELL} py-8`}>
         <FilterListingShell
           maxPriceDefault={maxP || 100000}

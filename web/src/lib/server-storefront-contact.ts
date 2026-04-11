@@ -69,6 +69,7 @@ export async function saveStorefrontContactToFirestore(
   patch: Partial<StorefrontContact>,
   _actorUid: string
 ): Promise<StorefrontContact> {
+  void _actorUid; /* reserved for audit / future Firestore rules context */
   const cur = await getStorefrontContactFromFirestore();
   const next: StorefrontContact = {
     supportPhoneE164:

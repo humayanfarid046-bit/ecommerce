@@ -40,7 +40,6 @@ type Props = {
 export function CategoryAwarePrice({ product, variant = "card", className }: Props) {
   const effective = useEffectiveUnitPrice(product);
   const tProduct = useTranslations("product");
-  const tCard = useTranslations("productCard");
   const hasCatDisc = effective < product.price;
   const showMrp = product.mrp > product.price;
 
@@ -98,25 +97,27 @@ export function CategoryAwarePrice({ product, variant = "card", className }: Pro
   }
 
   return (
-    <div className={cn("mt-auto flex flex-wrap items-center gap-2 pt-1", className)}>
-      <span className="text-base font-bold text-[#1F2937] dark:text-slate-100">
-        ₹{effective.toLocaleString("en-IN")}
-      </span>
-      {hasCatDisc ? (
-        <span className="text-sm text-slate-400 line-through decoration-slate-400 dark:text-slate-500">
-          ₹{product.price.toLocaleString("en-IN")}
+    <div
+      className={cn(
+        "flex flex-col gap-0.5 pt-1 font-sans tabular-nums",
+        className
+      )}
+    >
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className="text-sm font-medium tracking-tight text-[#1F2937] dark:text-slate-100">
+          ₹{effective.toLocaleString("en-IN")}
         </span>
-      ) : null}
-      {showMrp ? (
-        <>
-          <span className="text-sm text-slate-400 line-through decoration-slate-400 dark:text-slate-500">
+        {hasCatDisc ? (
+          <span className="text-xs font-normal text-slate-400 line-through decoration-slate-400 dark:text-slate-500">
+            ₹{product.price.toLocaleString("en-IN")}
+          </span>
+        ) : null}
+        {showMrp ? (
+          <span className="text-xs font-normal text-slate-400 line-through decoration-slate-400 dark:text-slate-500">
             ₹{product.mrp.toLocaleString("en-IN")}
           </span>
-          <span className="rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-100 dark:bg-rose-950/70 dark:text-rose-300 dark:ring-rose-900/60">
-            {product.discountPct}% {tCard("off")}
-          </span>
-        </>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * Shared layout + surface styles for inner feature pages (Rewards, Help, Support panel).
- * Card dark surface #161d2b — floats above app canvas; light: white + soft shadow.
+ * Dark cards use global `.app-glass-surface` (glass + gradient border) from globals.css.
  */
 
 export const innerPageShell =
@@ -18,12 +18,12 @@ export const innerPageShellMax =
 export const legalProse =
   "space-y-5 text-sm leading-relaxed text-slate-600 dark:text-slate-300/90";
 
-/** Primary elevated card */
+/** Primary elevated card — premium glass in dark (see `.app-glass-surface`) */
 export const appCard =
-  "rounded-[18px] border border-slate-100/90 bg-white shadow-[0_2px_20px_rgba(15,23,42,0.07)] dark:border-white/[0.07] dark:bg-[#161d2b] dark:shadow-[0_12px_48px_rgba(0,0,0,0.42)]";
+  "app-glass-surface rounded-[18px] border border-slate-100/90 bg-white shadow-[0_2px_20px_rgba(15,23,42,0.07)] dark:border-transparent dark:bg-transparent";
 
 export const appCardSubtle =
-  "rounded-[18px] border border-slate-100/60 bg-white/95 shadow-sm dark:border-white/[0.05] dark:bg-[#161d2b]/90 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]";
+  "app-glass-surface rounded-[18px] border border-slate-100/60 bg-white/95 shadow-sm dark:border-transparent dark:bg-transparent";
 
 /** Tap feedback — use on tappable rows / cards */
 export const pressable =

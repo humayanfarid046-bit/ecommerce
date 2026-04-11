@@ -58,7 +58,7 @@ export function ProductCatalog({ onEdit, onDuplicate }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user]);
 
   const rows = useMemo(() => {
     void tick;
