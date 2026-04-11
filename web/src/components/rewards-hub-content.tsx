@@ -97,7 +97,7 @@ export function RewardsHubContent() {
                 pressable,
                 canCheckIn
                   ? gradientCta
-                  : "cursor-not-allowed rounded-2xl bg-slate-200 font-semibold text-slate-500 dark:bg-slate-700/80 dark:text-slate-400"
+                  : "cursor-not-allowed rounded-[12px] bg-slate-200 font-semibold text-slate-500 dark:bg-slate-700/80 dark:text-slate-400"
               )}
             >
               {canCheckIn ? t("checkInCta") : t("checkInDone")}
@@ -143,7 +143,7 @@ export function RewardsHubContent() {
                 pressable,
                 canSpin
                   ? gradientCta
-                  : "cursor-not-allowed rounded-2xl bg-slate-200 font-semibold text-slate-500 dark:bg-slate-700/80 dark:text-slate-400"
+                  : "cursor-not-allowed rounded-[12px] bg-slate-200 font-semibold text-slate-500 dark:bg-slate-700/80 dark:text-slate-400"
               )}
             >
               <Sparkles className="h-4 w-4 opacity-90" />
@@ -151,7 +151,7 @@ export function RewardsHubContent() {
             </button>
             {spinResult ? (
               <p
-                className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[12px] font-medium leading-relaxed text-emerald-900 dark:border-emerald-400/15 dark:bg-emerald-950/40 dark:text-emerald-100"
+                className="mt-4 rounded-[18px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[12px] font-medium leading-relaxed text-emerald-900 dark:border-emerald-400/15 dark:bg-emerald-950/40 dark:text-emerald-100"
                 role="status"
               >
                 {spinResult}

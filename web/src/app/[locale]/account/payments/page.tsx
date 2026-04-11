@@ -13,6 +13,7 @@ import {
 import { readSavedCards, removeSavedCard } from "@/lib/saved-cards-storage";
 import { AccountPaymentHistory } from "@/components/account-payment-history";
 import { WalletRechargePanel } from "@/components/wallet-recharge-panel";
+import { AccountSectionHeader } from "@/components/account-section-header";
 
 export default function AccountPaymentsPage() {
   const t = useTranslations("account");
@@ -61,14 +62,10 @@ export default function AccountPaymentsPage() {
 
   return (
     <div className="space-y-8 sm:space-y-10">
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
-          {t("paymentsTitle")}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {t("paymentsSubtitle")}
-        </p>
-      </div>
+      <AccountSectionHeader
+        title={t("paymentsTitle")}
+        subtitle={t("paymentsSubtitle")}
+      />
 
       <section
         id="wallet-add-money"

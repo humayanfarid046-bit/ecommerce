@@ -1,37 +1,45 @@
-import { ProfileInfoSection } from "@/components/settings/profile-info-section";
-import { AccountAddressSection } from "@/components/account-address-section";
-import { SecuritySection } from "@/components/settings/security-section";
-import { NotificationsSection } from "@/components/settings/notifications-section";
-import { AppPreferencesSection } from "@/components/settings/app-preferences-section";
-import { LegalSection } from "@/components/settings/legal-section";
-import { ApiBackendSection } from "@/components/settings/api-backend-section";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+"use client";
 
-type Props = { params: Promise<{ locale: string }> };
+import { AccountNavTiles } from "@/components/account-nav-tiles";
+import { AccountSectionHeader } from "@/components/account-section-header";
+import { useTranslations } from "next-intl";
+import {
+  User,
+  MapPin,
+  Shield,
+  Bell,
+  SlidersHorizontal,
+  Scale,
+} from "lucide-react";
 
-export default async function AccountSettingsPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations("account");
+export default function AccountSettingsHubPage() {
+  const t = useTranslations("account");
+
+  const items = [
+    { href: "/account/personal", label: t("personalInfo"), icon: User },
+    { href: "/account/settings/addresses", label: t("addressBook"), icon: MapPin },
+    { href: "/account/settings/security", label: t("securityTitle"), icon: Shield },
+    {
+      href: "/account/settings/notifications",
+      label: t("notificationsTitle"),
+      icon: Bell,
+    },
+    {
+      href: "/account/settings/preferences",
+      label: t("appPreferencesTitle"),
+      icon: SlidersHorizontal,
+    },
+    { href: "/account/settings/legal", label: t("legalTitle"), icon: Scale },
+  ];
 
   return (
-    <div className="min-w-0 space-y-8 sm:space-y-10">
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
-          {t("settingsTitle")}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {t("settingsSubtitle")}
-        </p>
-      </div>
-
-      <ProfileInfoSection />
-      <AccountAddressSection />
-      <SecuritySection />
-      <NotificationsSection />
-      <AppPreferencesSection />
-      <ApiBackendSection />
-      <LegalSection />
+    <div className="min-w-0">
+      <AccountSectionHeader
+        title={t("settingsTitle")}
+        subtitle={t("settingsHubSubtitle")}
+        backHref="/account"
+      />
+      <AccountNavTiles items={items} className="mt-2" />
     </div>
   );
 }

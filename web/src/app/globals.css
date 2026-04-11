@@ -1,19 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* Light canvas — subtle off-white (not flat pure white) */
+  --background: #f5f7fa;
   --foreground: #0f172a;
   /* Storefront highlight — use sparingly (≈10%): CTAs & key links */
   --electric: #2874f0;
   --electric-hover: #1a65d8;
-  --store-canvas: #f9fafb;
+  --store-canvas: #f5f7fa;
   --store-secondary: #f5f7fa;
-  --store-card-border: #e5e7eb;
+  --surface-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --shadow-card-soft: 0 1px 10px 1px rgba(0, 0, 0, 0.05);
+  --store-card-border: #e2e8f0;
   --product-title: #1f2937;
   --deal-orange: #ff6b00;
   --muted: #64748b;
   --glass-fill: rgba(255, 255, 255, 0.52);
   --glass-border: rgba(255, 255, 255, 0.65);
+  /* Filled inputs — light grey surface */
+  --input-fill: #edf0f4;
 }
 
 @theme inline {
@@ -41,6 +47,7 @@ html.dark {
   --glass-fill: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.14);
   --glass-blur: 10px;
+  --input-fill: #1e293b;
 }
 
 body {
@@ -52,16 +59,21 @@ body {
   line-height: 1.6;
 }
 
+/* Light mode: soften Tailwind “heavy” gray borders to thin #E2E8F0 */
+html:not(.dark) .border-slate-300,
+html:not(.dark) .border-neutral-300,
+html:not(.dark) .border-gray-300 {
+  border-color: var(--border-subtle);
+}
+
 /*
  * Premium glass card — dark: frosted rgba(255,255,255,0.05), blur 10px,
  * 1px soft gradient border. Light: solid white card (readable on light canvas).
  */
 html:not(.dark) .app-glass-surface {
-  background: #ffffff;
-  border: 1px solid var(--store-card-border);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 4px 12px rgb(0 0 0 / 0.06);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card-soft);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -91,9 +103,9 @@ html.dark .app-glass-surface {
 
 html:not(.dark) .app-glass-surface:hover {
   box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.06),
-    0 12px 24px -4px rgb(0 0 0 / 0.1);
-  border-color: #e5e7eb;
+    0 2px 12px 1px rgba(0, 0, 0, 0.07),
+    0 1px 10px 1px rgba(0, 0, 0, 0.05);
+  border-color: var(--border-subtle);
 }
 
 html.dark .app-glass-surface:hover {
@@ -105,19 +117,17 @@ html.dark .app-glass-surface:hover {
 
 /* Product cards — same glass system in dark */
 .product-card-store {
-  background: #ffffff;
-  border: 1px solid var(--store-card-border);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 4px 12px rgb(0 0 0 / 0.06);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card-soft);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .product-card-store:hover {
   box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.06),
-    0 12px 24px -4px rgb(0 0 0 / 0.1);
-  border-color: #e5e7eb;
+    0 2px 12px 1px rgba(0, 0, 0, 0.07),
+    0 1px 10px 1px rgba(0, 0, 0, 0.05);
+  border-color: var(--border-subtle);
 }
 
 html.dark .product-card-store {
@@ -196,15 +206,13 @@ html.dark select option {
   animation: ripple-ring 0.65s ease-out forwards;
 }
 
-/* Panels & filters — light: soft glass; dark: matches premium card glass */
+/* Panels & filters — light: white card + soft shadow; dark: matches premium card glass */
 .glass {
-  background: var(--glass-fill);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 102, 255, 0.08);
-  box-shadow:
-    0 4px 24px rgba(0, 102, 255, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.04);
+  background: var(--surface-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card-soft);
 }
 
 html.dark .glass {
@@ -238,14 +246,11 @@ html.dark .glass[class*="border-neutral-200"] {
 
 /* Product cards — stronger glass + soft colored shadow */
 .glass-card-product {
-  background: rgba(255, 255, 255, 0.48);
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 8px 32px rgba(0, 102, 255, 0.1),
-    0 2px 8px rgba(124, 58, 237, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  background: var(--surface-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card-soft);
 }
 
 html.dark .glass-card-product {
@@ -273,14 +278,11 @@ html.dark .glass-card-product {
 }
 
 .glass-premium {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow:
-    0 4px 24px rgba(0, 102, 255, 0.12),
-    0 24px 64px rgba(124, 58, 237, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  background: var(--surface-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card-soft);
 }
 
 html.dark .glass-premium {
@@ -456,3 +458,72 @@ svg {
   }
 }
 
+/* Typography — Inter on <html>; headings strong, body inherits muted from layout */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--foreground);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/*
+ * Filled inputs — light grey / dark slate, no visible border until focus.
+ * Opt out with data-no-filled on special UIs (e.g. wallet line input).
+ */
+html:not(.dark)
+  input:not([data-no-filled]):not([type="checkbox"]):not([type="radio"]):not(
+    [type="range"]
+  ):not([type="file"]):not([type="hidden"]):not([type="button"]):not(
+    [type="submit"]
+  ):not([type="reset"]):not([type="color"]):not([type="image"]),
+html:not(.dark) textarea:not([data-no-filled]),
+html:not(.dark) select:not([data-no-filled]) {
+  background-color: var(--input-fill) !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+html:not(.dark) input:not([data-no-filled]):focus,
+html:not(.dark) input:not([data-no-filled]):focus-visible,
+html:not(.dark) textarea:not([data-no-filled]):focus,
+html:not(.dark) textarea:not([data-no-filled]):focus-visible,
+html:not(.dark) select:not([data-no-filled]):focus,
+html:not(.dark) select:not([data-no-filled]):focus-visible {
+  border-color: rgba(40, 116, 240, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.1) !important;
+  outline: none !important;
+}
+
+html.dark
+  input:not([data-no-filled]):not([type="checkbox"]):not([type="radio"]):not(
+    [type="range"]
+  ):not([type="file"]):not([type="hidden"]):not([type="button"]):not(
+    [type="submit"]
+  ):not([type="reset"]):not([type="color"]):not([type="image"]),
+html.dark textarea:not([data-no-filled]),
+html.dark select:not([data-no-filled]) {
+  background-color: var(--input-fill) !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+html.dark input:not([data-no-filled]):focus,
+html.dark input:not([data-no-filled]):focus-visible,
+html.dark textarea:not([data-no-filled]):focus,
+html.dark textarea:not([data-no-filled]):focus-visible,
+html.dark select:not([data-no-filled]):focus,
+html.dark select:not([data-no-filled]):focus-visible {
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  outline: none !important;
+}

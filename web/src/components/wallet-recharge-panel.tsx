@@ -164,11 +164,6 @@ export function WalletRechargePanel() {
 
   return (
     <div className="space-y-4">
-      {!useRazorpay ? (
-        <p className="rounded-xl border border-sky-200 bg-sky-50/90 px-4 py-3 text-sm text-sky-950 dark:border-sky-700/50 dark:bg-sky-950/20 dark:text-sky-100">
-          {t("demoModeHint")}
-        </p>
-      ) : null}
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {t("quickAmounts")}
       </p>
@@ -196,6 +191,7 @@ export function WalletRechargePanel() {
         {t("customAmount")}
         <div className="mt-2 overflow-hidden rounded-lg bg-slate-950 px-4 pt-3 ring-1 ring-white/10 dark:bg-[#060a12] dark:ring-white/[0.08]">
           <input
+            data-no-filled
             type="number"
             min={1}
             max={maxRupees}
@@ -225,10 +221,10 @@ export function WalletRechargePanel() {
         disabled={busy || amountRupees < 1}
         onClick={() => void pay()}
         className={cn(
-          "inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition duration-150 ease-out",
+          "inline-flex w-full items-center justify-center gap-2 rounded-[12px] py-3.5 text-sm font-bold text-white transition duration-150 ease-out",
           busy || amountRupees < 1
             ? "cursor-not-allowed bg-gradient-to-r from-slate-500 to-slate-600 opacity-80 shadow-none hover:brightness-100 active:scale-100"
-            : "bg-gradient-to-r from-[#0066ff] via-[#6366f1] to-[#0891b2] shadow-[0_10px_32px_rgba(0,102,255,0.38),inset_0_1px_0_0_rgba(255,255,255,0.14)] hover:brightness-[1.06] hover:shadow-[0_12px_36px_rgba(0,102,255,0.45)] active:scale-[0.98] active:shadow-[0_6px_20px_rgba(0,102,255,0.5)] motion-reduce:active:scale-100"
+            : "bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] shadow-[0_10px_32px_rgba(40,116,240,0.35),inset_0_1px_0_0_rgba(255,255,255,0.12)] hover:brightness-[1.05] hover:shadow-[0_12px_36px_rgba(40,116,240,0.42)] active:scale-[0.98] motion-reduce:active:scale-100"
         )}
       >
         <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />

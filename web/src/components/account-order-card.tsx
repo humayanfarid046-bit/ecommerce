@@ -8,11 +8,9 @@ import {
   type OrderTrackingPayload,
 } from "@/lib/order-tracking-sync";
 import { getOrCreateGraceEnd } from "@/lib/order-edit-grace";
-import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { OrderStatusTracker } from "@/components/order-status-tracker";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, MapPin, CreditCard, Receipt } from "lucide-react";
+import { MapPin, CreditCard, Receipt } from "lucide-react";
 import { OrderNeedHelpChat } from "@/components/order-need-help-chat";
 import { useAuth } from "@/context/auth-context";
 import { Link } from "@/i18n/navigation";
@@ -45,7 +43,6 @@ export function AccountOrderCard({
   const { user } = useAuth();
   const wUid = walletUserId(user);
   const [cancelled, setCancelled] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [graceEnd, setGraceEnd] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [actionBanner, setActionBanner] = useState<string | null>(null);
@@ -394,32 +391,8 @@ export function AccountOrderCard({
         ) : null}
       </div>
 
-      {/* Accordion trigger */}
-      <button
-        type="button"
-        onClick={() => setDetailsOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-bold text-[#0066ff] transition hover:bg-[#0066ff]/5 dark:hover:bg-[#0066ff]/10 sm:px-5"
-        aria-expanded={detailsOpen}
-      >
-        {detailsOpen ? to("hideDetails") : to("viewDetails")}
-        <ChevronDown
-          className={cn(
-            "h-5 w-5 shrink-0 transition-transform",
-            detailsOpen && "rotate-180"
-          )}
-        />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {detailsOpen ? (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
-            className="overflow-hidden border-t border-slate-100 dark:border-slate-800"
-          >
-            <div className="space-y-4 px-4 py-4 sm:px-5">
+      <div className="border-t border-slate-100 dark:border-slate-800">
+        <div className="space-y-4 px-4 py-4 sm:px-5">
               {canCancel ? (
                 <div className="flex flex-wrap gap-2">
                   <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
@@ -494,9 +467,7 @@ export function AccountOrderCard({
                 ) : null}
               </div>
             </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      </div>
 
       {returnOpen ? (
         <div

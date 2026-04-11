@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { WishlistContent } from "@/components/wishlist-content";
+import { AccountSectionHeader } from "@/components/account-section-header";
 
 export default function AccountWishlistPage() {
   const t = useTranslations("wishlist");
@@ -9,10 +10,10 @@ export default function AccountWishlistPage() {
 
   return (
     <div className="min-w-0">
-      <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
-        {t("title")}
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">{ta("wishlistAccountHint")}</p>
+      <AccountSectionHeader
+        title={t("title")}
+        subtitle={ta("wishlistAccountHint")}
+      />
       <WishlistContent embedded />
     </div>
   );

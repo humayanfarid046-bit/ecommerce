@@ -151,7 +151,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
           "flex w-full items-center gap-2 px-3 py-2 transition",
           variant === "flipkart"
             ? "min-h-[44px] rounded-sm border-0 bg-white shadow-inner ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-white/90 dark:bg-slate-900 dark:ring-slate-600 dark:focus-within:ring-[#0066ff]/40"
-            : "min-h-[2.75rem] rounded-2xl border border-slate-200/80 bg-white/95 shadow-sm focus-within:border-[#0066ff]/45 focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#0066ff]/12 dark:border-slate-600/60 dark:bg-slate-900/80 dark:focus-within:border-[#0066ff]/50 dark:focus-within:bg-slate-900"
+            : "min-h-[2.75rem] rounded-[12px] border border-slate-200/80 bg-white/95 shadow-sm focus-within:border-[#0066ff]/45 focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#0066ff]/12 dark:border-slate-600/60 dark:bg-slate-900/80 dark:focus-within:border-[#0066ff]/50 dark:focus-within:bg-slate-900"
         )}
       >
         <Search
@@ -162,6 +162,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
           strokeWidth={2}
         />
         <input
+          data-no-filled
           value={q}
           onChange={(e) => {
             setQ(e.target.value);
@@ -233,7 +234,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="absolute left-0 right-0 top-full z-40 mt-2 max-h-80 overflow-auto rounded-2xl border border-slate-200/90 bg-white/95 py-2 shadow-[0_16px_48px_rgba(0,102,255,0.12)] backdrop-blur-xl dark:border-slate-600 dark:bg-slate-900/95 dark:shadow-black/30"
+            className="absolute left-0 right-0 top-full z-40 mt-2 max-h-80 overflow-auto rounded-[12px] border border-slate-200/90 bg-white/95 py-2 shadow-[0_16px_48px_rgba(0,102,255,0.12)] backdrop-blur-xl dark:border-slate-600 dark:bg-slate-900/95 dark:shadow-black/30"
             role="listbox"
           >
             {suggestions.map((p) => (

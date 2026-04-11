@@ -492,7 +492,7 @@ export function CheckoutAddressStep({
         onClick={onContinue}
         rippleClassName="bg-white/30"
         className={cn(
-          "w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition",
+          "w-full rounded-[12px] py-3.5 text-sm font-semibold text-white transition",
           canPlaceAddress
             ? "bg-[#0066ff] shadow-[0_8px_24px_rgba(0,102,255,0.35)] hover:bg-[#0052cc]"
             : "cursor-not-allowed bg-slate-300 dark:bg-slate-700"

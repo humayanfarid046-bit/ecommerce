@@ -42,15 +42,15 @@ export function ProductStickyAddToCart({ productId, inStock }: Props) {
           rippleClassName="bg-white/30"
           className={
             inStock
-              ? "min-h-[48px] flex-1 rounded-xl bg-[#2874f0] py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-[#1a65d8]"
-              : "min-h-[48px] flex-1 cursor-not-allowed rounded-xl bg-slate-200 py-3 text-sm font-bold text-slate-500"
+              ? "min-h-[48px] flex-1 rounded-[12px] bg-[#2874f0] py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-[#1a65d8]"
+              : "min-h-[48px] flex-1 cursor-not-allowed rounded-[12px] bg-slate-200 py-3 text-sm font-bold text-slate-500"
           }
         >
           {inStock ? t("addToCart") : t("outOfStock")}
         </RippleButton>
         <Link
           href="/cart"
-          className="flex min-h-[48px] shrink-0 items-center rounded-xl border-2 border-[#2874f0]/35 px-4 text-sm font-bold text-[#2874f0]"
+          className="flex min-h-[48px] shrink-0 items-center rounded-[12px] border-2 border-[#2874f0]/35 px-4 text-sm font-bold text-[#2874f0]"
         >
           {t("goToCart")}
         </Link>

@@ -263,13 +263,13 @@ export function WishlistContent({ embedded = false }: WishlistContentProps) {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/search"
-              className={`${gradientCta} inline-flex min-w-[200px] justify-center rounded-2xl px-8 py-3 text-sm font-semibold`}
+              className={`${gradientCta} inline-flex min-w-[200px] justify-center px-8 py-3 text-sm font-semibold`}
             >
               {t("startExploring")}
             </Link>
             <Link
               href="/"
-              className="inline-flex min-w-[160px] justify-center rounded-2xl border-2 border-[#0066ff]/30 bg-white px-6 py-3 text-sm font-semibold text-[#0066ff] transition hover:bg-[#0066ff]/5 dark:border-white/15 dark:bg-[#161d2b] dark:text-[#93c5fd]"
+              className="inline-flex min-w-[160px] justify-center rounded-[12px] border-2 border-[#0066ff]/30 bg-white px-6 py-3 text-sm font-semibold text-[#0066ff] transition hover:bg-[#0066ff]/5 dark:border-white/15 dark:bg-[#161d2b] dark:text-[#93c5fd]"
             >
               {t("shopNow")}
             </Link>

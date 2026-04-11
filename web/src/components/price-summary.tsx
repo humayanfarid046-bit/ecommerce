@@ -54,7 +54,7 @@ export function PriceSummary({
   );
 
   return (
-    <div className={cn("glass space-y-3 rounded-2xl p-4", className)}>
+    <div className={cn("glass space-y-3 rounded-[18px] p-4", className)}>
       <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("priceDetails")}</h2>
       <div className="space-y-2 text-sm">
         <div className="flex justify-between text-neutral-600 dark:text-slate-400">

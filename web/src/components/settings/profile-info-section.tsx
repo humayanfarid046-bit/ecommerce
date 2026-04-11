@@ -171,15 +171,10 @@ export function ProfileInfoSection() {
   return (
     <section
       id="settings-profile"
-      className="glass scroll-mt-24 rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80"
+      className="glass scroll-mt-24 rounded-[18px] border border-slate-200/80 p-5 dark:border-slate-700/80 sm:p-6"
     >
-      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
-        <User className="h-5 w-5 text-[#0066ff]" />
-        {t("personalInfo")}
-      </h2>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        {t("personalInfoHint")}
-      </p>
+      <h2 className="sr-only">{t("personalInfo")}</h2>
+      <p className="sr-only">{t("personalInfoHint")}</p>
 
       <input
         id={photoInputId}
@@ -192,10 +187,10 @@ export function ProfileInfoSection() {
         aria-label={t("profilePhotoChange")}
       />
 
-      <form className="mt-6 space-y-6" onSubmit={saveProfile}>
-        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-slate-600/60 dark:bg-slate-900/40 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-4">
-            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#2874f0] to-[#7c3aed] ring-2 ring-white/40">
+      <form className="space-y-6" onSubmit={saveProfile}>
+        <div className="flex flex-col gap-3 border-b border-slate-200/80 pb-5 dark:border-slate-700/80 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#2874f0] to-[#7c3aed] ring-2 ring-white/30 sm:h-14 sm:w-14">
               {photoDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -204,15 +199,16 @@ export function ProfileInfoSection() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="flex h-full w-full items-center justify-center text-2xl font-extrabold text-white">
+                <span className="flex h-full w-full items-center justify-center text-sm font-extrabold text-white sm:text-base">
                   {(name.trim() || user?.displayName || user?.email || "?")
                     .slice(0, 2)
                     .toUpperCase()}
                 </span>
               )}
             </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                <User className="h-4 w-4 shrink-0 text-[#0066ff]" aria-hidden />
                 {t("profilePhotoLabel")}
               </p>
               <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
@@ -220,15 +216,15 @@ export function ProfileInfoSection() {
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
             <label
               htmlFor={photoInputId}
               className={cn(
-                "inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
+                "inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 sm:px-4 sm:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
                 photoBusy && "pointer-events-none opacity-60"
               )}
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {photoBusy ? t("profilePhotoUploading") : t("profilePhotoChange")}
             </label>
             {photoDataUrl ? (
@@ -236,18 +232,18 @@ export function ProfileInfoSection() {
                 type="button"
                 disabled={photoBusy}
                 onClick={removePhoto}
-                className="rounded-xl px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                className="rounded-xl px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 sm:text-sm dark:text-rose-400 dark:hover:bg-rose-950/40"
               >
                 {t("profilePhotoRemove")}
               </button>
             ) : null}
           </div>
-          {photoError ? (
-            <p className="w-full text-sm font-medium text-rose-600 dark:text-rose-400">
-              {photoError}
-            </p>
-          ) : null}
         </div>
+        {photoError ? (
+          <p className="text-sm font-medium text-rose-600 dark:text-rose-400">
+            {photoError}
+          </p>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">

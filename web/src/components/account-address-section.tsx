@@ -199,7 +199,7 @@ export function AccountAddressSection() {
           return (
             <li
               key={a.id}
-              className="glass flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-slate-200/80 p-4"
+              className="glass flex flex-wrap items-start justify-between gap-3 rounded-[18px] border border-slate-200/80 p-4"
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -261,7 +261,7 @@ export function AccountAddressSection() {
 
       <form
         onSubmit={submitAddress}
-        className="glass mt-6 space-y-3 rounded-2xl border border-slate-200/80 p-4"
+        className="glass mt-6 space-y-3 rounded-[18px] border border-slate-200/80 p-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-bold text-slate-900 dark:text-slate-100">

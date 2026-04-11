@@ -37,7 +37,7 @@ export function CheckoutProcessingOverlay({
       <motion.div
         initial={{ scale: 0.94, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-md rounded-3xl border border-white/20 bg-white p-8 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+        className="w-full max-w-md rounded-[18px] border border-white/20 bg-white p-8 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
       >
         {variant === "processing" ? (
           <>
@@ -89,7 +89,7 @@ export function CheckoutProcessingOverlay({
                 <button
                   type="button"
                   onClick={onRetryUpi}
-                  className="rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  className="rounded-[12px] border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                 >
                   {t("retryWithUpi")}
                 </button>
@@ -98,7 +98,7 @@ export function CheckoutProcessingOverlay({
                 <button
                   type="button"
                   onClick={onRetryCard}
-                  className="rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  className="rounded-[12px] border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                 >
                   {t("retryWithCard")}
                 </button>
@@ -107,7 +107,7 @@ export function CheckoutProcessingOverlay({
                 <button
                   type="button"
                   onClick={onRetryNet}
-                  className="rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  className="rounded-[12px] border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                 >
                   {t("retryWithNetbanking")}
                 </button>
@@ -117,7 +117,7 @@ export function CheckoutProcessingOverlay({
               <button
                 type="button"
                 onClick={onDismiss}
-                className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                className="mt-4 w-full rounded-[12px] border border-slate-200 bg-slate-50 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
               >
                 {t("paymentFailClose")}
               </button>

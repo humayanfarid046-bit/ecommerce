@@ -11,7 +11,7 @@ export function LegalSection() {
   const [showDelete, setShowDelete] = useState(false);
 
   return (
-    <section className="glass rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80">
+    <section className="glass rounded-[18px] border border-slate-200/80 p-6 dark:border-slate-700/80">
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
         <ShieldAlert className="h-5 w-5 text-[#0066ff]" />
         {t("legalTitle")}
@@ -70,7 +70,7 @@ export function LegalSection() {
 
       {showDeactivate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
+          <div className="max-w-md rounded-[18px] bg-white p-6 shadow-xl dark:bg-slate-900">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
               {t("deactivateTitle")}
             </h3>
@@ -99,7 +99,7 @@ export function LegalSection() {
 
       {showDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
+          <div className="max-w-md rounded-[18px] bg-white p-6 shadow-xl dark:bg-slate-900">
             <h3 className="text-lg font-bold text-rose-700 dark:text-rose-400">
               {t("deleteTitle")}
             </h3>

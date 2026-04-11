@@ -75,7 +75,7 @@ export function ComparePageClient() {
           </p>
           <Link
             href="/search"
-            className={`${gradientCta} mt-6 inline-block rounded-2xl px-6 py-3 text-sm font-bold`}
+            className={`${gradientCta} mt-6 inline-block px-6 py-3 text-sm font-bold`}
           >
             {t("browse")}
           </Link>
@@ -166,7 +166,7 @@ export function ComparePageClient() {
                 <td key={p.id} className="px-4 py-4 text-center">
                   <Link
                     href={`/product/${p.id}`}
-                    className={`${gradientCta} inline-block rounded-xl px-4 py-2 text-xs font-bold`}
+                    className={`${gradientCta} inline-block px-4 py-2 text-xs font-bold`}
                   >
                     {t("viewProduct")}
                   </Link>

@@ -137,11 +137,11 @@ export function RazorpayCheckoutButton({
 
   return (
     <div className="rounded-2xl border border-[#0066ff]/30 bg-gradient-to-br from-[#0066ff]/[0.07] to-violet-500/[0.06] p-4 dark:border-[#0066ff]/40">
-      <p className="text-xs font-bold uppercase tracking-wide text-[#0066ff]">
-        {t("razorpayBadge")}
+      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+        {t("razorpayCheckoutCustomerTitle")}
       </p>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        {t("razorpayHint")}
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+        {t("razorpayCheckoutCustomerSubtitle")}
       </p>
       <button
         type="button"

@@ -386,13 +386,13 @@ export function MobileNavDrawer() {
             <GroupLabel>{t("drawerGroupAccount")}</GroupLabel>
             <div className="space-y-1">
               <DrawerRow
-                href="/account/settings#settings-profile"
+                href="/account/personal"
                 onNavigate={close}
                 icon={<User className="h-4 w-4" />}
                 label={t("drawerProfileSettings")}
               />
               <DrawerRow
-                href="/account/settings#settings-addresses"
+                href="/account/settings/addresses"
                 onNavigate={close}
                 icon={<MapPin className="h-4 w-4" />}
                 label={t("drawerSavedAddresses")}
@@ -404,7 +404,7 @@ export function MobileNavDrawer() {
                 label={t("drawerPaymentsRefunds")}
               />
               <DrawerRow
-                href="/account/settings#settings-security"
+                href="/account/settings/security"
                 onNavigate={close}
                 icon={<Shield className="h-4 w-4" />}
                 label={t("drawerSecurity")}

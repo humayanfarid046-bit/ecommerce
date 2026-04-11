@@ -13,7 +13,7 @@ export function CompareBar() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[4.75rem] z-[55] flex justify-center px-3 pb-1 pt-0 md:bottom-4 md:px-6 md:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <div className="pointer-events-auto w-full max-w-lg rounded-t-2xl border border-slate-200/90 bg-white/95 px-4 py-3 shadow-[0_-8px_32px_rgba(0,102,255,0.14)] backdrop-blur-md dark:border-slate-600 dark:bg-slate-900/95 md:rounded-2xl md:shadow-[0_12px_40px_rgba(0,102,255,0.18)]">
+      <div className="pointer-events-auto w-full max-w-lg rounded-t-[12px] border border-slate-200/90 bg-white/95 px-4 py-3 shadow-[0_-8px_32px_rgba(0,102,255,0.14)] backdrop-blur-md dark:border-slate-600 dark:bg-slate-900/95 md:rounded-[12px] md:shadow-[0_12px_40px_rgba(0,102,255,0.18)]">
       <div className="mx-auto flex max-w-none items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
           <Scale className="h-5 w-5 text-[#0066ff]" />

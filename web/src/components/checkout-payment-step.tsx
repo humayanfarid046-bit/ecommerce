@@ -441,7 +441,7 @@ export function CheckoutPaymentStep({
           onClick={onPay}
           rippleClassName="bg-white/35"
           className={cn(
-            "w-full rounded-2xl py-4 text-base font-bold text-white transition",
+            "w-full rounded-[12px] py-4 text-base font-bold text-white transition",
             canPay
               ? "bg-[#0066ff] shadow-[0_12px_36px_rgba(0,102,255,0.38)] hover:bg-[#0052cc]"
               : "cursor-not-allowed bg-slate-300 dark:bg-slate-700"

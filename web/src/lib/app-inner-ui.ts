@@ -18,12 +18,12 @@ export const innerPageShellMax =
 export const legalProse =
   "space-y-5 text-sm leading-relaxed text-slate-600 dark:text-slate-300/90";
 
-/** Primary elevated card — premium glass in dark (see `.app-glass-surface`) */
+/** Primary elevated card — light: white + soft shadow (see `.app-glass-surface` in globals.css); dark: glass */
 export const appCard =
-  "app-glass-surface rounded-[18px] border border-slate-100/90 bg-white shadow-[0_2px_20px_rgba(15,23,42,0.07)] dark:border-transparent dark:bg-transparent";
+  "app-glass-surface rounded-[18px] dark:border-transparent dark:bg-transparent";
 
 export const appCardSubtle =
-  "app-glass-surface rounded-[18px] border border-slate-100/60 bg-white/95 shadow-sm dark:border-transparent dark:bg-transparent";
+  "app-glass-surface rounded-[18px] dark:border-transparent dark:bg-transparent";
 
 /** Tap feedback — use on tappable rows / cards */
 export const pressable =
@@ -42,9 +42,18 @@ export const appTextTitle =
 export const sectionLabel =
   "text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400/90";
 
+/** Shared premium button radius (12px) */
+export const btnRadius12 = "rounded-[12px]";
+
 /** Primary CTA — blue → indigo → cyan */
 export const gradientCta =
-  "rounded-2xl bg-gradient-to-r from-[#0066ff] via-[#5b21b6] to-[#0891b2] font-semibold text-white shadow-lg shadow-[#0066ff]/25 transition hover:brightness-105 active:scale-[0.98] motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+  `${btnRadius12} bg-gradient-to-r from-[#0066ff] via-[#5b21b6] to-[#0891b2] font-semibold text-white shadow-lg shadow-[#0066ff]/25 transition hover:brightness-105 active:scale-[0.98] motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100`;
+
+/**
+ * High-impact CTAs (Add to wallet, Buy now) — very subtle gradient shift for depth.
+ */
+export const gradientCtaPremium =
+  `${btnRadius12} bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] font-semibold text-white shadow-lg shadow-[#2874f0]/30 transition hover:brightness-[1.04] active:scale-[0.98] motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100`;
 
 /** Game / rewards accent — gold + neon hint */
 export const rewardsAccentRing =

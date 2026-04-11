@@ -13,6 +13,8 @@ import {
   isFirebaseConfigured,
 } from "@/lib/firebase/client";
 import { subscribeUserOrdersFromFirestore } from "@/lib/user-order-firestore";
+import { AccountSectionHeader } from "@/components/account-section-header";
+
 export default function AccountOrdersPage() {
   const t = useTranslations("orders");
   const { user } = useAuth();
@@ -60,9 +62,7 @@ export default function AccountOrdersPage() {
   if (!hydrated) {
     return (
       <div className="min-w-0">
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
-          {t("title")}
-        </h1>
+        <AccountSectionHeader title={t("title")} />
         <p className="mt-6 text-sm text-slate-500">{t("loadingOrders")}</p>
       </div>
     );
@@ -70,9 +70,7 @@ export default function AccountOrdersPage() {
 
   return (
     <div className="min-w-0">
-      <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 sm:text-2xl">
-        {t("title")}
-      </h1>
+      <AccountSectionHeader title={t("title")} />
       {showSignInHint ? (
         <p className="mt-1 text-sm text-slate-500">{t("signInForOrders")}</p>
       ) : null}

@@ -50,7 +50,7 @@ export const RippleButton = forwardRef<HTMLButtonElement, Props>(
         ref={innerRef}
         type="button"
         className={cn(
-          "relative overflow-hidden transition-transform active:scale-[0.98]",
+          "relative overflow-hidden rounded-[12px] transition-transform active:scale-[0.98]",
           className
         )}
         onClick={handleClick}

@@ -84,15 +84,15 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
       {lines.length > 0 ? <CartExitIntent /> : null}
-      <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         {t("title")}
       </h1>
       {lines.length === 0 ? (
-        <div className="mt-8 glass rounded-2xl p-8 text-center">
+        <div className="mt-8 glass rounded-[18px] p-8 text-center">
           <p className="text-neutral-500 dark:text-slate-400">{t("empty")}</p>
           <Link
             href="/search"
-            className="mt-4 inline-block rounded-xl bg-[#0066ff] px-6 py-2 text-sm font-medium text-white hover:bg-[#0052cc]"
+            className="mt-4 inline-block rounded-[12px] bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#2874f0]/25 hover:brightness-105"
           >
             {t("continueShopping")}
           </Link>
@@ -110,7 +110,7 @@ export default function CartPage() {
               <motion.div
                 layout
                 key={product.id}
-                className="glass flex gap-4 rounded-2xl p-4"
+                className="glass flex gap-4 rounded-[18px] p-4"
               >
                 <Link
                   href={`/product/${product.id}`}
@@ -181,7 +181,7 @@ export default function CartPage() {
               </motion.div>
             );
             })}
-            <div className="rounded-2xl border border-dashed border-[#0066ff]/35 bg-gradient-to-br from-[#0066ff]/[0.06] to-transparent p-6 dark:border-[#0066ff]/25 dark:from-[#0066ff]/10">
+            <div className="rounded-[18px] border border-dashed border-[#0066ff]/35 bg-gradient-to-br from-[#0066ff]/[0.06] to-transparent p-6 dark:border-[#0066ff]/25 dark:from-[#0066ff]/10">
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {t("saveForLaterTitle")}
               </h2>
@@ -190,7 +190,7 @@ export default function CartPage() {
               </p>
               <Link
                 href="/wishlist"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#0066ff] shadow-sm ring-1 ring-[#0066ff]/20 transition hover:bg-[#0066ff]/5 dark:bg-slate-800 dark:text-[#7eb3ff] dark:ring-[#0066ff]/35 dark:hover:bg-slate-700/80"
+                className="mt-4 inline-flex items-center gap-2 rounded-[12px] bg-white px-4 py-2.5 text-sm font-semibold text-[#0066ff] shadow-sm ring-1 ring-[#0066ff]/20 transition hover:bg-[#0066ff]/5 dark:bg-slate-800 dark:text-[#7eb3ff] dark:ring-[#0066ff]/35 dark:hover:bg-slate-700/80"
               >
                 <Heart className="h-4 w-4" />
                 {t("wishlistLink")}
@@ -198,7 +198,7 @@ export default function CartPage() {
             </div>
           </div>
           <div className="space-y-4 lg:col-span-1">
-            <div className="glass rounded-2xl p-4">
+            <div className="glass rounded-[18px] p-4">
               <label className="text-xs font-medium uppercase text-neutral-500 dark:text-slate-400">
                 {t("coupon")}
               </label>
@@ -207,12 +207,12 @@ export default function CartPage() {
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value)}
                   placeholder={t("couponPlaceholder")}
-                  className="min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  className="min-w-0 flex-1 rounded-[12px] border border-transparent bg-[var(--input-fill,#edf0f4)] px-3 py-2 text-sm text-slate-900 outline-none focus:border-[#0066ff]/40 focus:ring-2 focus:ring-[#0066ff]/12 dark:bg-[var(--input-fill)] dark:text-slate-100"
                 />
                 <button
                   type="button"
                   onClick={applyCoupon}
-                  className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-slate-900 hover:bg-neutral-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  className="rounded-[12px] border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-slate-900 hover:bg-neutral-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                 >
                   {t("apply")}
                 </button>
@@ -226,7 +226,7 @@ export default function CartPage() {
             />
             <Link
               href="/checkout"
-              className="block w-full rounded-2xl bg-[#0066ff] py-3 text-center text-sm font-semibold text-white transition hover:bg-[#0052cc] dark:bg-[#3b82f6] dark:hover:bg-[#2563eb]"
+              className="block w-full rounded-[12px] bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] py-3 text-center text-sm font-semibold text-white shadow-md shadow-[#2874f0]/25 transition hover:brightness-105 dark:shadow-[#2874f0]/20"
             >
               {t("proceedCheckout")}
             </Link>

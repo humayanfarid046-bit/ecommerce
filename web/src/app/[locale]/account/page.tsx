@@ -8,6 +8,7 @@ import { useWishlist } from "@/context/wishlist-context";
 import { useRecent } from "@/context/recent-context";
 import { getProductById } from "@/lib/storefront-catalog";
 import { getUserPaymentHistory } from "@/lib/user-payment-history";
+import { permissionsForScope } from "@/lib/panel-access";
 import { useTranslations } from "next-intl";
 import {
   ShoppingBag,
@@ -16,7 +17,13 @@ import {
   Sparkles,
   Crown,
   Wallet,
+  ClipboardList,
+  CircleUser,
+  Settings,
+  CreditCard,
+  Store,
 } from "lucide-react";
+import { AccountNavTiles } from "@/components/account-nav-tiles";
 import { ProfileAvatarPreview } from "@/components/profile-avatar-preview";
 import { CategoryAwarePrice } from "@/components/category-aware-price";
 import { AccountLegalInformation } from "@/components/account-legal-information";
@@ -24,7 +31,7 @@ import { readProfile, type StoredProfile } from "@/lib/account-profile-storage";
 import { getWallet, walletUserId } from "@/lib/wallet-storage";
 import {
   appCard,
-  gradientCta,
+  gradientCtaPremium,
   pressable,
   sectionLabel,
 } from "@/lib/app-inner-ui";
@@ -87,6 +94,30 @@ export default function AccountOverviewPage() {
     return h % 4 === 0;
   }, [user]);
 
+  const showManageStore = useMemo(() => {
+    if (!user?.accessScopeReady) return false;
+    const p = permissionsForScope(user.accessScope ?? "none");
+    return Object.values(p).some(Boolean);
+  }, [user]);
+
+  const accountNavItems = useMemo(() => {
+    const rows = [
+      { href: "/account/orders", label: t("navOrders"), icon: ClipboardList },
+      { href: "/account/personal", label: t("personalInfo"), icon: CircleUser },
+      { href: "/account/settings", label: t("navSettings"), icon: Settings },
+      { href: "/account/wishlist", label: t("navWishlist"), icon: Heart },
+      { href: "/account/payments", label: t("navPayments"), icon: CreditCard },
+    ];
+    if (showManageStore) {
+      rows.push({
+        href: "/admin",
+        label: t("navManageStore"),
+        icon: Store,
+      });
+    }
+    return rows;
+  }, [t, showManageStore]);
+
   useEffect(() => {
     function syncOrderStats() {
       if (!user?.uid) {
@@ -125,6 +156,11 @@ export default function AccountOverviewPage() {
             <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-[#e8edf5] sm:text-2xl">
               {displayName}
             </h1>
+            {user?.email ? (
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                {user.email}
+              </p>
+            ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {isPremium ? (
                 <span className="relative inline-flex overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-amber-500 to-amber-700 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(245,158,11,0.45)] ring-1 ring-amber-300/50">
@@ -150,6 +186,13 @@ export default function AccountOverviewPage() {
         </div>
       </header>
 
+      <section aria-labelledby="account-nav-heading">
+        <h2 id="account-nav-heading" className={sectionLabel}>
+          {t("accountNavHeading")}
+        </h2>
+        <AccountNavTiles items={accountNavItems} className="mt-3" />
+      </section>
+
       <div
         className={`${appCard} flex flex-col gap-4 rounded-[18px] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5`}
       >
@@ -168,7 +211,7 @@ export default function AccountOverviewPage() {
         </div>
         <Link
           href="/account/payments#wallet-add-money"
-          className={`${gradientCta} inline-flex items-center justify-center px-5 py-3 text-sm font-bold`}
+          className={`${gradientCtaPremium} inline-flex items-center justify-center px-5 py-3 text-sm font-bold`}
         >
           {t("walletAddMoneyTitle")}
         </Link>

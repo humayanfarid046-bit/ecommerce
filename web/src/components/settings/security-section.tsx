@@ -56,7 +56,7 @@ export function SecuritySection() {
   return (
     <section
       id="settings-security"
-      className="glass scroll-mt-24 rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80"
+      className="glass scroll-mt-24 rounded-[18px] border border-slate-200/80 p-6 dark:border-slate-700/80"
     >
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
         <Shield className="h-5 w-5 text-[#0066ff]" />

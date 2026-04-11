@@ -39,16 +39,16 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 const inputClass =
-  "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20";
+  "mt-1.5 w-full rounded-[12px] border border-transparent bg-[var(--input-fill,#edf0f4)] px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0066ff]/45 focus:ring-2 focus:ring-[#0066ff]/15 dark:bg-[var(--input-fill)]";
 
 const inputPasswordClass =
-  "w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-4 pr-12 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20";
+  "w-full rounded-[12px] border border-transparent bg-[var(--input-fill,#edf0f4)] py-3.5 pl-4 pr-12 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#0066ff]/45 focus:ring-2 focus:ring-[#0066ff]/15 dark:bg-[var(--input-fill)]";
 
 const btnPrimary =
-  "w-full rounded-xl bg-gradient-to-r from-[#0066ff] to-[#0052cc] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0066ff]/25 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-[12px] bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#2874f0]/30 transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-50";
 
 const btnSecondary =
-  "w-full rounded-xl border border-slate-200 bg-white py-3.5 text-sm font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-[12px] border border-slate-200 bg-white py-3.5 text-sm font-extrabold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100";
 
 const linkAccent =
   "text-xs font-bold text-[#0066ff] transition hover:text-[#0052cc] hover:underline";
@@ -212,7 +212,7 @@ function LoginPageContent() {
         </div>
 
         <div className="flex flex-col justify-center px-4 py-10 sm:px-8 lg:px-12 xl:px-16">
-          <div className="glass glass-premium mx-auto w-full max-w-[420px] rounded-3xl p-8 sm:p-10">
+          <div className="glass glass-premium mx-auto w-full max-w-[420px] rounded-[18px] p-8 sm:p-10">
             {view === "login" ? (
               <>
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
@@ -316,7 +316,7 @@ function LoginPageContent() {
                   <button
                     type="button"
                     disabled
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
                   >
                     <GoogleIcon className="h-5 w-5" />
                     {t("continueWithGoogle")}

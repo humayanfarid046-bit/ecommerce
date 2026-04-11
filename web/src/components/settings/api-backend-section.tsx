@@ -49,7 +49,7 @@ export function ApiBackendSection() {
 
   if (!configured) {
     return (
-      <section className="glass rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80">
+      <section className="glass rounded-[18px] border border-slate-200/80 p-6 dark:border-slate-700/80">
         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
           <Server className="h-5 w-5 text-[#0066ff]" />
           {t("apiBackendTitle")}
@@ -62,7 +62,7 @@ export function ApiBackendSection() {
   }
 
   return (
-    <section className="glass rounded-2xl border border-slate-200/80 p-6 dark:border-slate-700/80">
+    <section className="glass rounded-[18px] border border-slate-200/80 p-6 dark:border-slate-700/80">
       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
         <Server className="h-5 w-5 text-[#0066ff]" />
         {t("apiBackendTitle")}

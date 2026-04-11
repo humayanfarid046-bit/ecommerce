@@ -28,6 +28,7 @@ import { motion } from "framer-motion";
 import {
   ChevronDown,
   CreditCard,
+  Loader2,
   Lock,
   MapPin,
   RotateCcw,
@@ -639,7 +640,7 @@ export function CheckoutShell() {
           </a>
           <Link
             href="/orders"
-            className="mt-6 inline-flex w-full justify-center rounded-2xl bg-[#0066ff] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0052cc]"
+            className="mt-6 inline-flex w-full justify-center rounded-[12px] bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#2874f0]/25 hover:brightness-105"
           >
             {t("trackOrder")}
           </Link>
@@ -670,8 +671,12 @@ export function CheckoutShell() {
 
   if (authStatus === "loading") {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center md:py-24">
-        <p className="text-sm text-neutral-500">{t("sessionLoading")}</p>
+      <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-16 text-center md:py-24">
+        <Loader2
+          className="h-8 w-8 animate-spin text-[#0066ff]"
+          aria-hidden
+        />
+        <span className="sr-only">{t("loadingCheckout")}</span>
       </div>
     );
   }
@@ -691,13 +696,13 @@ export function CheckoutShell() {
             <button
               type="button"
               onClick={() => setShowOtp(true)}
-              className="rounded-2xl bg-[#0066ff] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0052cc]"
+              className="rounded-[12px] bg-gradient-to-br from-[#2f84ff] via-[#2874f0] to-[#1a5fd4] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#2874f0]/25 hover:brightness-105"
             >
               {t("quickOtp")}
             </button>
             <Link
               href="/login?returnUrl=%2Fcheckout"
-              className="rounded-2xl border border-slate-300 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-900 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              className="rounded-[12px] border border-slate-300 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-900 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             >
               {t("signInHint")}
             </Link>
@@ -761,7 +766,7 @@ export function CheckoutShell() {
             {/* Step 1 */}
             <section
               className={cn(
-                "overflow-hidden rounded-2xl border transition dark:border-slate-700/80",
+                "overflow-hidden rounded-[18px] border transition dark:border-slate-700/80",
                 openStep === 1
                   ? "border-[#0066ff]/30 bg-white shadow-[0_8px_40px_rgba(0,102,255,0.08)] dark:bg-slate-900/40"
                   : "border-neutral-200/90 bg-white/90 dark:bg-slate-900/30"
@@ -839,7 +844,7 @@ export function CheckoutShell() {
             {/* Step 2 */}
             <section
               className={cn(
-                "overflow-hidden rounded-2xl border transition dark:border-slate-700/80",
+                "overflow-hidden rounded-[18px] border transition dark:border-slate-700/80",
                 openStep === 2
                   ? "border-[#0066ff]/30 bg-white shadow-[0_8px_40px_rgba(0,102,255,0.08)] dark:bg-slate-900/40"
                   : "border-neutral-200/90 bg-white/90 dark:bg-slate-900/30"
@@ -975,7 +980,7 @@ export function CheckoutShell() {
                     onClick={continueFromSummary}
                     rippleClassName="bg-white/30"
                     className={cn(
-                      "w-full rounded-2xl py-3 text-sm font-semibold text-white transition",
+                      "w-full rounded-[12px] py-3 text-sm font-semibold text-white transition",
                       addressDone
                         ? "bg-[#0066ff] hover:bg-[#0052cc]"
                         : "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
@@ -990,7 +995,7 @@ export function CheckoutShell() {
             {/* Step 3 */}
             <section
               className={cn(
-                "overflow-hidden rounded-2xl border transition dark:border-slate-700/80",
+                "overflow-hidden rounded-[18px] border transition dark:border-slate-700/80",
                 openStep === 3
                   ? "border-[#0066ff]/30 bg-white shadow-[0_8px_40px_rgba(0,102,255,0.08)] dark:bg-slate-900/40"
                   : "border-neutral-200/90 bg-white/90 dark:bg-slate-900/30"
@@ -1124,10 +1129,6 @@ export function CheckoutShell() {
                 <p className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-100">
                   <RotateCcw className="h-4 w-4 text-emerald-600" />
                   {t("trustReturn")}
-                </p>
-                <p className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-[#0066ff]" />
-                  {t("trustSsl")}
                 </p>
                 <p className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-violet-600" />
