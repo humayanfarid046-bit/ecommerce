@@ -18,7 +18,9 @@ import {
   Sparkles,
   Crown,
   ChevronRight,
+  ChevronDown,
   Phone,
+  FileText,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -43,7 +45,7 @@ import { useMobileDrawer } from "@/context/mobile-drawer-context";
 function Divider() {
   return (
     <div
-      className="my-3 border-t border-slate-200/90 dark:border-slate-700/90"
+      className="my-3 border-t border-slate-200/80 dark:border-slate-700/90"
       role="separator"
     />
   );
@@ -51,7 +53,7 @@ function Divider() {
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-text-secondary dark:text-slate-400">
       {children}
     </p>
   );
@@ -66,9 +68,9 @@ type RowProps = {
 };
 
 const drawerRowLinkClass =
-  "flex items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-[#F0F7FF] active:bg-[#F0F7FF] dark:hover:bg-slate-800/80 dark:active:bg-slate-800/80";
+  "flex items-center gap-3 rounded-xl px-2 py-2.5 text-left text-text-primary transition-colors hover:bg-[#F0F7FF] active:bg-[#F0F7FF] dark:hover:bg-slate-800/80 dark:active:bg-slate-800/80";
 const drawerRowIconClass =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[#2D3748] dark:bg-slate-800 dark:text-slate-200 [&_svg]:stroke-[#2D3748] dark:[&_svg]:stroke-current";
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-[#F8F9FA] text-text-primary dark:border-transparent dark:bg-slate-800 dark:text-slate-200 [&_svg]:stroke-[#212121] dark:[&_svg]:stroke-current";
 
 function DrawerRow({ href, icon, label, onNavigate, hint }: RowProps) {
   return (
@@ -79,11 +81,11 @@ function DrawerRow({ href, icon, label, onNavigate, hint }: RowProps) {
     >
       <span className={drawerRowIconClass}>{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-neutral-900 dark:text-slate-50">
+        <span className="block text-sm font-semibold text-text-primary dark:text-slate-50">
           {label}
         </span>
         {hint ? (
-          <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="mt-0.5 block text-[11px] text-text-secondary dark:text-slate-400">
             {hint}
           </span>
         ) : null}
@@ -108,6 +110,7 @@ export function MobileNavDrawer() {
   const [orderCount, setOrderCount] = useState(0);
   const [profileTick, setProfileTick] = useState(0);
   const [logoutAsk, setLogoutAsk] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
 
   const wUid = walletUserId(user);
   void profileTick;
@@ -162,7 +165,10 @@ export function MobileNavDrawer() {
   }, []);
 
   useEffect(() => {
-    if (!drawerOpen) setLogoutAsk(false);
+    if (!drawerOpen) {
+      setLogoutAsk(false);
+      setLegalOpen(false);
+    }
   }, [drawerOpen]);
 
   useEffect(() => {
@@ -207,7 +213,7 @@ export function MobileNavDrawer() {
       />
       <aside
         className={cn(
-          "fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-[min(100vw-2rem,340px)] flex-col bg-white shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
+          "fixed left-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-[min(100vw-2rem,340px)] flex-col bg-[#FFFFFF] shadow-xl transition-transform duration-300 ease-out dark:bg-slate-950 md:hidden",
           drawerOpen
             ? "translate-x-0 pointer-events-auto"
             : "-translate-x-full pointer-events-none"
@@ -230,12 +236,12 @@ export function MobileNavDrawer() {
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div
-            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-y-contain px-3 pt-3 pb-[max(2.25rem,env(safe-area-inset-bottom,0px)+1.25rem)] [scrollbar-gutter:stable]"
+            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-y-contain bg-[#FFFFFF] px-3 pt-3 pb-[max(2.25rem,env(safe-area-inset-bottom,0px)+1.25rem)] [scrollbar-gutter:stable] dark:bg-slate-950"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
             {isCategoryOnly ? (
               <div className="space-y-3">
-                <p className="text-xs leading-snug text-slate-600 dark:text-slate-400">
+                <p className="text-xs leading-snug text-text-secondary dark:text-slate-400">
                   {t("drawerCategoriesHint")}
                 </p>
                 <DrawerCategoryAccordion onPick={close} />
@@ -244,11 +250,11 @@ export function MobileNavDrawer() {
             ) : (
               <>
             <GroupLabel>{t("drawerGroupProfile")}</GroupLabel>
-            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="rounded-2xl border border-slate-200/90 bg-[#FFFFFF] p-4 shadow-[0_1px_3px_rgba(15,23,42,0.05)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
               {signedIn ? (
                 <>
                   <div className="flex gap-3">
-                    <div className="shrink-0 rounded-full p-[2px] ring-2 ring-[#2563EB] ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                    <div className="shrink-0 rounded-full p-[2px] ring-2 ring-[#2563EB] ring-offset-2 ring-offset-[#FFFFFF] dark:ring-offset-slate-900">
                       <ProfileAvatarPreview
                         imageSrc={profile.photoDataUrl}
                         initials={(displayName || user!.email || "U").slice(0, 2)}
@@ -257,14 +263,14 @@ export function MobileNavDrawer() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-text-secondary dark:text-slate-400">
                         {t("drawerSignedInAs")}
                       </p>
-                      <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-50">
+                      <p className="truncate text-sm font-bold text-text-primary dark:text-slate-50">
                         {displayName || user!.email}
                       </p>
                       {user!.email ? (
-                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                        <p className="truncate text-xs text-text-secondary dark:text-slate-400">
                           {user!.email}
                         </p>
                       ) : null}
@@ -277,7 +283,7 @@ export function MobileNavDrawer() {
                         {t("drawerBadgePremium")}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200/80 bg-[#F8F9FA] px-2 py-0.5 text-[10px] font-bold uppercase text-text-secondary dark:border-transparent dark:bg-slate-800 dark:text-slate-300">
                         <Sparkles className="h-3 w-3" />
                         {t("drawerBadgeRegular")}
                       </span>
@@ -286,13 +292,13 @@ export function MobileNavDrawer() {
                   <Link
                     href="/account/payments#wallet-add-money"
                     onClick={close}
-                    className="mt-3 flex items-center justify-between rounded-xl bg-[#2874f0]/10 px-3 py-2.5 text-left transition-colors hover:bg-[#F0F7FF] dark:bg-[#2874f0]/20 dark:hover:bg-slate-800/90"
+                    className="mt-3 flex items-center justify-between rounded-xl border border-[#2874f0]/20 bg-[#F0F7FF] px-3 py-2.5 text-left transition-colors hover:bg-[#E8F2FF] dark:border-transparent dark:bg-[#2874f0]/20 dark:hover:bg-slate-800/90"
                   >
-                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-text-primary dark:text-slate-100">
                       <Wallet className="h-4 w-4 text-[#2874f0]" />
                       {t("drawerWalletBalance")}
                     </span>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    <span className="text-sm font-bold text-text-primary dark:text-white">
                       ₹{(walletPaise / 100).toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -309,19 +315,19 @@ export function MobileNavDrawer() {
                     </Link>
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-800/80">
-                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    <div className="rounded-xl border border-slate-200/80 bg-[#F8F9FA] px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-800/80">
+                      <p className="text-[10px] font-semibold text-text-secondary dark:text-slate-400">
                         {t("drawerStatOrders")}
                       </p>
-                      <p className="text-lg font-extrabold text-slate-900 dark:text-white">
+                      <p className="text-lg font-extrabold text-text-primary dark:text-white">
                         {orderCount}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-800/80">
-                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    <div className="rounded-xl border border-slate-200/80 bg-[#F8F9FA] px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-800/80">
+                      <p className="text-[10px] font-semibold text-text-secondary dark:text-slate-400">
                         {t("drawerStatWishlist")}
                       </p>
-                      <p className="text-lg font-extrabold text-slate-900 dark:text-white">
+                      <p className="text-lg font-extrabold text-text-primary dark:text-white">
                         {wishIds.length}
                       </p>
                     </div>
@@ -329,7 +335,7 @@ export function MobileNavDrawer() {
                 </>
               ) : (
                 <div className="text-center">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-text-secondary dark:text-slate-300">
                     {t("drawerGuestProfileHint")}
                   </p>
                   <Link
@@ -402,6 +408,85 @@ export function MobileNavDrawer() {
             </div>
 
             <Divider />
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setLegalOpen((o) => !o)}
+                className={cn(
+                  drawerRowLinkClass,
+                  "w-full justify-between font-semibold"
+                )}
+                aria-expanded={legalOpen}
+              >
+                <span className={drawerRowIconClass}>
+                  <FileText className="h-4 w-4" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1 text-left text-sm font-semibold text-text-primary dark:text-slate-50">
+                  {t("drawerLegalInformation")}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 dark:text-slate-500",
+                    legalOpen && "rotate-180"
+                  )}
+                  aria-hidden
+                />
+              </button>
+              {legalOpen ? (
+                <div
+                  className="ml-2 space-y-0.5 border-l-2 border-slate-200/80 py-0.5 pl-3 dark:border-slate-600"
+                  role="region"
+                  aria-label={t("drawerLegalInformation")}
+                >
+                  <Link
+                    href="/privacy"
+                    onClick={close}
+                    className="flex w-full items-center gap-2 rounded-lg py-2 pl-1 pr-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-[#F0F7FF] dark:text-slate-100 dark:hover:bg-slate-800/80"
+                  >
+                    <ChevronRight
+                      className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+                      aria-hidden
+                    />
+                    {t("drawerLegalPrivacy")}
+                  </Link>
+                  <Link
+                    href="/terms"
+                    onClick={close}
+                    className="flex w-full items-center gap-2 rounded-lg py-2 pl-1 pr-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-[#F0F7FF] dark:text-slate-100 dark:hover:bg-slate-800/80"
+                  >
+                    <ChevronRight
+                      className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+                      aria-hidden
+                    />
+                    {t("drawerLegalTerms")}
+                  </Link>
+                  <Link
+                    href="/shipping"
+                    onClick={close}
+                    className="flex w-full items-center gap-2 rounded-lg py-2 pl-1 pr-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-[#F0F7FF] dark:text-slate-100 dark:hover:bg-slate-800/80"
+                  >
+                    <ChevronRight
+                      className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+                      aria-hidden
+                    />
+                    {t("drawerLegalRefund")}
+                  </Link>
+                  <Link
+                    href="/cookies"
+                    onClick={close}
+                    className="flex w-full items-center gap-2 rounded-lg py-2 pl-1 pr-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-[#F0F7FF] dark:text-slate-100 dark:hover:bg-slate-800/80"
+                  >
+                    <ChevronRight
+                      className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
+                      aria-hidden
+                    />
+                    {t("drawerLegalCookies")}
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+
+            <Divider />
             <GroupLabel>{t("drawerGroupSupport")}</GroupLabel>
             <div className="space-y-1">
               <DrawerRow
@@ -431,7 +516,7 @@ export function MobileNavDrawer() {
                 <span className={drawerRowIconClass}>
                   <MessageCircle className="h-4 w-4" strokeWidth={2} />
                 </span>
-                <span className="flex-1 text-sm font-semibold text-neutral-900 dark:text-slate-50">
+                <span className="flex-1 text-sm font-semibold text-text-primary dark:text-slate-50">
                   {t("drawerWhatsApp")}
                 </span>
                 <ChevronRight
@@ -443,15 +528,15 @@ export function MobileNavDrawer() {
 
             <Divider />
             <GroupLabel>{t("drawerGroupApp")}</GroupLabel>
-            <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-2xl border border-slate-200/90 bg-[#FFFFFF] p-3 dark:border-slate-700 dark:bg-slate-900">
               <div className="flex items-center justify-between py-1">
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="text-xs font-semibold text-text-secondary dark:text-slate-300">
                   {t("languageLabel")}
                 </span>
                 <LanguageSwitcher />
               </div>
-              <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-700">
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <div className="mt-2 flex items-center justify-between border-t border-slate-200/80 pt-2 dark:border-slate-700">
+                <span className="text-xs font-semibold text-text-secondary dark:text-slate-300">
                   {t("themeToggle")}
                 </span>
                 <ThemeToggle />
@@ -471,15 +556,15 @@ export function MobileNavDrawer() {
             <Link
               href="/account"
               onClick={close}
-              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-sm font-bold text-neutral-900 transition-colors hover:bg-[#F0F7FF] dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-[#F8F9FA] py-2.5 text-sm font-bold text-text-primary transition-colors hover:border-[#2563eb]/35 hover:bg-[#F0F7FF] dark:border-transparent dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               <ShoppingBag className="h-4 w-4" strokeWidth={2} />
               {t("drawerMyAccountFull")}
             </Link>
 
-            <div className="mt-6 border-t border-slate-200/90 pt-4 dark:border-slate-700/90">
+            <div className="mt-6 border-t border-slate-200/80 pt-4 dark:border-slate-700/90">
               <nav
-                className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-center text-[11px] font-medium text-slate-600 dark:text-slate-400"
+                className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-center text-[11px] font-medium text-text-secondary dark:text-slate-400"
                 aria-label={t("drawerMenuFooterAria")}
               >
                 <Link href="/about" onClick={close} className="hover:text-[#2874f0]">
@@ -508,7 +593,7 @@ export function MobileNavDrawer() {
                   {tf("footerTerms")}
                 </Link>
               </nav>
-              <p className="mt-3 text-center text-[10px] leading-snug text-slate-500 dark:text-slate-500">
+              <p className="mt-3 text-center text-[10px] leading-snug text-text-secondary dark:text-slate-500">
                 {tf("footerCopyright", {
                   year: new Date().getFullYear(),
                 })}
@@ -529,22 +614,22 @@ export function MobileNavDrawer() {
           onClick={() => setLogoutAsk(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-900"
+            className="w-full max-w-sm rounded-2xl border border-slate-200/90 bg-[#FFFFFF] p-5 shadow-xl dark:border-transparent dark:bg-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="logout-confirm-title"
-              className="text-lg font-bold text-slate-900 dark:text-slate-50"
+              className="text-lg font-bold text-text-primary dark:text-slate-50"
             >
               {t("drawerLogoutConfirmTitle")}
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-2 text-sm text-text-secondary dark:text-slate-400">
               {t("drawerLogoutConfirmBody")}
             </p>
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
-                className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-700 dark:border-slate-600 dark:text-slate-200"
+                className="flex-1 rounded-xl border border-slate-200/90 bg-[#F8F9FA] py-2.5 text-sm font-bold text-text-primary dark:border-slate-600 dark:bg-transparent dark:text-slate-200"
                 onClick={() => setLogoutAsk(false)}
               >
                 {t("drawerLogoutCancel")}

@@ -8,16 +8,16 @@ export function InstagramFeed() {
   const t = useTranslations("home");
 
   return (
-    <section className="border-t border-slate-200/90 bg-gradient-to-b from-slate-50/80 to-white py-5 dark:border-slate-800/80 dark:from-[#121a2a] dark:to-[#0c1019] md:py-6">
+    <section className="border-t border-[#EEEEEE] bg-gradient-to-b from-[#F8F9FA] to-white py-5 dark:border-slate-800/80 dark:from-[#121a2a] dark:to-[#0c1019] md:py-6">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex flex-col items-center text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#0066ff] dark:text-[#7eb3ff]">
             {t("instagramKicker")}
           </p>
-          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-xl">
+          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-text-primary dark:text-slate-100 md:text-xl">
             {t("instagramTitle")}
           </h2>
-          <p className="mt-1 max-w-lg text-xs leading-snug text-slate-600 dark:text-slate-400">
+          <p className="mt-1 max-w-lg text-xs leading-snug text-text-secondary dark:text-slate-400">
             {t("instagramSubtitle")}
           </p>
         </div>

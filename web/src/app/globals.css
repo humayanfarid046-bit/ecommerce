@@ -3,10 +3,12 @@
 :root {
   /* Light canvas — pure white */
   --background: #ffffff;
+  /* Secondary page surface (clean off-white) */
+  --surface-muted: #f8f9fa;
   /* Primary brand blue (aligns with Place Order / key CTAs) */
   --brand-blue: #2563eb;
-  /* Primary copy — deep charcoal (headings, titles, prices) */
-  --text-primary: #1a202c;
+  /* Primary copy — sharp dark grey for storefront readability */
+  --text-primary: #212121;
   /* Secondary copy — dark grey (descriptions, meta, subtitles) */
   --text-secondary: #4a5568;
   --foreground: var(--text-primary);
@@ -16,11 +18,11 @@
   --store-canvas: #ffffff;
   --store-secondary: #ffffff;
   --surface-card: #ffffff;
-  /* Thin blue borders + soft blue glow (no heavy grey/black shadows) */
-  --border-subtle: rgba(37, 99, 235, 0.38);
-  --store-card-border: rgba(37, 99, 235, 0.4);
-  --shadow-card-soft: 0 4px 28px rgba(37, 99, 235, 0.05);
-  --shadow-card-soft-hover: 0 8px 36px rgba(37, 99, 235, 0.08);
+  /* Light cards — subtle neutral frame (premium e-commerce) */
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --store-card-border: #eeeeee;
+  --shadow-card-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card-soft-hover: 0 4px 16px rgba(0, 0, 0, 0.07);
   --product-title: var(--text-primary);
   --deal-orange: #ff6b00;
   --muted: var(--text-secondary);
@@ -35,6 +37,7 @@
   --color-foreground: var(--foreground);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-surface-muted: var(--surface-muted);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -83,9 +86,9 @@ html:not(.dark) .border-gray-300 {
  * 1px soft gradient border. Light: solid white card (readable on light canvas).
  */
 html:not(.dark) .app-glass-surface {
-  background: var(--surface-card);
-  border: 1px solid var(--store-card-border);
-  box-shadow: var(--shadow-card-soft);
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -114,8 +117,20 @@ html.dark .app-glass-surface {
 }
 
 html:not(.dark) .app-glass-surface:hover {
-  box-shadow: var(--shadow-card-soft-hover);
-  border-color: rgba(37, 99, 235, 0.52);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  border-color: #e8e8e8;
+}
+
+/* Account stats / wallet — same tokenized light surface (explicit class for radius tweaks in TS) */
+html:not(.dark) .account-info-surface.app-glass-surface {
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html:not(.dark) .account-info-surface.app-glass-surface:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  border-color: #e8e8e8;
 }
 
 html.dark .app-glass-surface:hover {
@@ -125,7 +140,7 @@ html.dark .app-glass-surface:hover {
     0 1px 0 rgba(255, 255, 255, 0.06) inset;
 }
 
-/* Product cards — light: white + brand border + blue glow */
+/* Product cards — light: white + neutral hairline + soft lift */
 .product-card-store {
   background: var(--surface-card);
   border: 1px solid var(--store-card-border);
@@ -133,9 +148,9 @@ html.dark .app-glass-surface:hover {
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.product-card-store:hover {
+html:not(.dark) .product-card-store:hover {
   box-shadow: var(--shadow-card-soft-hover);
-  border-color: rgba(37, 99, 235, 0.52);
+  border-color: #e0e0e0;
 }
 
 html.dark .product-card-store {

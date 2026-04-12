@@ -10,13 +10,13 @@ export function StoreShareBar() {
   const tb = useTranslations("brand");
 
   return (
-    <section className="mt-10 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 p-5 shadow-sm dark:border-slate-700/90 dark:from-[#151f2e] dark:to-[#0f1419] md:p-6">
+    <section className="mt-10 rounded-2xl border border-[#EEEEEE] bg-gradient-to-br from-white to-[#F8F9FA] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:border-slate-700/90 dark:from-[#151f2e] dark:to-[#0f1419] dark:shadow-none md:p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-sm font-extrabold text-text-primary dark:text-slate-100">
             {t("storeShareTitle")}
           </p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs leading-relaxed text-text-secondary dark:text-slate-400">
             {t("storeShareHint")}
           </p>
         </div>

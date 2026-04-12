@@ -86,7 +86,12 @@
     "drawerAboutUs": "আমাদের সম্পর্কে",
     "drawerContactUs": "যোগাযোগ",
     "drawerContactUsHint": "",
-    "drawerMenuFooterAria": "নীতিমালা ও কপিরাইট"
+    "drawerMenuFooterAria": "নীতিমালা ও কপিরাইট",
+    "drawerLegalInformation": "আইনি তথ্য",
+    "drawerLegalPrivacy": "গোপনীয়তা নীতি",
+    "drawerLegalTerms": "ব্যবহারের শর্তাবলী",
+    "drawerLegalRefund": "রিফান্ড নীতি",
+    "drawerLegalCookies": "কুকি নীতি"
   },
   "about": {
     "title": "আমাদের সম্পর্কে",

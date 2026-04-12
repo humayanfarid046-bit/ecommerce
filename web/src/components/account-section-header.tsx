@@ -29,11 +29,11 @@ export function AccountSectionHeader({
         {backLabel}
       </Link>
       <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-[#e8edf5] sm:text-2xl">
+        <h1 className="text-xl font-extrabold tracking-tight text-text-primary dark:text-[#e8edf5] sm:text-2xl">
           {title}
         </h1>
         {subtitle ? (
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-text-secondary dark:text-slate-400">
             {subtitle}
           </p>
         ) : null}

@@ -25,6 +25,11 @@ export const appCard =
 export const appCardSubtle =
   "app-glass-surface rounded-[18px] dark:border-transparent dark:bg-transparent";
 
+/** Account wallet + quick stats — soft shadows in light (see `.account-info-surface` in globals.css) */
+/** 12–16px radius in light; glass treatment preserved in dark */
+export const accountInfoCard =
+  "account-info-surface app-glass-surface rounded-2xl dark:rounded-[18px] dark:border-transparent dark:bg-transparent";
+
 /** Tap feedback — use on tappable rows / cards */
 export const pressable =
   "transition-transform duration-150 ease-out will-change-transform active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100";

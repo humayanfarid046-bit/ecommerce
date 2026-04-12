@@ -148,15 +148,15 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
       />
       <div
         className={cn(
-          "flex w-full items-center gap-2 px-3 py-2 transition",
+          "flex w-full items-center gap-2.5 px-4 py-2.5 transition",
           variant === "flipkart"
-            ? "min-h-[44px] rounded-sm border-0 bg-white shadow-inner ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-[#2563eb]/30 dark:bg-slate-900 dark:ring-slate-600 dark:focus-within:ring-[#2563eb]/40"
+            ? "min-h-[44px] rounded-sm border-0 bg-white shadow-inner ring-1 ring-[#EEEEEE] focus-within:ring-2 focus-within:ring-[#2563eb]/25 dark:bg-slate-900 dark:ring-slate-600 dark:focus-within:ring-[#2563eb]/40"
             : "min-h-[2.75rem] rounded-[12px] border border-slate-200/80 bg-white/95 shadow-sm focus-within:border-[#2563eb]/55 focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#2563eb]/15 dark:border-slate-600/60 dark:bg-slate-900/80 dark:focus-within:border-[#2563eb]/50 dark:focus-within:bg-slate-900"
         )}
       >
         <Search
           className={cn(
-            "h-3.5 w-3.5 shrink-0",
+            "h-4 w-4 shrink-0",
             variant === "flipkart" ? "text-[#2563eb]" : "text-slate-400 dark:text-slate-500"
           )}
           strokeWidth={2}
@@ -176,7 +176,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
           className={cn(
             "min-w-0 flex-1 bg-transparent text-sm font-medium outline-none",
             variant === "flipkart"
-              ? "text-slate-900 placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-500"
+              ? "text-text-primary placeholder:text-text-secondary dark:text-slate-100 dark:placeholder:text-slate-500"
               : "text-slate-900 placeholder:text-slate-400 dark:text-slate-100"
           )}
           aria-autocomplete="list"
@@ -196,7 +196,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
           aria-label={listening ? t("voiceListening") : t("voiceSearch")}
           title={listening ? t("voiceListening") : t("voiceSearch")}
         >
-          <Mic className="h-3.5 w-3.5" />
+          <Mic className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -211,7 +211,7 @@ export function SearchBar({ variant = "default" }: SearchBarProps) {
           aria-label={visualBusy ? t("visualSearchWorking") : t("visualSearch")}
           title={visualBusy ? t("visualSearchWorking") : t("visualSearch")}
         >
-          <Camera className={cn("h-3.5 w-3.5", visualBusy && "animate-pulse")} />
+          <Camera className={cn("h-4 w-4", visualBusy && "animate-pulse")} />
         </button>
         <button
           type="button"

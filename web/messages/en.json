@@ -86,7 +86,12 @@
     "drawerAboutUs": "About us",
     "drawerContactUs": "Contact us",
     "drawerContactUsHint": "",
-    "drawerMenuFooterAria": "Legal links and copyright"
+    "drawerMenuFooterAria": "Legal links and copyright",
+    "drawerLegalInformation": "Legal Information",
+    "drawerLegalPrivacy": "Privacy Policy",
+    "drawerLegalTerms": "Terms of Use",
+    "drawerLegalRefund": "Refund Policy",
+    "drawerLegalCookies": "Cookie Policy"
   },
   "about": {
     "title": "About us",
