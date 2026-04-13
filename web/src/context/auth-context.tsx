@@ -20,7 +20,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase/client";
 import { setFirebaseProfileSyncUid } from "@/lib/account-profile-storage";
 import { hydrateUserDataFromFirestore } from "@/lib/firebase/hydrate-user-data";
-import { clearAllSessionsExceptTheme } from "@/lib/clear-session-storage";
+import { clearLibasSessionLocalStorage } from "@/lib/clear-session-storage";
 import { isForcedOwnerUid } from "@/lib/owner-override";
 import {
   normalizeAccessScope,
@@ -263,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logoutAllDevices = useCallback(async () => {
-    clearAllSessionsExceptTheme();
+    clearLibasSessionLocalStorage();
     setUser(null);
     const auth = getFirebaseAuth();
     if (auth) await firebaseSignOut(auth);

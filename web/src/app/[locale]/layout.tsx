@@ -9,7 +9,6 @@ import {
 } from "next-intl/server";
 import type { Locale } from "next-intl";
 import { routing } from "@/i18n/routing";
-import Script from "next/script";
 import { Providers } from "@/app/providers";
 import { ConditionalChrome } from "@/components/conditional-chrome";
 import { SiteFooter } from "@/components/site-footer";
@@ -98,16 +97,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html
       lang={locale}
-      className={`${fontSans.variable} ${fontSans.className} ${geistMono.variable} h-full antialiased`}
+      className={`${fontSans.variable} ${fontSans.className} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-background transition-colors duration-200">
-        <Script
-          id="libas-theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('libas_theme_mode');var d=m==='dark';document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}})();`,
-          }}
-        />
+      <body className="flex min-h-full flex-col bg-background">
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <ConditionalChrome

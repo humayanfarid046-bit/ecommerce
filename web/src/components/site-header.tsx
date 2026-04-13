@@ -14,7 +14,6 @@ import { SearchBar } from "@/components/search-bar";
 import { CategoryNav } from "@/components/category-nav";
 import { NotificationInbox } from "@/components/notification-inbox";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { STORE_SHELL } from "@/lib/store-layout";
 import { useTranslations } from "next-intl";
 import { useWishlist } from "@/context/wishlist-context";
@@ -59,7 +58,6 @@ export function SiteHeader() {
 
             <nav className="ml-auto flex min-h-[44px] shrink-0 items-center gap-2.5 sm:gap-3 md:order-3 md:ml-auto md:gap-4 lg:gap-6">
               <div className="hidden items-center gap-2 md:flex">
-                <ThemeToggle variant="onPrimary" />
                 <LanguageSwitcher variant="onPrimary" />
               </div>
               <div className="hidden md:block">
@@ -133,7 +131,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="hidden border-b border-[rgba(37,99,235,0.18)] bg-white shadow-[0_4px_24px_rgba(37,99,235,0.04)] md:block">
+      <div className="hidden border-b border-slate-700/80 bg-slate-950 shadow-[0_4px_24px_rgba(0,0,0,0.25)] md:block">
         <CategoryNav flipkartStyle />
       </div>
 

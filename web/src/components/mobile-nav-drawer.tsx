@@ -26,7 +26,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { getWallet, walletUserId } from "@/lib/wallet-storage";
@@ -534,12 +533,6 @@ export function MobileNavDrawer() {
                   {t("languageLabel")}
                 </span>
                 <LanguageSwitcher />
-              </div>
-              <div className="mt-2 flex items-center justify-between border-t border-slate-200/80 pt-2 dark:border-slate-700">
-                <span className="text-xs font-semibold text-text-secondary dark:text-slate-300">
-                  {t("themeToggle")}
-                </span>
-                <ThemeToggle />
               </div>
               {signedIn ? (
                 <button
